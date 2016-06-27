@@ -1,0 +1,15 @@
+{
+  "name": "logstream",
+  "version": "1.0.0",
+  "description": "log stream.",
+  "main": "server.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "WXY",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mocha": "^2.5.3"
+  }
+}
