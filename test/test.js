@@ -1,7 +1,8 @@
-var assert = require('assert')
+var assert = require('assert');
+
 
 describe('test', function() {
-    it('go!', function() {
+    it('play', function() {
         assert.equal('a', 'a');
     });
 });
