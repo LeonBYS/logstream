@@ -65,6 +65,20 @@ app.post('/*/*/setting', function(req, res) {
     res.send('invalid now...');
 });
 
+// meta data
+app.get('/projects', function (req, res) {
+    res.send('all project names');
+});
+
+app.get('/lognames', function (req, res) {
+    res.send('all lognames for specified project');
+});
+
+
+// root page
+app.get('/', function (req, res) {
+    res.sendFile('./public/index.html');
+})
 
 
 var server = http.listen(process.env.PORT || 3333, function() {
