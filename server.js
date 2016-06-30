@@ -2,57 +2,44 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
 var http = require('http').Server(app);
-var redis = new require('ioredis')();
+var db = require('./src/db').Database('redis');
 
-app.disable('x-powerd-by');
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
 
+db.connect();
 
 
 /* RESTful API*/
 // Logs
 app.get('/*/*/logs', function (req, res) {
-    console.log(req);
     var project = req.params[0];
     var logname = req.params[1];
-    var lkey = 'logs:' + project + ':' + logname;
-    redis.lrange(lkey, 0, -1, function (err, result) {
-        res.send('<h1>' + lkey + '=' + result + '</h1>');
+    db.getLogs(project, logname, function (err, result) {
+        console.log(new Date().toLocaleString(), 'get', project, logname);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(result));
     });
 });
 
 app.post('/*/*/logs', function(req, res) {
     var project = req.params[0];
     var logname = req.params[1];
-    var lkey = 'logs:' + project + ':' + logname;
-    var lval = req.body;
-    redis.lpush(lkey, lval, function (err, result) {
-        res.send(lval);
+    var logtext = req.body;
+    db.addLogs(project, logname, logtext, function (err, result) {
+        console.log(new Date().toLocaleString(), 'post', project, logname, logtext);
+        res.send(logtext);
     });
 });
 
 // Commands
 app.get('/*/*/commands', function(req, res) {
-    var project = req.params[0];
-    var logname = req.params[1];
-    var lkey = 'commands:' + project + ':' + logname;
-    redis.lrange(lkey, 0, -1, function (err, result) {
-        res.send('<h1>' + lkey + '=' + result + '</h1>');
-    });
+    res.send('invalid now...');
 });
 
 app.post('/*/*/commands', function(req, res) {
-    var project = req.params[0];
-    var logname = req.params[1];
-    var lkey = 'commands:' + project + ':' + logname;
-    var commandName = req.body.name;
-    var commandUri = req.body.uri;
-    var lval = JSON.stringify({name: commandName, uri: commandUri});
-    redis.lpush(lkey, lval, function (err, result) {
-        res.send(lval);
-    });
+    res.send('invalid now...');
 });
 // app.delete commands
 
@@ -67,11 +54,11 @@ app.post('/*/*/setting', function(req, res) {
 
 // meta data
 app.get('/projects', function (req, res) {
-    res.send('all project names');
-});
-
-app.get('/lognames', function (req, res) {
-    res.send('all lognames for specified project');
+    db.getProjectsAndLognames(function (err, result) {
+        console.log(new Date().toLocaleString(), 'get projects');
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(result));
+    });
 });
 
 
