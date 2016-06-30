@@ -41,7 +41,7 @@ function renderProjectsPanel(projects) {
     menu.html(projectsHTML);
     menu.metisMenu();
     $('#side-menu > li > ul > li > a').click(function() {
-        $(this).parent().siblings().attr('class', '');
+        $('#side-menu > li > ul > li').attr('class', '');
         $(this).parent().attr('class', 'active');
         clearTimeout(timerUpdateLog);
         var project = $(this).parent().parent().prev().text();
