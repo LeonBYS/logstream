@@ -20,7 +20,7 @@ class LogStream {
         var options = {
             hostname: this.host,
             port: this.port,
-            path: '/' + this.project + '/' + this.logname + '/logs',
+            path: '/api/' + this.project + '/' + this.logname + '/logs?timestamp=' + Date.now(),
             method: 'POST',
             headers: {'Content-Type': 'text/plain', 'Content-Length': Buffer.byteLength(message)}
         };

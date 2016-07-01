@@ -27,7 +27,7 @@ var api = {
 
 
 function updateLog(project, logname) {
-    var url = '/' + project + '/' + logname + '/logs';
+    var url = '/api/' + project + '/' + logname + '/logs';
     api.get(url, function (data, status) {
         logs = data;
         var tableHTML = '';
@@ -73,7 +73,7 @@ function renderProjectsPanel(projects) {
 }
 
 $(document).ready(function(){
-    api.get('/projects', function (data, status) {
+    api.get('/api/projects', function (data, status) {
         projects = data;
         renderProjectsPanel(projects);
     });
