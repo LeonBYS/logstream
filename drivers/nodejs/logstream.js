@@ -22,7 +22,7 @@ class LogStream {
             port: this.port,
             path: '/' + this.project + '/' + this.logname + '/logs',
             method: 'POST',
-            headers: {'Content-Type': 'raw', 'Content-Length': Buffer.byteLength(message)}
+            headers: {'Content-Type': 'text/plain', 'Content-Length': Buffer.byteLength(message)}
         };
         var req = http.request(options);
         req.on('error', function (e) {
