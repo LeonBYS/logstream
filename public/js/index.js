@@ -4,17 +4,39 @@ var projects = {};
 var logs = {};
 var timerUpdateLog = null;
 
+var api = {
+    get: function (url, success) {
+        $.ajax({
+            url: url,
+            success: success,
+            dataType: 'json',
+            cache: false
+        });
+    },
+    post: function (url, data, success) {
+        $.ajax({
+            method: 'POST',
+            url: url,
+            data: data,
+            success: success,
+            dataType: 'json',
+            cache: false
+        });
+    }
+};
+
+
 function updateLog(project, logname) {
-    $.get('/' + project + '/' + logname + '/logs', function (data, status) {
-        logs = typeof(data) === 'string' ? JSON.parse(data) : data;
-        var table = $('#table-log > tbody');
+    var url = '/' + project + '/' + logname + '/logs';
+    api.get(url, function (data, status) {
+        logs = data;
         var tableHTML = '';
         for (var i = 0; i<logs.length; i++) {
-            tableHTML += '<tr><td>' + i + '</td><td>' + logs[i] + '</td></tr>';
+            tableHTML += '<tr><td>' + (logs.length - i) + '</td><td>' + logs[i] + '</td></tr>';
         }
-        table.html(tableHTML);
+        $('#table-log > tbody').html(tableHTML);
     });
-    timerUpdateLog = setTimeout(function() {updateLog(project, logname)}, 1000);
+    timerUpdateLog = setTimeout(function() {updateLog(project, logname);}, 1000);
 }
 
 function renderProjectsPanel(projects) {
@@ -51,10 +73,9 @@ function renderProjectsPanel(projects) {
 }
 
 $(document).ready(function(){
-    $.get('/projects', function (data, status) {
-        projects = typeof(data) === 'string' ? JSON.parse(data) : data;
+    api.get('/projects', function (data, status) {
+        projects = data;
         renderProjectsPanel(projects);
     });
-
 });
 
