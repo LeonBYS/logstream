@@ -1,3 +1,12 @@
+import React from 'react'
+
+class LognameButton extends React.Component {
+    render () {
+        return (<li><a>{this.props.logname}</a></li>);
+    }
+}
+
+/*
 var LognameList = React.createClass({
     render: function () {
         return (
@@ -9,20 +18,26 @@ var LognameList = React.createClass({
         );
     }
 });
+*/
 
-var ProjectMenu = React.createClass({
-    render: function () {
+class ProjectMenu extends React.Component {
+    render() {
+        var loglist = this.props.lognames.map(logname => {
+            return (<LognameButton key={logname} logname={logname} project={this.props.project} />); 
+        });
         return (
             <li>
                 <a><i className="fa fa-fw"></i>{this.props.project}<span className="fa arrow"></span></a>
-                <LognameList lognames={this.props.lognames} />
+                <ul className="nav nav-second-level">
+                    {loglist}
+                </ul>
             </li>
         );
     }
-});
+}
 
-var MenuSearchbar = React.createClass({
-    render: function () {
+class MenuSearchbar extends React.Component {
+    render () {
         return (
             <li className="sidebar-search">
                 <div className="input-group custom-search-form">
@@ -36,24 +51,27 @@ var MenuSearchbar = React.createClass({
             </li>
         );
     }
-});
+}
 
 
-var SideMenu = React.createClass({
-    pullMenuData: function () {
+class SideMenu extends React.createClass {
+    pullMenuData () {
         api.get(this.props.url, function (data, status) {
             this.setState({data:data});
             $('#side-menu').metisMenu();
         }.bind(this));
-    },
-    getInitialState: function () {
+    }
+
+    getInitialState () {
       return {data: {}};
-    },
-    componentDidMount: function () {
+    }
+
+    componentDidMount () {
         this.pullMenuData();
         //setInterval(this.pullMenuData, this.props.pollInterval);
-    },
-    render: function () {
+    }
+
+    render () {
         var data = this.state.data;
         return (
             <ul className="nav" id="side-menu">
@@ -64,9 +82,11 @@ var SideMenu = React.createClass({
             </ul>
         );
     }
-});
+}
 
+/*
 ReactDOM.render(
     <SideMenu url="/api/projects" pollInterval={10000} />,
     document.getElementById('side-menu-wrapper')
 );
+*/
