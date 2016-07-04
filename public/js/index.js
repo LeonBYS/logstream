@@ -25,7 +25,7 @@ var api = {
     }
 };
 
-
+/*
 function updateLog(project, logname) {
     var url = '/api/' + project + '/' + logname + '/logs';
     api.get(url, function (data, status) {
@@ -79,3 +79,4 @@ $(document).ready(function(){
     });
 });
 
+*/
