@@ -8,9 +8,40 @@ var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
     'localhost', 3333, 'LogStream', 'Console'
 );
 
+
+/* react */
+require('babel-register');
+var swig = require('swig');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactDOMServer = require('react-dom/server')
+var Router = require('react-router');
+var routes = require('./app/routes');
+
+
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
+
+app.use(function (req, res) {
+    Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
+        if (err) {
+            res.status(500).send(err.message)
+        } else if (redirectLocation) {
+            res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
+        } else if (renderProps) {
+            var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
+            var page = swig.renderFile('views/index.html', { html: html });
+            res.status(200).send(page);
+        } else {
+            res.status(404).send('Page Not Found')
+        }
+    });
+});
+
+
+
+
 
 db.connect();
 
@@ -75,9 +106,11 @@ app.get('/api/projects', function (req, res) {
 
 
 // root page
+/*
 app.get('/', function (req, res) {
     res.sendFile('./public/index.html');
 })
+*/
 
 
 var server = http.listen(process.env.PORT || 3333, function() {

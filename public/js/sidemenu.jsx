@@ -51,7 +51,7 @@ var SideMenu = React.createClass({
     },
     componentDidMount: function () {
         this.pullMenuData();
-        setInterval(this.pullMenuData, this.props.pollInterval);
+        //setInterval(this.pullMenuData, this.props.pollInterval);
     },
     render: function () {
         var data = this.state.data;
