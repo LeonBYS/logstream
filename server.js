@@ -23,21 +23,7 @@ app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
 
-app.use(function (req, res) {
-    Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
-        if (err) {
-            res.status(500).send(err.message)
-        } else if (redirectLocation) {
-            res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
-        } else if (renderProps) {
-            var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
-            var page = swig.renderFile('views/index.html', { html: html });
-            res.status(200).send(page);
-        } else {
-            res.status(404).send('Page Not Found')
-        }
-    });
-});
+
 
 
 
@@ -111,6 +97,24 @@ app.get('/', function (req, res) {
     res.sendFile('./public/index.html');
 })
 */
+
+
+
+app.use(function (req, res) {
+    Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
+        if (err) {
+            res.status(500).send(err.message)
+        } else if (redirectLocation) {
+            res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
+        } else if (renderProps) {
+            var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
+            var page = swig.renderFile('views/index.html', { html: html });
+            res.status(200).send(page);
+        } else {
+            res.status(404).send('Page Not Found')
+        }
+    });
+});
 
 
 var server = http.listen(process.env.PORT || 3333, function() {

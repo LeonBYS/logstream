@@ -1,24 +1,12 @@
-import React from 'react'
+import React from 'react';
+import SideBarStore from '../stores/sideBarStore';
+import SideBarActions from '../actions/sideBarActions'
 
 class LognameButton extends React.Component {
     render () {
-        return (<li><a>{this.props.logname}</a></li>);
+        return (<li><a style={{cursor:"pointer"}}>{this.props.logname}</a></li>);
     }
 }
-
-/*
-var LognameList = React.createClass({
-    render: function () {
-        return (
-            <ul className="nav nav-second-level">
-            {this.props.lognames.map(function (logname) {
-                return (<li key={logname}><a>{logname}</a></li>);
-            })}
-            </ul>
-        );
-    }
-});
-*/
 
 class ProjectMenu extends React.Component {
     render() {
@@ -27,7 +15,7 @@ class ProjectMenu extends React.Component {
         });
         return (
             <li>
-                <a><i className="fa fa-fw"></i>{this.props.project}<span className="fa arrow"></span></a>
+                <a href="#"><i className="fa fa-fw"></i>{this.props.project}<span className="fa arrow"></span></a>
                 <ul className="nav nav-second-level">
                     {loglist}
                 </ul>
@@ -54,25 +42,9 @@ class MenuSearchbar extends React.Component {
 }
 
 
-class SideMenu extends React.createClass {
-    pullMenuData () {
-        api.get(this.props.url, function (data, status) {
-            this.setState({data:data});
-            $('#side-menu').metisMenu();
-        }.bind(this));
-    }
-
-    getInitialState () {
-      return {data: {}};
-    }
-
-    componentDidMount () {
-        this.pullMenuData();
-        //setInterval(this.pullMenuData, this.props.pollInterval);
-    }
-
+class SideMenu extends React.Component {
     render () {
-        var data = this.state.data;
+        var data = this.props.data;
         return (
             <ul className="nav" id="side-menu">
                 <MenuSearchbar />
@@ -84,9 +56,35 @@ class SideMenu extends React.createClass {
     }
 }
 
-/*
-ReactDOM.render(
-    <SideMenu url="/api/projects" pollInterval={10000} />,
-    document.getElementById('side-menu-wrapper')
-);
-*/
+class SideBar extends React.Component {
+    constructor (props) {
+        super(props);
+        this.state = SideBarStore.getState();
+        this.onChange = this.onChange.bind(this);
+    }
+
+    componentDidMount() {
+        SideBarStore.listen(this.onChange);
+        SideBarActions.getProjects();
+    }
+
+    componentWillUnmount() {
+        SideBarStore.unlisten(this.onChange);
+    }
+
+    onChange (state) {
+        this.setState(state);
+    }
+
+    render () {
+        return (
+            <div className="navbar-default sidebar" role="navigation">
+                <div className="sidebar-nav navbar-collapse">
+                    <SideMenu data={this.state.projects}/>
+                </div>
+            </div>
+        );
+    }
+}
+
+export default SideBar;
