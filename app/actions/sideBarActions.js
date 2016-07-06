@@ -7,21 +7,7 @@ class SideBarActions {
             'getProjectsFail'
         )
     }
-
-    /*
-    getProjectsFail(jqXhr) {
-        return (function (dispath) {
-            return jqXhr;
-        });
-    }
-
-    getProjectsSuccess(data) {
-        return (function (dispath) {
-            return data;
-        });
-    }
-    */
-
+    
     getProjects() {
         $.ajax({
             url: '/api/projects',

@@ -7,11 +7,11 @@ class SideBarStore {
         this.projects = {};
     }
 
-    getProjectsSuccess(data) {
+    onGetProjectsSuccess(data) {
         this.projects = data;
     }
 
-    getProjectsFail(jqXhr) {
+    onGetProjectsFail(jqXhr) {
         // Handle multiple response formats, fallback to HTTP status code number.
    	    toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
     }

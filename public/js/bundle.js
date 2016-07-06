@@ -15,25 +15,59 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var LogWindowActions = function () {
+    function LogWindowActions() {
+        _classCallCheck(this, LogWindowActions);
+
+        this.generateActions('getLogsSuccess', 'getLogsFail');
+    }
+
+    _createClass(LogWindowActions, [{
+        key: 'getLogs',
+        value: function getLogs(project, logname) {
+            var _this = this;
+
+            $.ajax({
+                url: '/api/' + project + '/' + logname + '/logs',
+                dataType: 'json',
+                cache: false
+            }).done(function (data) {
+                _this.getLogsSuccess(data);
+            }).fail(function (jqXhr) {
+                _this.getLogsFail(jqXhr);
+            });
+            return false;
+        }
+    }]);
+
+    return LogWindowActions;
+}();
+
+exports.default = _alt2.default.createActions(LogWindowActions);
+
+},{"../alt":3}],2:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _alt = require('../alt');
+
+var _alt2 = _interopRequireDefault(_alt);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var SideBarActions = function () {
     function SideBarActions() {
         _classCallCheck(this, SideBarActions);
 
         this.generateActions('getProjectsSuccess', 'getProjectsFail');
     }
-
-    /*
-    getProjectsFail(jqXhr) {
-        return (function (dispath) {
-            return jqXhr;
-        });
-    }
-      getProjectsSuccess(data) {
-        return (function (dispath) {
-            return data;
-        });
-    }
-    */
 
     _createClass(SideBarActions, [{
         key: 'getProjects',
@@ -58,7 +92,7 @@ var SideBarActions = function () {
 
 exports.default = _alt2.default.createActions(SideBarActions);
 
-},{"../alt":2}],2:[function(require,module,exports){
+},{"../alt":3}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -73,7 +107,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = new _alt2.default();
 
-},{"alt":"alt"}],3:[function(require,module,exports){
+},{"alt":"alt"}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -121,8 +155,8 @@ var App = function (_React$Component) {
 
 exports.default = App;
 
-},{"react":"react"}],4:[function(require,module,exports){
-"use strict";
+},{"react":"react"}],5:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -130,9 +164,13 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _logWindow = require('./logWindow');
+
+var _logWindow2 = _interopRequireDefault(_logWindow);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -152,24 +190,12 @@ var Content = function (_React$Component) {
     }
 
     _createClass(Content, [{
-        key: "render",
+        key: 'render',
         value: function render() {
             return _react2.default.createElement(
-                "div",
-                { id: "page-wrapper" },
-                _react2.default.createElement(
-                    "div",
-                    { className: "row" },
-                    _react2.default.createElement(
-                        "div",
-                        { className: "col-lg-12" },
-                        _react2.default.createElement(
-                            "h1",
-                            { className: "page-header" },
-                            "LogStream Content!"
-                        )
-                    )
-                )
+                'div',
+                { id: 'page-wrapper' },
+                _react2.default.createElement(_logWindow2.default, null)
             );
         }
     }]);
@@ -179,7 +205,7 @@ var Content = function (_React$Component) {
 
 exports.default = Content;
 
-},{"react":"react"}],5:[function(require,module,exports){
+},{"./logWindow":7,"react":"react"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -234,7 +260,170 @@ var Home = function (_React$Component) {
 
 exports.default = Home;
 
-},{"./content":4,"./navBar":6,"react":"react"}],6:[function(require,module,exports){
+},{"./content":5,"./navBar":8,"react":"react"}],7:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _logWindowStore = require('../stores/logWindowStore');
+
+var _logWindowStore2 = _interopRequireDefault(_logWindowStore);
+
+var _logWindowActions = require('../actions/logWindowActions');
+
+var _logWindowActions2 = _interopRequireDefault(_logWindowActions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LogItem = function (_React$Component) {
+    _inherits(LogItem, _React$Component);
+
+    function LogItem() {
+        _classCallCheck(this, LogItem);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(LogItem).apply(this, arguments));
+    }
+
+    _createClass(LogItem, [{
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement(
+                'tr',
+                null,
+                _react2.default.createElement(
+                    'td',
+                    null,
+                    this.props.time
+                ),
+                _react2.default.createElement(
+                    'td',
+                    null,
+                    this.props.text
+                )
+            );
+        }
+    }]);
+
+    return LogItem;
+}(_react2.default.Component);
+
+var LogWindow = function (_React$Component2) {
+    _inherits(LogWindow, _React$Component2);
+
+    function LogWindow(props) {
+        _classCallCheck(this, LogWindow);
+
+        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
+
+        _this2.state = _logWindowStore2.default.getState();
+        _this2.onChange = _this2.onChange.bind(_this2);
+        return _this2;
+    }
+
+    _createClass(LogWindow, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            _logWindowStore2.default.listen(this.onChange);
+            _logWindowActions2.default.getLogs('LogStream', 'Console');
+        }
+    }, {
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {
+            _logWindowStore2.default.unlisten(this.onChange);
+        }
+    }, {
+        key: 'onChange',
+        value: function onChange(state) {
+            this.setState(state);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var logs = this.state.logs.map(function (item) {
+                try {
+                    item = JSON.parse(item);
+                    var timestring = new Date(item.timestamp).toLocaleTimeString();
+                    return _react2.default.createElement(LogItem, { key: item.timestamp, time: timestring, text: item.logtext });
+                } catch (e) {
+                    item = item.toString();
+                    return _react2.default.createElement(LogItem, { key: item, time: 'NA', text: item });
+                }
+            });
+            return _react2.default.createElement(
+                'div',
+                { className: 'row' },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'col-lg-12', style: { marginTop: "1%" } },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'panel panel-default' },
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'panel-heading' },
+                            'Log Window'
+                        ),
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'panel-body' },
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'dataTable_wrapper' },
+                                _react2.default.createElement(
+                                    'table',
+                                    { className: 'table table-striped table-bordered table-hover', id: 'dataTables-example' },
+                                    _react2.default.createElement(
+                                        'thead',
+                                        null,
+                                        _react2.default.createElement(
+                                            'tr',
+                                            null,
+                                            _react2.default.createElement(
+                                                'th',
+                                                { width: '20%' },
+                                                'Time'
+                                            ),
+                                            _react2.default.createElement(
+                                                'th',
+                                                null,
+                                                'Log'
+                                            )
+                                        )
+                                    ),
+                                    _react2.default.createElement(
+                                        'tbody',
+                                        null,
+                                        logs
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+    }]);
+
+    return LogWindow;
+}(_react2.default.Component);
+
+exports.default = LogWindow;
+
+},{"../actions/logWindowActions":1,"../stores/logWindowStore":12,"react":"react"}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -393,7 +582,7 @@ var NavBar = function (_React$Component3) {
 
 exports.default = NavBar;
 
-},{"./sideBar":7,"react":"react"}],7:[function(require,module,exports){
+},{"./sideBar":9,"react":"react"}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -600,7 +789,7 @@ var SideBar = function (_React$Component5) {
 
 exports.default = SideBar;
 
-},{"../actions/sideBarActions":1,"../stores/sideBarStore":10,"react":"react"}],8:[function(require,module,exports){
+},{"../actions/sideBarActions":2,"../stores/sideBarStore":13,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -625,7 +814,7 @@ _reactDom2.default.render(_react2.default.createElement(
     _routes2.default
 ), document.getElementById('app'));
 
-},{"./routes":9,"react":"react","react-dom":"react-dom","react-router":"react-router"}],9:[function(require,module,exports){
+},{"./routes":11,"react":"react","react-dom":"react-dom","react-router":"react-router"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -654,7 +843,54 @@ exports.default = _react2.default.createElement(
     _react2.default.createElement(_reactRouter.Route, { path: '/', component: _home2.default })
 );
 
-},{"./components/app":3,"./components/home":5,"react":"react","react-router":"react-router"}],10:[function(require,module,exports){
+},{"./components/app":4,"./components/home":6,"react":"react","react-router":"react-router"}],12:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _alt = require('../alt');
+
+var _alt2 = _interopRequireDefault(_alt);
+
+var _logWindowActions = require('../actions/logWindowActions');
+
+var _logWindowActions2 = _interopRequireDefault(_logWindowActions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var LogWindowStore = function () {
+    function LogWindowStore() {
+        _classCallCheck(this, LogWindowStore);
+
+        this.bindActions(_logWindowActions2.default);
+        this.logs = [];
+    }
+
+    _createClass(LogWindowStore, [{
+        key: 'onGetLogsSuccess',
+        value: function onGetLogsSuccess(data) {
+            this.logs = data;
+        }
+    }, {
+        key: 'onGetLogsFail',
+        value: function onGetLogsFail(jqXhr) {
+            // Handle multiple response formats, fallback to HTTP status code number.
+            toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+        }
+    }]);
+
+    return LogWindowStore;
+}();
+
+exports.default = _alt2.default.createStore(LogWindowStore);
+
+},{"../actions/logWindowActions":1,"../alt":3}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -684,13 +920,13 @@ var SideBarStore = function () {
     }
 
     _createClass(SideBarStore, [{
-        key: 'getProjectsSuccess',
-        value: function getProjectsSuccess(data) {
+        key: 'onGetProjectsSuccess',
+        value: function onGetProjectsSuccess(data) {
             this.projects = data;
         }
     }, {
-        key: 'getProjectsFail',
-        value: function getProjectsFail(jqXhr) {
+        key: 'onGetProjectsFail',
+        value: function onGetProjectsFail(jqXhr) {
             // Handle multiple response formats, fallback to HTTP status code number.
             toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
         }
@@ -701,7 +937,7 @@ var SideBarStore = function () {
 
 exports.default = _alt2.default.createStore(SideBarStore);
 
-},{"../actions/sideBarActions":1,"../alt":2}]},{},[8])
+},{"../actions/sideBarActions":2,"../alt":3}]},{},[10])
 
 
 //# sourceMappingURL=bundle.js.map
