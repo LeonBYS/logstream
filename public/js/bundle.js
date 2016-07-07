@@ -20,19 +20,42 @@ var LogWindowActions = function () {
         _classCallCheck(this, LogWindowActions);
 
         this.generateActions('getLogsSuccess', 'getLogsFail');
+        this.internalID = null;
+        this.prevLogs = [];
     }
 
     _createClass(LogWindowActions, [{
+        key: 'changeFocus',
+        value: function changeFocus(project, logname) {
+            var getLastLogTimeStamp = function () {
+                return this.prevLogs.length > 0 ? this.prevLogs[0].timestamp : null;
+            }.bind(this);
+
+            if (this.internalID) {
+                clearInterval(this.internalID);
+                this.prevLogs = [];
+            }
+            this.getLogs(project, logname, getLastLogTimeStamp());
+            this.internalID = setInterval(function () {
+                this.getLogs(project, logname, getLastLogTimeStamp());
+            }.bind(this), 1000);
+        }
+    }, {
         key: 'getLogs',
-        value: function getLogs(project, logname) {
+        value: function getLogs(project, logname, timestamp) {
             var _this = this;
 
+            var url = '/api/' + project + '/' + logname + '/logs';
+            if (timestamp) {
+                url += '?timestamp=' + timestamp;
+            }
             $.ajax({
-                url: '/api/' + project + '/' + logname + '/logs',
+                url: url,
                 dataType: 'json',
                 cache: false
             }).done(function (data) {
-                _this.getLogsSuccess(data);
+                _this.prevLogs = data.concat(_this.prevLogs);
+                _this.getLogsSuccess({ logs: _this.prevLogs, project: project, logname: logname });
             }).fail(function (jqXhr) {
                 _this.getLogsFail(jqXhr);
             });
@@ -338,7 +361,6 @@ var LogWindow = function (_React$Component2) {
         key: 'componentDidMount',
         value: function componentDidMount() {
             _logWindowStore2.default.listen(this.onChange);
-            _logWindowActions2.default.getLogs('LogStream', 'Console');
         }
     }, {
         key: 'componentWillUnmount',
@@ -353,14 +375,14 @@ var LogWindow = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
+            var index = 0;
             var logs = this.state.logs.map(function (item) {
+                index = index + 1;
                 try {
-                    item = JSON.parse(item);
-                    var timestring = new Date(item.timestamp).toLocaleTimeString();
-                    return _react2.default.createElement(LogItem, { key: item.timestamp, time: timestring, text: item.logtext });
+                    var timestring = new Date(item.timestamp).toLocaleString();
+                    return _react2.default.createElement(LogItem, { key: index, time: timestring, text: item.logtext });
                 } catch (e) {
-                    item = item.toString();
-                    return _react2.default.createElement(LogItem, { key: item, time: 'NA', text: item });
+                    return _react2.default.createElement(LogItem, { key: index, time: 'NA', text: item.toString() });
                 }
             });
             return _react2.default.createElement(
@@ -375,7 +397,7 @@ var LogWindow = function (_React$Component2) {
                         _react2.default.createElement(
                             'div',
                             { className: 'panel-heading' },
-                            'Log Window'
+                            this.state.project + '/' + this.state.logname
                         ),
                         _react2.default.createElement(
                             'div',
@@ -603,6 +625,10 @@ var _sideBarActions = require('../actions/sideBarActions');
 
 var _sideBarActions2 = _interopRequireDefault(_sideBarActions);
 
+var _logWindowActions = require('../actions/logWindowActions');
+
+var _logWindowActions2 = _interopRequireDefault(_logWindowActions);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -614,10 +640,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var LognameButton = function (_React$Component) {
     _inherits(LognameButton, _React$Component);
 
-    function LognameButton() {
+    function LognameButton(props) {
         _classCallCheck(this, LognameButton);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(LognameButton).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LognameButton).call(this, props));
+
+        _this.handleClick = _this.handleClick.bind(_this);
+        return _this;
     }
 
     _createClass(LognameButton, [{
@@ -625,13 +654,18 @@ var LognameButton = function (_React$Component) {
         value: function render() {
             return _react2.default.createElement(
                 'li',
-                null,
+                { onClick: this.handleClick },
                 _react2.default.createElement(
                     'a',
                     { style: { cursor: "pointer" } },
                     this.props.logname
                 )
             );
+        }
+    }, {
+        key: 'handleClick',
+        value: function handleClick() {
+            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
         }
     }]);
 
@@ -789,7 +823,7 @@ var SideBar = function (_React$Component5) {
 
 exports.default = SideBar;
 
-},{"../actions/sideBarActions":2,"../stores/sideBarStore":13,"react":"react"}],10:[function(require,module,exports){
+},{"../actions/logWindowActions":1,"../actions/sideBarActions":2,"../stores/sideBarStore":13,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -870,12 +904,16 @@ var LogWindowStore = function () {
 
         this.bindActions(_logWindowActions2.default);
         this.logs = [];
+        this.project = '';
+        this.logname = '';
     }
 
     _createClass(LogWindowStore, [{
         key: 'onGetLogsSuccess',
         value: function onGetLogsSuccess(data) {
-            this.logs = data;
+            this.logs = data.logs;
+            this.project = data.project;
+            this.logname = data.logname;
         }
     }, {
         key: 'onGetLogsFail',

@@ -20,7 +20,6 @@ class LogWindow extends React.Component {
 
     componentDidMount() {
         LogWindowStore.listen(this.onChange);
-        LogWindowActions.getLogs('LogStream', 'Console');
     }
 
     componentWillUnmount() {
@@ -32,16 +31,16 @@ class LogWindow extends React.Component {
     }
 
     render () {
+        var index = 0;
         var logs = this.state.logs.map(item => {
+            index = index + 1;
             try {
-                item = JSON.parse(item);
-                var timestring = new Date(item.timestamp).toLocaleTimeString();
+                var timestring = new Date(item.timestamp).toLocaleString();
                 return (
-                    <LogItem key={item.timestamp} time={timestring} text={item.logtext} />
+                    <LogItem key={index} time={timestring} text={item.logtext} />
                 );
             } catch (e) {
-                item = item.toString();
-                return (<LogItem key={item} time="NA" text={item} />);
+                return (<LogItem key={index} time="NA" text={item.toString()} />);
             }
         });
         return (
@@ -49,7 +48,7 @@ class LogWindow extends React.Component {
                 <div className="col-lg-12" style={{marginTop:"1%"}}>
                     <div className="panel panel-default">
                         <div className="panel-heading">
-                            Log Window
+                            {this.state.project + '/' + this.state.logname}
                         </div>
                         <div className="panel-body">
                             <div className="dataTable_wrapper">

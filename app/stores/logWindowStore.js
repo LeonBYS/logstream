@@ -5,10 +5,14 @@ class LogWindowStore {
     constructor () {
         this.bindActions(LogWindowActions);
         this.logs = [];
+        this.project = '';
+        this.logname = ''; 
     }
 
     onGetLogsSuccess(data) {
-        this.logs = data;
+        this.logs = data.logs;
+        this.project = data.project;
+        this.logname = data.logname;
     }
 
     onGetLogsFail(jqXhr) {

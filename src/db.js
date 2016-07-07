@@ -13,35 +13,43 @@ var dbRedis = {
     getLogs: function (project, logname, timestamp, callback) {
         var lkey = 'logs:' + project + ':' + logname;
         if (!timestamp) {
-            this.client.lrange(lkey, 0, -1, callback);
+            this.client.lrange(lkey, 0, -1, function (err, data) {
+                data = data.map(x => {
+                    return JSON.parse(x); 
+                });
+                callback(null, data);
+            });
         } else {
             // get logs batch by batch, until exceed timestamp, UNTEST
-            timestamp = Number(timestamp);
-            var start = 0, batchsize = 100;
-            var result = [];
-            var lastTimestamp = timestamp;
-            while (lastTimestamp >= timestamp) {
-                this.client.lrange(start, start + batchsize - 1, function (err, data) {
+            var getLogsSteply = function (start, batchsize, result, timestamp) {
+                this.client.lrange(lkey, start, start + batchsize - 1, function (err, data) {
                     if (err) {
                         callback(err, null);
                         return;
                     } else {
-                        data = JSON.parse(data);
-                        result.push.apply(data);
-                        lastTimestamp = result[result.length - 1].timestamp;
+                        //data = JSON.parse(data);
+                        result = result.concat(data.map(x => {return JSON.parse(x);}));
+                        var lastTimestamp = result[result.length - 1].timestamp;
+
+                        // update start position and batchsize
+                        if (lastTimestamp >= timestamp) {
+                            start += batchsize;
+                            batchsize *= 2;
+                            getLogsSteply(start, batchsize, result, timestamp);
+                        }else {
+                            // remove the logs before timestamp
+                            var size = result.length;
+                            while (result[size - 1].timestamp <= timestamp) {
+                                size--;
+                            }
+                            // callback(err=null, result=result)
+                            callback(null, result.slice(0, size));
+                        }
                     }
                 });
-                // update start position and batchsize
-                start += batchsize;
-                batchsize *= 2;
-            }
-            // remove the logs before timestamp
-            var size = result.length;
-            while (result[size - 1].timestamp <= timestamp) {
-                size--;
-            }
-            // callback(err=null, result=result)
-            callback(null, result);
+            }.bind(this);
+                
+            getLogsSteply(0, 100, [], Number(timestamp));
         }
     },
     addLogs: function (project, logname, logtext, timestamp, callback) {

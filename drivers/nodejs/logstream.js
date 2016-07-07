@@ -12,7 +12,7 @@ class LogStream {
     }
 
     log(msg) {
-        var message = '[' + new Date().toLocaleString() + ']';
+        var message = '';
         for (var i=0; i<arguments.length; i++) {
             message += ' ' + arguments[i];
         }

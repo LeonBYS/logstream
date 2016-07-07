@@ -1,10 +1,22 @@
 import React from 'react';
 import SideBarStore from '../stores/sideBarStore';
 import SideBarActions from '../actions/sideBarActions'
+import LogWindowActions from '../actions/logWindowActions';
 
 class LognameButton extends React.Component {
+    constructor (props) {
+        super(props);
+        this.handleClick = this.handleClick.bind(this);
+    }
     render () {
-        return (<li><a style={{cursor:"pointer"}}>{this.props.logname}</a></li>);
+        return (
+            <li onClick={this.handleClick}>
+                <a style={{cursor:"pointer"}}>{this.props.logname}</a>
+            </li>
+        );
+    }
+    handleClick() {
+        LogWindowActions.changeFocus(this.props.project, this.props.logname);
     }
 }
 

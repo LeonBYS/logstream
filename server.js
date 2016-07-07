@@ -39,8 +39,8 @@ app.get('/api/*/*/logs', function (req, res) {
     var logname = req.params[1];
     var timestamp = req.query.timestamp;
     db.getLogs(project, logname, timestamp, function (err, result) {
-        console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname);
-        logstream.log('get', project, logname);
+        console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
+        logstream.log('get', project, logname, timestamp);
 
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(result));
@@ -54,7 +54,7 @@ app.post('/api/*/*/logs', function(req, res) {
     var timestamp = req.query.timestamp || Date.now(); // use server timestamp if user not provide it
     db.addLogs(project, logname, logtext, timestamp, function (err, result) {
         console.log('[' + new Date().toLocaleString() + ']', 'post', project, logname, logtext);
-        //logstream.log('post', project, logname, logtext);
+        //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
         res.send(logtext);
     });
