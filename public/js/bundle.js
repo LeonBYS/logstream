@@ -376,7 +376,7 @@ var LogWindow = function (_React$Component2) {
         key: 'render',
         value: function render() {
             var index = 0;
-            var logs = this.state.logs.map(function (item) {
+            var logs = this.state.logs.slice(0, 100).map(function (item) {
                 index = index + 1;
                 try {
                     var timestring = new Date(item.timestamp).toLocaleString();
@@ -385,19 +385,51 @@ var LogWindow = function (_React$Component2) {
                     return _react2.default.createElement(LogItem, { key: index, time: 'NA', text: item.toString() });
                 }
             });
+
             return _react2.default.createElement(
                 'div',
                 { className: 'row' },
                 _react2.default.createElement(
                     'div',
-                    { className: 'col-lg-12', style: { marginTop: "1%" } },
+                    { className: 'col-lg-12', style: { marginTop: "5px" } },
                     _react2.default.createElement(
                         'div',
                         { className: 'panel panel-default' },
                         _react2.default.createElement(
                             'div',
                             { className: 'panel-heading' },
-                            this.state.project + '/' + this.state.logname
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'row' },
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'col-md-4' },
+                                    _react2.default.createElement(
+                                        'h4',
+                                        null,
+                                        this.state.project + '/' + this.state.logname + '(' + this.state.logs.length + ')'
+                                    )
+                                ),
+                                _react2.default.createElement('div', { className: 'col-md-4' }),
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'col-md-4 text-right' },
+                                    _react2.default.createElement(
+                                        'div',
+                                        { className: 'input-group custom-search-form', style: { marginTop: "1%" } },
+                                        _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Filter...' }),
+                                        _react2.default.createElement(
+                                            'span',
+                                            { className: 'input-group-btn' },
+                                            _react2.default.createElement(
+                                                'button',
+                                                { className: 'btn btn-default', type: 'button' },
+                                                _react2.default.createElement('i', { className: 'fa fa-filter' })
+                                            )
+                                        )
+                                    )
+                                )
+                            )
                         ),
                         _react2.default.createElement(
                             'div',

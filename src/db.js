@@ -10,6 +10,15 @@ var dbRedis = {
             tls: tls,
         });
     },
+    
+    /**
+     * add a log to a specific log branch (project, logname)
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} logtext
+     * @param {number} timestamp
+     * @param {function(err, result)} callback 
+     */
     getLogs: function (project, logname, timestamp, callback) {
         var lkey = 'logs:' + project + ':' + logname;
         if (!timestamp) {
@@ -27,8 +36,11 @@ var dbRedis = {
                         callback(err, null);
                         return;
                     } else {
-                        //data = JSON.parse(data);
                         result = result.concat(data.map(x => {return JSON.parse(x);}));
+                        if (result.length == 0) { // there is no log data in this branch (very hard to hit...)
+                            callback(null, []);
+                            return;
+                        } 
                         var lastTimestamp = result[result.length - 1].timestamp;
 
                         // update start position and batchsize
@@ -42,7 +54,6 @@ var dbRedis = {
                             while (result[size - 1].timestamp <= timestamp) {
                                 size--;
                             }
-                            // callback(err=null, result=result)
                             callback(null, result.slice(0, size));
                         }
                     }
@@ -52,25 +63,42 @@ var dbRedis = {
             getLogsSteply(0, 100, [], Number(timestamp));
         }
     },
+
+    /**
+     * add a log to a specific log branch (project, logname)
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} logtext
+     * @param {number} timestamp
+     * @param {function(err, result)} callback 
+     */
     addLogs: function (project, logname, logtext, timestamp, callback) {
         var lkey = 'logs:' + project + ':' + logname;
-        var lval = JSON.stringify({ timestamp: Number(timestamp), logtext: logtext });
+        var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext });
         this.client.lpush(lkey, lval, callback);
     },
 
+    /**
+     * get projects with it's log branchs
+     * @param {function(err, result)} callback 
+     */
     getProjectsAndLognames: function (callback) {
         this.client.keys("logs:*", function (err, result) {
-            var set = {};
-            for (var i=0; i<result.length; i++) {
-                var arr = result[i].split(':');
-                var project = arr[1];
-                var logname = arr[2];
-                if (!(project in set)) {
-                    set[project] = []
+            if (err) {
+                callback(err, null);
+            }else {
+                var set = {};
+                for (var i=0; i<result.length; i++) {
+                    var arr = result[i].split(':');
+                    var project = arr[1];
+                    var logname = arr[2];
+                    if (!(project in set)) {
+                        set[project] = []
+                    }
+                    set[project].push(logname);
                 }
-                set[project].push(logname);
+                callback(null, set);
             }
-            callback(err, set);
         });
     }
 };

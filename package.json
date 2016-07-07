@@ -20,7 +20,6 @@
     "alt": "^0.18.4",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
-    "gulp": "^3.9.1",
     "ioredis": "^2.1.0",
     "mocha": "^2.5.3",
     "react": "^15.2.0",
@@ -39,7 +38,7 @@
     "babelify": "^7.2.0",
     "bower": "^1.7.9",
     "browserify": "^12.0.1",
-    "gulp": "^3.9.0",
+    "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.0",
     "gulp-concat": "^2.6.0",
     "gulp-cssmin": "^0.1.7",
@@ -51,6 +50,7 @@
     "gulp-util": "^3.0.7",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.6.0"
+    "watchify": "^3.6.0",
+    "supertest": "^1.2.0"
   }
 }

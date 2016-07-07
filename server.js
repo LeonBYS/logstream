@@ -38,12 +38,22 @@ app.get('/api/*/*/logs', function (req, res) {
     var project = req.params[0];
     var logname = req.params[1];
     var timestamp = req.query.timestamp;
-    db.getLogs(project, logname, timestamp, function (err, result) {
-        console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
-        logstream.log('get', project, logname, timestamp);
+    if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
+        timestamp = Number(req.query.timestamp); // use user provided timestamp
+    }else {
+        timestamp = null; // give it null
+    }
 
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(result));
+    console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
+    logstream.log('get', project, logname, timestamp);
+
+    db.getLogs(project, logname, timestamp, function (err, result) {
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(result));
+        }
     });
 });
 
@@ -51,53 +61,39 @@ app.post('/api/*/*/logs', function(req, res) {
     var project = req.params[0];
     var logname = req.params[1];
     var logtext = req.body;
-    var timestamp = req.query.timestamp || Date.now(); // use server timestamp if user not provide it
+    var timestamp = req.query.timestamp; 
+    if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
+        timestamp = Number(req.query.timestamp); // use user provided timestamp
+    }else {
+        timestamp = Date.now(); // use server timestamp if user not provide it
+    }
+
+    console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
+    //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
+
     db.addLogs(project, logname, logtext, timestamp, function (err, result) {
-        console.log('[' + new Date().toLocaleString() + ']', 'post', project, logname, logtext);
-        //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
-
-        res.send(logtext);
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.status(200).send(logtext);
+        }
     });
-});
-
-// Commands
-app.get('/*/*/commands', function(req, res) {
-    res.send('invalid now...');
-});
-
-app.post('/*/*/commands', function(req, res) {
-    res.send('invalid now...');
-});
-// app.delete commands
-
-// Setting
-app.get('/*/*/setting', function(req, res) {
-    res.send('invalid now...');
-});
-
-app.post('/*/*/setting', function(req, res) {
-    res.send('invalid now...');
 });
 
 // meta data
 app.get('/api/projects', function (req, res) {
-    db.getProjectsAndLognames(function (err, result) {
-        console.log('[' + new Date().toLocaleString() + ']', 'get projects');
-        logstream.log('get projects');
-
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(result));
+    console.log('[' + new Date().toLocaleString() + ']', 'get projects');
+    logstream.log('GET projects');
+        
+    db.getProjectsAndLognames(function (err, result) {    
+        if (err) {
+            res.status(500).send({error:err});
+        }else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(result));
+        }
     });
 });
-
-
-// root page
-/*
-app.get('/', function (req, res) {
-    res.sendFile('./public/index.html');
-})
-*/
-
 
 
 app.use(function (req, res) {
@@ -124,3 +120,6 @@ var server = http.listen(process.env.PORT || 3333, function() {
     console.log('Server listening at http://%s:%s', host, port);
 });
 
+
+
+module.exports = app;

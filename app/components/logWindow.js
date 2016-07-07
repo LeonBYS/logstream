@@ -1,6 +1,10 @@
+'use strict'
+
 import React from 'react'
 import LogWindowStore from '../stores/logWindowStore';
 import LogWindowActions from '../actions/logWindowActions'
+
+
 
 class LogItem extends React.Component {
     render () {
@@ -9,7 +13,6 @@ class LogItem extends React.Component {
         );
     }
 }
-
 
 class LogWindow extends React.Component {
     constructor (props) {
@@ -32,7 +35,7 @@ class LogWindow extends React.Component {
 
     render () {
         var index = 0;
-        var logs = this.state.logs.map(item => {
+        var logs = this.state.logs.slice(0, 100).map(item => {
             index = index + 1;
             try {
                 var timestring = new Date(item.timestamp).toLocaleString();
@@ -43,15 +46,32 @@ class LogWindow extends React.Component {
                 return (<LogItem key={index} time="NA" text={item.toString()} />);
             }
         });
+
         return (
              <div className="row">
-                <div className="col-lg-12" style={{marginTop:"1%"}}>
+                <div className="col-lg-12" style={{marginTop:"5px"}}>
                     <div className="panel panel-default">
                         <div className="panel-heading">
-                            {this.state.project + '/' + this.state.logname}
+                            <div className="row">
+                                <div className="col-md-4">
+                                    <h4>{this.state.project + '/' + this.state.logname + '(' + this.state.logs.length + ')'}</h4>
+                                </div>
+                                <div className="col-md-4">
+                                </div>
+                                <div className="col-md-4 text-right">
+                                    <div className="input-group custom-search-form" style={{marginTop:"1%"}}>
+                                        <input type="text" className="form-control" placeholder="Filter..." />
+                                        <span className="input-group-btn">
+                                            <button className="btn btn-default" type="button">
+                                                <i className="fa fa-filter"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div className="panel-body">
-                            <div className="dataTable_wrapper">
+                            <div className="dataTable_wrapper">                    
                                 <table className="table table-striped table-bordered table-hover" id="dataTables-example">
                                     <thead>
                                         <tr><th width="20%">Time</th><th>Log</th></tr>
