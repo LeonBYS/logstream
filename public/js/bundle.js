@@ -25,6 +25,16 @@ var LogWindowActions = function () {
     }
 
     _createClass(LogWindowActions, [{
+        key: 'changePage',
+        value: function changePage(move) {
+            return move;
+        }
+    }, {
+        key: 'changePageSize',
+        value: function changePageSize(pageSize) {
+            return pageSize;
+        }
+    }, {
         key: 'changeFocus',
         value: function changeFocus(project, logname) {
             var getLastLogTimeStamp = function () {
@@ -344,17 +354,131 @@ var LogItem = function (_React$Component) {
     return LogItem;
 }(_react2.default.Component);
 
-var LogWindow = function (_React$Component2) {
-    _inherits(LogWindow, _React$Component2);
+var LogPageBar = function (_React$Component2) {
+    _inherits(LogPageBar, _React$Component2);
+
+    function LogPageBar(props) {
+        _classCallCheck(this, LogPageBar);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(LogPageBar).call(this, props));
+    }
+
+    _createClass(LogPageBar, [{
+        key: 'handleChangePageSize',
+        value: function handleChangePageSize(pageSize) {
+            _logWindowActions2.default.changePageSize(pageSize);
+        }
+    }, {
+        key: 'handleChangePage',
+        value: function handleChangePage(move) {
+            _logWindowActions2.default.changePage(move);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this3 = this;
+
+            var start = this.props.page * this.props.pageSize;
+            var end = start + this.props.pageSize - 1;
+
+            return _react2.default.createElement(
+                'div',
+                { style: { marginBottom: "6px" }, className: 'btn-toolbar', role: 'toolbar' },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'btn-group', role: 'group', style: { marginRight: "15px" } },
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', className: 'btn btn-default dropdown-toggle', 'data-toggle': 'dropdown', 'aria-haspopup': 'true', 'aria-expanded': 'false' },
+                        "PageSize:" + this.props.pageSize,
+                        _react2.default.createElement('span', { className: 'caret' })
+                    ),
+                    _react2.default.createElement(
+                        'ul',
+                        { className: 'dropdown-menu' },
+                        _react2.default.createElement(
+                            'li',
+                            null,
+                            _react2.default.createElement(
+                                'a',
+                                { href: '#', onClick: function onClick() {
+                                        _this3.handleChangePageSize(50);
+                                    } },
+                                '50'
+                            )
+                        ),
+                        _react2.default.createElement(
+                            'li',
+                            null,
+                            _react2.default.createElement(
+                                'a',
+                                { href: '#', onClick: function onClick() {
+                                        _this3.handleChangePageSize(100);
+                                    } },
+                                '100'
+                            )
+                        )
+                    )
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'btn-group', role: 'group' },
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
+                                _this3.handleChangePage(-_this3.props.page);
+                            } },
+                        _react2.default.createElement('span', { className: 'fa fa-fast-backward', 'aria-hidden': 'true' })
+                    ),
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
+                                _this3.handleChangePage(-1);
+                            } },
+                        _react2.default.createElement('span', { className: 'fa fa-backward', 'aria-hidden': 'true' })
+                    )
+                ),
+                _react2.default.createElement(
+                    'span',
+                    { className: 'btn-group', style: { fontSize: "1.5em", marginLeft: "10px", marginRight: "5px", marginTop: "2px" } },
+                    start + "-" + end
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'btn-group', role: 'group' },
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
+                                _this3.handleChangePage(1);
+                            } },
+                        _react2.default.createElement('span', { className: 'fa fa-forward', 'aria-hidden': 'true' })
+                    ),
+                    _react2.default.createElement(
+                        'button',
+                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
+                                _this3.handleChangePage(100000000);
+                            } },
+                        _react2.default.createElement('span', { className: 'fa fa-fast-forward', 'aria-hidden': 'true' })
+                    )
+                )
+            );
+        }
+    }]);
+
+    return LogPageBar;
+}(_react2.default.Component);
+
+var LogWindow = function (_React$Component3) {
+    _inherits(LogWindow, _React$Component3);
 
     function LogWindow(props) {
         _classCallCheck(this, LogWindow);
 
-        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
 
-        _this2.state = _logWindowStore2.default.getState();
-        _this2.onChange = _this2.onChange.bind(_this2);
-        return _this2;
+        _this4.state = _logWindowStore2.default.getState();
+        _this4.onChange = _this4.onChange.bind(_this4);
+        return _this4;
     }
 
     _createClass(LogWindow, [{
@@ -375,11 +499,12 @@ var LogWindow = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
-            var index = 0;
-            var logs = this.state.logs.slice(0, 100).map(function (item) {
+            var start = this.state.page * this.state.pageSize;
+            var index = start;
+            var logs = this.state.logs.slice(start, start + this.state.pageSize).map(function (item) {
                 index = index + 1;
                 try {
-                    var timestring = new Date(item.timestamp).toLocaleString();
+                    var timestring = new Date(Number(item.timestamp)).toLocaleString();
                     return _react2.default.createElement(LogItem, { key: index, time: timestring, text: item.logtext });
                 } catch (e) {
                     return _react2.default.createElement(LogItem, { key: index, time: 'NA', text: item.toString() });
@@ -417,15 +542,11 @@ var LogWindow = function (_React$Component2) {
                                     _react2.default.createElement(
                                         'div',
                                         { className: 'input-group custom-search-form', style: { marginTop: "1%" } },
-                                        _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Filter...' }),
+                                        _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Filter... not avaliable now...' }),
                                         _react2.default.createElement(
-                                            'span',
-                                            { className: 'input-group-btn' },
-                                            _react2.default.createElement(
-                                                'button',
-                                                { className: 'btn btn-default', type: 'button' },
-                                                _react2.default.createElement('i', { className: 'fa fa-filter' })
-                                            )
+                                            'div',
+                                            { className: 'input-group-addon' },
+                                            _react2.default.createElement('i', { className: 'fa fa-filter' })
                                         )
                                     )
                                 )
@@ -434,6 +555,7 @@ var LogWindow = function (_React$Component2) {
                         _react2.default.createElement(
                             'div',
                             { className: 'panel-body' },
+                            _react2.default.createElement(LogPageBar, { page: this.state.page, pageSize: this.state.pageSize }),
                             _react2.default.createElement(
                                 'div',
                                 { className: 'dataTable_wrapper' },
@@ -761,15 +883,11 @@ var MenuSearchbar = function (_React$Component3) {
                 _react2.default.createElement(
                     'div',
                     { className: 'input-group custom-search-form' },
-                    _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search...' }),
+                    _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search... not avaliable now...' }),
                     _react2.default.createElement(
-                        'span',
-                        { className: 'input-group-btn' },
-                        _react2.default.createElement(
-                            'button',
-                            { className: 'btn btn-default', type: 'button' },
-                            _react2.default.createElement('i', { className: 'fa fa-search' })
-                        )
+                        'div',
+                        { className: 'input-group-addon' },
+                        _react2.default.createElement('i', { className: 'fa fa-search' })
                     )
                 )
             );
@@ -935,12 +1053,42 @@ var LogWindowStore = function () {
         _classCallCheck(this, LogWindowStore);
 
         this.bindActions(_logWindowActions2.default);
+        // data
         this.logs = [];
         this.project = '';
         this.logname = '';
+
+        // data for component
+        this.page = 0;
+        this.pageSize = 50;
+        //this.filter = '';
     }
 
     _createClass(LogWindowStore, [{
+        key: 'onChangePage',
+        value: function onChangePage(move) {
+            var maxPage = this.logs.length / this.pageSize;
+            if (this.logs.length % this.pageSize !== 0) {
+                maxPage++;
+            }
+
+            // page in [0, maxPage-1]
+            var newPage = this.page + move;
+            if (newPage < 0) {
+                newPage = 0;
+            }
+            if (newPage > maxPage - 1) {
+                newPage = maxPage - 1;
+            }
+
+            this.page = newPage;
+        }
+    }, {
+        key: 'onChangePageSize',
+        value: function onChangePageSize(pageSize) {
+            this.pageSize = pageSize;
+        }
+    }, {
         key: 'onGetLogsSuccess',
         value: function onGetLogsSuccess(data) {
             this.logs = data.logs;

@@ -41,13 +41,9 @@ class MenuSearchbar extends React.Component {
         return (
             <li className="sidebar-search">
                 <div className="input-group custom-search-form">
-                    <input type="text" className="form-control" placeholder="Search..." />
-                    <span className="input-group-btn">
-                        <button className="btn btn-default" type="button">
-                            <i className="fa fa-search"></i>
-                        </button>
-                    </span>
-                </div>
+                    <input type="text" className="form-control" placeholder="Search... not avaliable now..." />
+                    <div className="input-group-addon"><i className="fa fa-search"></i></div>
+                </div> 
             </li>
         );
     }

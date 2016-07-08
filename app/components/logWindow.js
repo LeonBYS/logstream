@@ -14,6 +14,67 @@ class LogItem extends React.Component {
     }
 }
 
+class LogPageBar extends React.Component {
+    constructor (props) {
+        super(props);
+    }
+
+    handleChangePageSize(pageSize) {
+        LogWindowActions.changePageSize(pageSize);
+    }
+
+    handleChangePage(move) {
+        LogWindowActions.changePage(move);
+    }
+
+    render () {
+        var start = this.props.page * this.props.pageSize;
+        var end = start + this.props.pageSize - 1;
+        
+        return (
+            <div style={{marginBottom:"6px"}} className="btn-toolbar" role="toolbar">
+                <div className="btn-group" role="group" style={{marginRight:"15px"}}>
+                    <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {"PageSize:" + this.props.pageSize}
+                        <span className="caret"></span>
+                    </button>
+                    <ul className="dropdown-menu">
+                        <li><a href="#" onClick={()=>{this.handleChangePageSize(50);}}>50</a></li>
+                        <li><a href="#" onClick={()=>{this.handleChangePageSize(100);}}>100</a></li>
+                    </ul>
+                </div>
+
+                <div className="btn-group" role="group">
+                    <button type="button" className="btn btn-default" onClick={()=>{this.handleChangePage(-this.props.page);}}>
+                        <span className="fa fa-fast-backward" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" className="btn btn-default" onClick={()=>{this.handleChangePage(-1);}}>
+                        <span className="fa fa-backward" aria-hidden="true"></span>
+                    </button>
+                </div>
+                
+                <span className="btn-group" style={{fontSize:"1.5em", marginLeft:"10px", marginRight:"5px", marginTop:"2px"}}>
+                    {start + "-" + end}
+                </span>
+
+                <div className="btn-group" role="group">
+                    <button type="button" className="btn btn-default" onClick={()=>{this.handleChangePage(1);}}>
+                        <span className="fa fa-forward" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" className="btn btn-default" onClick={()=>{this.handleChangePage(100000000);}}>
+                        <span className="fa fa-fast-forward" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        );
+    }
+}
+
+
+
+
+
+
 class LogWindow extends React.Component {
     constructor (props) {
         super(props);
@@ -34,11 +95,12 @@ class LogWindow extends React.Component {
     }
 
     render () {
-        var index = 0;
-        var logs = this.state.logs.slice(0, 100).map(item => {
+        var start = this.state.page * this.state.pageSize;
+        var index = start;
+        var logs = this.state.logs.slice(start, start + this.state.pageSize).map(item => {
             index = index + 1;
             try {
-                var timestring = new Date(item.timestamp).toLocaleString();
+                var timestring = new Date(Number(item.timestamp)).toLocaleString();
                 return (
                     <LogItem key={index} time={timestring} text={item.logtext} />
                 );
@@ -60,17 +122,14 @@ class LogWindow extends React.Component {
                                 </div>
                                 <div className="col-md-4 text-right">
                                     <div className="input-group custom-search-form" style={{marginTop:"1%"}}>
-                                        <input type="text" className="form-control" placeholder="Filter..." />
-                                        <span className="input-group-btn">
-                                            <button className="btn btn-default" type="button">
-                                                <i className="fa fa-filter"></i>
-                                            </button>
-                                        </span>
+                                        <input type="text" className="form-control" placeholder="Filter... not avaliable now..." />
+                                        <div className="input-group-addon"><i className="fa fa-filter"></i></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="panel-body">
+                            <LogPageBar page={this.state.page} pageSize={this.state.pageSize} />
                             <div className="dataTable_wrapper">                    
                                 <table className="table table-striped table-bordered table-hover" id="dataTables-example">
                                     <thead>

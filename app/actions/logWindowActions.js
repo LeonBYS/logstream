@@ -10,6 +10,14 @@ class LogWindowActions {
         this.prevLogs = [];
     }
 
+    changePage(move) {
+        return move;
+    }
+
+    changePageSize(pageSize) {
+        return pageSize;
+    }
+
     changeFocus(project, logname) {
         var getLastLogTimeStamp = function() {
             return this.prevLogs.length > 0 ? this.prevLogs[0].timestamp : null;

@@ -11,6 +11,6 @@ describe('test api', function() {
 
     it('404 everything else', (done) => {
         request(app).get('/api/some-strange-thing').expect(404, done);
-    })
+    });
 });
 
