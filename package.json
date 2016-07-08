@@ -2,17 +2,55 @@
   "name": "logstream",
   "version": "1.0.0",
   "description": "log stream.",
-  "main": "server.js",
-  "scripts": {
-    "test": "mocha"
-  },
   "author": "WXY",
   "license": "ISC",
+  "main": "server.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "node server.js",
+    "watch": "nodemon server.js"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "react"
+    ]
+  },
   "dependencies": {
+    "alt": "^0.18.4",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "ioredis": "^2.1.0",
     "mocha": "^2.5.3",
-    "socket.io": "^1.4.8"
+    "react": "^15.2.0",
+    "react-dom": "^15.2.0",
+    "react-router": "^2.5.2",
+    "serve-favicon": "^2.3.0",
+    "socket.io": "^1.4.8",
+    "swig": "^1.4.2",
+    "underscore": "^1.8.3",
+    "babel-core": "^6.1.19",
+    "babel-preset-es2015": "^6.1.18",
+    "babel-preset-react": "^6.1.18",
+    "babel-register": "^6.3.13",
+    "babelify": "^7.2.0"
+  },
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "browserify": "^12.0.1",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-cssmin": "^0.1.7",
+    "gulp-if": "^2.0.0",
+    "gulp-less": "^3.0.3",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^1.4.2",
+    "gulp-util": "^3.0.7",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.6.0",
+    "supertest": "^1.2.0"
   }
 }

@@ -9,10 +9,11 @@ class LogStream {
         this.port = port;
         this.project = project;
         this.logname = logname;
+        this.log = this.log.bind(this);
     }
 
     log(msg) {
-        var message = '[' + new Date().toLocaleString() + ']';
+        var message = '';
         for (var i=0; i<arguments.length; i++) {
             message += ' ' + arguments[i];
         }
@@ -26,7 +27,7 @@ class LogStream {
         };
         var req = http.request(options);
         req.on('error', function (e) {
-            console.log('LogStream', message, 'FAILED!');
+            console.log('LogStream.Log(', message, ') FAILED!');
         });
         req.write(message);
         req.end();
