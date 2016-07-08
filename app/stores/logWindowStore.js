@@ -16,15 +16,14 @@ class LogWindowStore {
     }
 
     onChangePage(move) {
-        var maxPage = this.logs.length / this.pageSize;
-        if (this.logs.length % this.pageSize !== 0) {
-            maxPage++;
-        }
+        var mod = (this.logs.length % this.pageSize);
+        var maxPage = (this.logs.length - mod) / this.pageSize;
+        if (mod !== 0) { maxPage++; }
 
         // page in [0, maxPage-1]
         var newPage = this.page + move;
+        if (newPage > maxPage - 1) { newPage = maxPage -1; }
         if (newPage < 0) { newPage = 0; }
-        if (newPage > maxPage - 1) {newPage = maxPage -1; }
 
         this.page = newPage;
     }
