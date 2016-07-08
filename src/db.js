@@ -9,6 +9,7 @@ var dbRedis = {
             password: password,
             tls: tls,
         });
+        this.prefix = "logstream>";
     },
     
     /**
@@ -20,7 +21,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     getLogs: function (project, logname, timestamp, callback) {
-        var lkey = 'logs:' + project + ':' + logname;
+        var lkey = this.prefix + 'logs:' + project + ':' + logname;
         if (!timestamp) {
             this.client.lrange(lkey, 0, -1, function (err, data) {
                 data = data.map(x => {
@@ -51,7 +52,7 @@ var dbRedis = {
                         }else {
                             // remove the logs before timestamp
                             var size = result.length;
-                            while (result[size - 1].timestamp <= timestamp) {
+                            while (size > 0 && result[size - 1].timestamp <= timestamp) {
                                 size--;
                             }
                             callback(null, result.slice(0, size));
@@ -73,7 +74,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     addLogs: function (project, logname, logtext, timestamp, callback) {
-        var lkey = 'logs:' + project + ':' + logname;
+        var lkey = this.prefix + 'logs:' + project + ':' + logname;
         var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext });
         this.client.lpush(lkey, lval, callback);
     },
@@ -83,7 +84,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     getProjectsAndLognames: function (callback) {
-        this.client.keys("logs:*", function (err, result) {
+        this.client.keys(this.prefix + "logs:*", function (err, result) {
             if (err) {
                 callback(err, null);
             }else {

@@ -883,7 +883,7 @@ var MenuSearchbar = function (_React$Component3) {
                 _react2.default.createElement(
                     'div',
                     { className: 'input-group custom-search-form' },
-                    _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search... not avaliable now...' }),
+                    _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search... not avaliable now... ' }),
                     _react2.default.createElement(
                         'div',
                         { className: 'input-group-addon' },
