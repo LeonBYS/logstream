@@ -8,7 +8,7 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'logstream-test.azurewebsites.net/', 80, 'LogStream', 'Console'
+    'logstream-test.azurewebsites.net', 80, 'LogStream', 'Console'
 );
 
 /* react */
@@ -46,7 +46,7 @@ app.get('/api/*/*/logs', function (req, res) {
     }
 
     console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
-    logstream.log('get', project, logname, timestamp);
+    //logstream.log('get', project, logname, timestamp);
 
     db.getLogs(project, logname, timestamp, function (err, result) {
         if (err) {
