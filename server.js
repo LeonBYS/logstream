@@ -1,3 +1,6 @@
+'use strict'
+
+require('babel-register');
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
@@ -8,9 +11,7 @@ var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
     'logstream-test.azurewebsites.net/', 80, 'LogStream', 'Console'
 );
 
-
 /* react */
-require('babel-register');
 var swig = require('swig');
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -26,7 +27,7 @@ app.use(express.static('public'));
 
 db.connect(
     process.env.REDIS_HOST,
-    process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : null,
+    process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
     process.env.REDIS_PASSWORD,
     process.env.REDIS_HOST ? {servername: process.env.REDIS_HOST} : null
 );
