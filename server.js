@@ -5,7 +5,7 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'localhost', 3333, 'LogStream', 'Console'
+    'logstream-test.azurewebsites.net/', 80, 'LogStream', 'Console'
 );
 
 
@@ -24,12 +24,12 @@ app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
 
 
-
-
-
-
-
-db.connect();
+db.connect(
+    process.env.REDIS_HOST,
+    process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : null,
+    process.env.REDIS_PASSWORD,
+    process.env.REDIS_HOST ? {servername: process.env.REDIS_HOST} : null
+);
 
 
 /* RESTful API*/
