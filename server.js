@@ -8,7 +8,7 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'localhost', 3333, 'LogStream', 'Console'
+    'logstream-test.azurewebsites.net', 80, 'LogStream', 'Console'
 );
 
 /* react */
@@ -81,66 +81,67 @@ app.post('/api/*/*/logs', function(req, res) {
     });
 });
 
-// Commands
-app.get('/api/*/*/commands', function (req, res) {
-    console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
-    logstream.log('GET commands');
 
-    var project = req.params[0];
-    var logname = req.params[1];
-    db.getCommands(project, logname, (err, result) => {
-        if (err) {
-            res.status(500).send({error: err});
-        }else {
-            res.setHeader('Content-Type', 'application/json');
-            res.status(200).send(JSON.stringify(result));
-        }
-    });
-});
+// Commands, UNTEST
+// app.get('/api/*/*/commands', function (req, res) {
+//     console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
+//     logstream.log('GET commands');
 
-app.post('/api/*/*/commands', function (req, res) {
-    console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
-    logstream.log('POST commands');
+//     var project = req.params[0];
+//     var logname = req.params[1];
+//     db.getCommands(project, logname, (err, result) => {
+//         if (err) {
+//             res.status(500).send({error: err});
+//         }else {
+//             res.setHeader('Content-Type', 'application/json');
+//             res.status(200).send(JSON.stringify(result));
+//         }
+//     });
+// });
 
-    var project = req.params[0];
-    var logname = req.params[1];
-    var commands = req.body;
+// app.post('/api/*/*/commands', function (req, res) {
+//     console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
+//     logstream.log('POST commands');
 
-    if (!commands || typeof(commands) !== 'array') {
-        res.status(500).send({error: 'command list is needed!'});
-    }else {
-        for (var i=0; i<commands.length; i++) {
-            if (!commands[i].name || commands[i].name.length === 0) {
-                res.status(500).send({error: 'command list is needed!'});
-                return;
-            }
-            commands[i].url = commands[i].url || '#';
-        }
-        db.addCommand(project, logname, commands, (err, result) => {
-            if (err) {
-                res.status(500).send({error: err});
-            }else {
-                res.setHeader('Content-Type', 'application/json');
-                res.status(200).send(commands);
-            }
-        });
-    }
-});
+//     var project = req.params[0];
+//     var logname = req.params[1];
+//     var commands = req.body;
 
-app.delete('/api/*/*/commands', function (req, res) {
-    console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
-    logstream.log('DELETE commands');
+//     if (!commands || typeof(commands) !== 'array') {
+//         res.status(500).send({error: 'command list is needed!'});
+//     }else {
+//         for (var i=0; i<commands.length; i++) {
+//             if (!commands[i].name || commands[i].name.length === 0) {
+//                 res.status(500).send({error: 'command list is needed!'});
+//                 return;
+//             }
+//             commands[i].url = commands[i].url || '#';
+//         }
+//         db.addCommand(project, logname, commands, (err, result) => {
+//             if (err) {
+//                 res.status(500).send({error: err});
+//             }else {
+//                 res.setHeader('Content-Type', 'application/json');
+//                 res.status(200).send(commands);
+//             }
+//         });
+//     }
+// });
 
-    var project = req.params[0];
-    var logname = req.params[1];
-    db.delCommands(project, logname, (err, result) => {
-        if (err) {
-            res.status(500).send({error: err});
-        }else {
-            res.status(200).send("DELETE OK!");
-        }
-    });
-});
+// app.delete('/api/*/*/commands', function (req, res) {
+//     console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
+//     logstream.log('DELETE commands');
+
+//     var project = req.params[0];
+//     var logname = req.params[1];
+//     db.delCommands(project, logname, (err, result) => {
+//         if (err) {
+//             res.status(500).send({error: err});
+//         }else {
+//             res.status(200).send("DELETE OK!");
+//         }
+//     });
+// });
 
 // meta data
 app.get('/api/projects', function (req, res) {
