@@ -24,18 +24,19 @@ var dbRedis = {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
         if (!timestamp) {
             this.client.lrange(lkey, 0, -1, function (err, data) {
-                data = data.map(x => {
-                    return JSON.parse(x); 
-                });
-                callback(null, data);
+                if (err) {
+                    callback(err, null);
+                }else {
+                    data = data.map(x => JSON.parse(x));
+                    callback(null, data);
+                }
             });
         } else {
-            // get logs batch by batch, until exceed timestamp, UNTEST
+            // get logs batch by batch, until exceed timestamp
             var getLogsSteply = function (start, batchsize, result, timestamp) {
                 this.client.lrange(lkey, start, start + batchsize - 1, function (err, data) {
                     if (err) {
                         callback(err, null);
-                        return;
                     } else {
                         result = result.concat(data.map(x => {return JSON.parse(x);}));
                         if (result.length == 0) { // there is no log data in this branch (very hard to hit...)
@@ -73,7 +74,7 @@ var dbRedis = {
      * @param {number} timestamp
      * @param {function(err, result)} callback 
      */
-    addLogs: function (project, logname, logtext, timestamp, callback) {
+    addLog: function (project, logname, logtext, timestamp, callback) {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
         var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext });
         this.client.lpush(lkey, lval, callback);
@@ -83,7 +84,7 @@ var dbRedis = {
      * get projects with it's log branchs
      * @param {function(err, result)} callback 
      */
-    getProjectsAndLognames: function (callback) {
+    getProjects: function (callback) {
         this.client.keys(this.prefix + "logs:*", function (err, result) {
             if (err) {
                 callback(err, null);
@@ -98,9 +99,57 @@ var dbRedis = {
                     }
                     set[project].push(logname);
                 }
-                callback(null, set);
+                var result = [];
+                for (var key in set) {
+                    result.push({name:key, lognames:set[key]})
+                }
+                callback(null, result);
             }
         });
+    },
+
+    /**
+     * get commands with it's log branchs
+     * @param {string} project
+     * @param {string} logname
+     * @param {function(err, result)} callback 
+     */
+    getCommands: function (project, logname, callback) {
+        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        this.client.lrange(lkey, 0, -1, function (err, data) {
+            if (err) {
+                callback(err, null);
+            }else {
+                data = data.map(x => JSON.parse(x));
+                callback(null, data);
+            }
+        });
+    },
+
+    /**
+     * delete commands of a specific log branch
+     * @param {string} project
+     * @param {string} logname
+     * @param {function(err, result)} callback 
+     */
+    delCommands: function (project, logname, callback) {
+        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        this.client.del(lkey, callback);
+    },
+
+    /**
+     * add commands to specific log branch
+     * @param {string} project
+     * @param {string} logname
+     * @param {array of {name:xx, url:xx}} commands
+     * @param {function(err, result)} callback 
+     */
+    addCommand: function (project, logname, commands, callback) {
+        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        var lvals = commands.map(command => JSON.stringify(command));
+        var params = [lkey].concat(lvals);
+        params.push(callback);
+        this.client.lpush.apply(this.client, params);
     }
 };
 

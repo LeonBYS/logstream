@@ -37,11 +37,20 @@ class ProjectMenu extends React.Component {
 }
 
 class MenuSearchbar extends React.Component {
+    constructor (props) {
+        super(props);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(event) {
+        SideBarActions.changeFilter(event.target.value);
+    }
+
     render () {
         return (
             <li className="sidebar-search">
                 <div className="input-group custom-search-form">
-                    <input type="text" className="form-control" placeholder="Search... not avaliable now... " />
+                    <input type="text" onChange={this.handleChange} className="form-control" placeholder="Search..." />
                     <div className="input-group-addon"><i className="fa fa-search"></i></div>
                 </div> 
             </li>
@@ -49,15 +58,14 @@ class MenuSearchbar extends React.Component {
     }
 }
 
-
 class SideMenu extends React.Component {
     render () {
         var data = this.props.data;
         return (
             <ul className="nav" id="side-menu">
                 <MenuSearchbar />
-                {Object.keys(data).map(function (project) {
-                    return (<ProjectMenu key={project} project={project} lognames={data[project]} />);
+                {data.map(function (project) {
+                    return (<ProjectMenu key={project.name} project={project.name} lognames={project.lognames} />);
                 })}
             </ul>
         );

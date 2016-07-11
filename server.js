@@ -8,7 +8,7 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'logstream-test.azurewebsites.net', 80, 'LogStream', 'Console'
+    'localhost', 3333, 'LogStream', 'Console'
 );
 
 /* react */
@@ -46,7 +46,7 @@ app.get('/api/*/*/logs', function (req, res) {
     }
 
     console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
-    //logstream.log('get', project, logname, timestamp);
+    logstream.log('get', project, logname, timestamp);
 
     db.getLogs(project, logname, timestamp, function (err, result) {
         if (err) {
@@ -72,11 +72,72 @@ app.post('/api/*/*/logs', function(req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
-    db.addLogs(project, logname, logtext, timestamp, function (err, result) {
+    db.addLog(project, logname, logtext, timestamp, function (err, result) {
         if (err) {
             res.status(500).send({error: err});
         }else {
             res.status(200).send(logtext);
+        }
+    });
+});
+
+// Commands
+app.get('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
+    logstream.log('GET commands');
+
+    var project = req.params[0];
+    var logname = req.params[1];
+    db.getCommands(project, logname, (err, result) => {
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(result));
+        }
+    });
+});
+
+app.post('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
+    logstream.log('POST commands');
+
+    var project = req.params[0];
+    var logname = req.params[1];
+    var commands = req.body;
+
+    if (!commands || typeof(commands) !== 'array') {
+        res.status(500).send({error: 'command list is needed!'});
+    }else {
+        for (var i=0; i<commands.length; i++) {
+            if (!commands[i].name || commands[i].name.length === 0) {
+                res.status(500).send({error: 'command list is needed!'});
+                return;
+            }
+            commands[i].url = commands[i].url || '#';
+        }
+        db.addCommand(project, logname, commands, (err, result) => {
+            if (err) {
+                res.status(500).send({error: err});
+            }else {
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(commands);
+            }
+        });
+    }
+});
+
+app.delete('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
+    logstream.log('DELETE commands');
+
+    var project = req.params[0];
+    var logname = req.params[1];
+    db.delCommands(project, logname, (err, result) => {
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.status(200).send("DELETE OK!");
         }
     });
 });
@@ -86,7 +147,7 @@ app.get('/api/projects', function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'get projects');
     logstream.log('GET projects');
         
-    db.getProjectsAndLognames(function (err, result) {    
+    db.getProjects(function (err, result) {    
         if (err) {
             res.status(500).send({error:err});
         }else {

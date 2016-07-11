@@ -7,6 +7,10 @@ class SideBarActions {
             'getProjectsFail'
         )
     }
+
+    changeFilter(filter) {
+        return filter;
+    }
     
     getProjects() {
         $.ajax({

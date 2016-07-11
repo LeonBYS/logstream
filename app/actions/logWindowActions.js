@@ -3,33 +3,26 @@ import alt from '../alt';
 class LogWindowActions {
     constructor () {
         this.generateActions(
+            'getLogsSuccessAppend',
             'getLogsSuccess',
-            'getLogsFail'
+            'getLogsFail',
+            'changeFilter',
+            'changePage',
+            'changePageSize'
         )
         this.internalID = null;
-        this.prevLogs = [];
-    }
-
-    changePage(move) {
-        return move;
-    }
-
-    changePageSize(pageSize) {
-        return pageSize;
+        this.lastTimestamp = null;
+        // this.prevLogs = [];
     }
 
     changeFocus(project, logname) {
-        var getLastLogTimeStamp = function() {
-            return this.prevLogs.length > 0 ? this.prevLogs[0].timestamp : null;
-        }.bind(this);
-
         if (this.internalID) {
             clearInterval(this.internalID);
-            this.prevLogs = [];
+            this.lastTimestamp = null;
         }
-        this.getLogs(project, logname, getLastLogTimeStamp());
+        this.getLogs(project, logname, this.lastTimestamp);
         this.internalID = setInterval(
-            function() { this.getLogs(project, logname, getLastLogTimeStamp()); }.bind(this), 
+            function() { this.getLogs(project, logname, this.lastTimestamp); }.bind(this), 
             1000
         );
     }
@@ -44,8 +37,14 @@ class LogWindowActions {
             dataType: 'json',
             cache: false
         }).done((data) => {
-            this.prevLogs = data.concat(this.prevLogs);
-            this.getLogsSuccess({logs: this.prevLogs, project: project, logname: logname});
+            if (data.length > 0) {
+                this.lastTimestamp = data[0].timestamp;
+                if (timestamp) {
+                    this.getLogsSuccessAppend(data);
+                }else {
+                    this.getLogsSuccess({logs: data, project: project, logname: logname});
+                }
+            }
         }).fail((jqXhr) => {
             this.getLogsFail(jqXhr);
         });
