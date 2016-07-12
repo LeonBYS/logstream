@@ -5,6 +5,7 @@ class LogWindowStore {
     constructor () {
         this.bindActions(LogWindowActions);
         // data
+        this.logsOrigin = [];
         this.logs = [];
         this.project = '';
         this.logname = '';
@@ -12,7 +13,22 @@ class LogWindowStore {
         // data for component
         this.page = 0;
         this.pageSize = 50;
-        //this.filter = '';
+        this.filter = '';
+    }
+
+    filterLogs(logs, filter) {
+        var newLogs = [];
+        logs.map((log) => {
+            if (filter.length == 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
+                newLogs.push(log);
+            }
+        });
+        return newLogs;
+    }
+
+    onChangeFilter(filter) {
+        this.filter = filter;
+        this.logs = this.filterLogs(this.logsOrigin, this.filter);
     }
 
     onChangePage(move) {
@@ -32,10 +48,17 @@ class LogWindowStore {
         this.pageSize = pageSize;
     }
 
+    onGetLogsSuccessAppend(logs) {
+        this.logsOrigin = logs.concat(this.logsOrigin);
+        var newLogs = this.filterLogs(logs, this.filter);
+        this.logs = newLogs.concat(this.logs);
+    }
+
     onGetLogsSuccess(data) {
-        this.logs = data.logs;
+        this.logsOrigin = data.logs;
         this.project = data.project;
         this.logname = data.logname;
+        this.logs = this.filterLogs(this.logsOrigin, this.filter);
     }
 
     onGetLogsFail(jqXhr) {

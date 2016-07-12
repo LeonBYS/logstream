@@ -4,11 +4,41 @@ import SideBarActions from '../actions/sideBarActions'
 class SideBarStore {
     constructor () {
         this.bindActions(SideBarActions);
-        this.projects = {};
+        this.originProjects = [];
+        this.projects = [];
+        this.filter = "";
+    }
+
+    updateProjects() {
+        var projects = [];
+        this.originProjects.map((project) => {
+            if (this.filter.length == 0) {
+                projects.push(project);
+            }else if (project.name.toLowerCase().indexOf(this.filter.toLowerCase()) >= 0) {
+                projects.push(project);
+            }else {
+                var newProject = {name:project.name, lognames:[]};
+                project.lognames.map((logname) => {
+                    if (logname.toLowerCase().indexOf(this.filter.toLowerCase()) >= 0) {
+                        newProject.lognames.push(logname);
+                    }
+                });
+                if (newProject.lognames.length > 0) {
+                    projects.push(newProject);
+                }
+            }
+        });
+        this.projects = projects;
+    }
+
+    onChangeFilter(filter) {
+        this.filter = filter;
+        this.updateProjects();
     }
 
     onGetProjectsSuccess(data) {
-        this.projects = data;
+        this.originProjects = data;
+        this.updateProjects();
     }
 
     onGetProjectsFail(jqXhr) {

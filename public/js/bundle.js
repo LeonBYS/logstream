@@ -19,35 +19,22 @@ var LogWindowActions = function () {
     function LogWindowActions() {
         _classCallCheck(this, LogWindowActions);
 
-        this.generateActions('getLogsSuccess', 'getLogsFail');
+        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getLogsFail', 'changeFilter', 'changePage', 'changePageSize');
         this.internalID = null;
-        this.prevLogs = [];
+        this.lastTimestamp = null;
+        // this.prevLogs = [];
     }
 
     _createClass(LogWindowActions, [{
-        key: 'changePage',
-        value: function changePage(move) {
-            return move;
-        }
-    }, {
-        key: 'changePageSize',
-        value: function changePageSize(pageSize) {
-            return pageSize;
-        }
-    }, {
         key: 'changeFocus',
         value: function changeFocus(project, logname) {
-            var getLastLogTimeStamp = function () {
-                return this.prevLogs.length > 0 ? this.prevLogs[0].timestamp : null;
-            }.bind(this);
-
             if (this.internalID) {
                 clearInterval(this.internalID);
-                this.prevLogs = [];
+                this.lastTimestamp = null;
             }
-            this.getLogs(project, logname, getLastLogTimeStamp());
+            this.getLogs(project, logname, this.lastTimestamp);
             this.internalID = setInterval(function () {
-                this.getLogs(project, logname, getLastLogTimeStamp());
+                this.getLogs(project, logname, this.lastTimestamp);
             }.bind(this), 1000);
         }
     }, {
@@ -64,8 +51,14 @@ var LogWindowActions = function () {
                 dataType: 'json',
                 cache: false
             }).done(function (data) {
-                _this.prevLogs = data.concat(_this.prevLogs);
-                _this.getLogsSuccess({ logs: _this.prevLogs, project: project, logname: logname });
+                if (data.length > 0) {
+                    _this.lastTimestamp = data[0].timestamp;
+                    if (timestamp) {
+                        _this.getLogsSuccessAppend(data);
+                    } else {
+                        _this.getLogsSuccess({ logs: data, project: project, logname: logname });
+                    }
+                }
             }).fail(function (jqXhr) {
                 _this.getLogsFail(jqXhr);
             });
@@ -103,6 +96,11 @@ var SideBarActions = function () {
     }
 
     _createClass(SideBarActions, [{
+        key: 'changeFilter',
+        value: function changeFilter(filter) {
+            return filter;
+        }
+    }, {
         key: 'getProjects',
         value: function getProjects() {
             var _this = this;
@@ -468,17 +466,90 @@ var LogPageBar = function (_React$Component2) {
     return LogPageBar;
 }(_react2.default.Component);
 
-var LogWindow = function (_React$Component3) {
-    _inherits(LogWindow, _React$Component3);
+var LogSearchBar = function (_React$Component3) {
+    _inherits(LogSearchBar, _React$Component3);
+
+    function LogSearchBar(props) {
+        _classCallCheck(this, LogSearchBar);
+
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogSearchBar).call(this, props));
+
+        _this4.handleChange = _this4.handleChange.bind(_this4);
+        return _this4;
+    }
+
+    _createClass(LogSearchBar, [{
+        key: 'handleChange',
+        value: function handleChange(event) {
+            _logWindowActions2.default.changeFilter(event.target.value);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement(
+                'div',
+                { className: 'input-group custom-search-form' },
+                _react2.default.createElement('input', { type: 'text', onChange: this.handleChange, className: 'form-control', placeholder: 'Filter...' }),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'input-group-addon' },
+                    _react2.default.createElement('i', { className: 'fa fa-filter' })
+                )
+            );
+        }
+    }]);
+
+    return LogSearchBar;
+}(_react2.default.Component);
+
+var LogUserCommand = function (_React$Component4) {
+    _inherits(LogUserCommand, _React$Component4);
+
+    function LogUserCommand(props) {
+        _classCallCheck(this, LogUserCommand);
+
+        var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogUserCommand).call(this, props));
+
+        _this5.handleClick = _this5.handleClick.bind(_this5);
+        return _this5;
+    }
+
+    _createClass(LogUserCommand, [{
+        key: 'handleClick',
+        value: function handleClick(event) {
+            // call this.props.url
+            $.ajax({
+                method: 'GET',
+                url: this.props.url,
+                cache: false,
+                success: function success(data) {} // do nothing
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement(
+                'button',
+                { onClick: this.handleClick, type: 'button', style: { marginTop: "2px", marginRight: "5px" }, className: 'btn btn-success' },
+                this.props.name
+            );
+        }
+    }]);
+
+    return LogUserCommand;
+}(_react2.default.Component);
+
+var LogWindow = function (_React$Component5) {
+    _inherits(LogWindow, _React$Component5);
 
     function LogWindow(props) {
         _classCallCheck(this, LogWindow);
 
-        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
+        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
 
-        _this4.state = _logWindowStore2.default.getState();
-        _this4.onChange = _this4.onChange.bind(_this4);
-        return _this4;
+        _this6.state = _logWindowStore2.default.getState();
+        _this6.onChange = _this6.onChange.bind(_this6);
+        return _this6;
     }
 
     _createClass(LogWindow, [{
@@ -539,23 +610,27 @@ var LogWindow = function (_React$Component3) {
                                 _react2.default.createElement(
                                     'div',
                                     { className: 'col-md-4 text-right' },
-                                    _react2.default.createElement(
-                                        'div',
-                                        { className: 'input-group custom-search-form', style: { marginTop: "1%" } },
-                                        _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Filter... not avaliable now...' }),
-                                        _react2.default.createElement(
-                                            'div',
-                                            { className: 'input-group-addon' },
-                                            _react2.default.createElement('i', { className: 'fa fa-filter' })
-                                        )
-                                    )
+                                    _react2.default.createElement(LogUserCommand, { name: 'Command0', url: 'nothing' })
                                 )
                             )
                         ),
                         _react2.default.createElement(
                             'div',
                             { className: 'panel-body' },
-                            _react2.default.createElement(LogPageBar, { page: this.state.page, pageSize: this.state.pageSize }),
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'row' },
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'col-md-8' },
+                                    _react2.default.createElement(LogPageBar, { page: this.state.page, pageSize: this.state.pageSize })
+                                ),
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'col-md-4 text-right' },
+                                    _react2.default.createElement(LogSearchBar, null)
+                                )
+                            ),
                             _react2.default.createElement(
                                 'div',
                                 { className: 'dataTable_wrapper' },
@@ -868,13 +943,21 @@ var ProjectMenu = function (_React$Component2) {
 var MenuSearchbar = function (_React$Component3) {
     _inherits(MenuSearchbar, _React$Component3);
 
-    function MenuSearchbar() {
+    function MenuSearchbar(props) {
         _classCallCheck(this, MenuSearchbar);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(MenuSearchbar).apply(this, arguments));
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(MenuSearchbar).call(this, props));
+
+        _this4.handleChange = _this4.handleChange.bind(_this4);
+        return _this4;
     }
 
     _createClass(MenuSearchbar, [{
+        key: 'handleChange',
+        value: function handleChange(event) {
+            _sideBarActions2.default.changeFilter(event.target.value);
+        }
+    }, {
         key: 'render',
         value: function render() {
             return _react2.default.createElement(
@@ -883,7 +966,7 @@ var MenuSearchbar = function (_React$Component3) {
                 _react2.default.createElement(
                     'div',
                     { className: 'input-group custom-search-form' },
-                    _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search... not avaliable now... ' }),
+                    _react2.default.createElement('input', { type: 'text', onChange: this.handleChange, className: 'form-control', placeholder: 'Search...' }),
                     _react2.default.createElement(
                         'div',
                         { className: 'input-group-addon' },
@@ -914,8 +997,8 @@ var SideMenu = function (_React$Component4) {
                 'ul',
                 { className: 'nav', id: 'side-menu' },
                 _react2.default.createElement(MenuSearchbar, null),
-                Object.keys(data).map(function (project) {
-                    return _react2.default.createElement(ProjectMenu, { key: project, project: project, lognames: data[project] });
+                data.map(function (project) {
+                    return _react2.default.createElement(ProjectMenu, { key: project.name, project: project.name, lognames: project.lognames });
                 })
             );
         }
@@ -1054,6 +1137,7 @@ var LogWindowStore = function () {
 
         this.bindActions(_logWindowActions2.default);
         // data
+        this.logsOrigin = [];
         this.logs = [];
         this.project = '';
         this.logname = '';
@@ -1061,10 +1145,27 @@ var LogWindowStore = function () {
         // data for component
         this.page = 0;
         this.pageSize = 50;
-        //this.filter = '';
+        this.filter = '';
     }
 
     _createClass(LogWindowStore, [{
+        key: 'filterLogs',
+        value: function filterLogs(logs, filter) {
+            var newLogs = [];
+            logs.map(function (log) {
+                if (filter.length == 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
+                    newLogs.push(log);
+                }
+            });
+            return newLogs;
+        }
+    }, {
+        key: 'onChangeFilter',
+        value: function onChangeFilter(filter) {
+            this.filter = filter;
+            this.logs = this.filterLogs(this.logsOrigin, this.filter);
+        }
+    }, {
         key: 'onChangePage',
         value: function onChangePage(move) {
             var mod = this.logs.length % this.pageSize;
@@ -1090,11 +1191,19 @@ var LogWindowStore = function () {
             this.pageSize = pageSize;
         }
     }, {
+        key: 'onGetLogsSuccessAppend',
+        value: function onGetLogsSuccessAppend(logs) {
+            this.logsOrigin = logs.concat(this.logsOrigin);
+            var newLogs = this.filterLogs(logs, this.filter);
+            this.logs = newLogs.concat(this.logs);
+        }
+    }, {
         key: 'onGetLogsSuccess',
         value: function onGetLogsSuccess(data) {
-            this.logs = data.logs;
+            this.logsOrigin = data.logs;
             this.project = data.project;
             this.logname = data.logname;
+            this.logs = this.filterLogs(this.logsOrigin, this.filter);
         }
     }, {
         key: 'onGetLogsFail',
@@ -1135,13 +1244,47 @@ var SideBarStore = function () {
         _classCallCheck(this, SideBarStore);
 
         this.bindActions(_sideBarActions2.default);
-        this.projects = {};
+        this.originProjects = [];
+        this.projects = [];
+        this.filter = "";
     }
 
     _createClass(SideBarStore, [{
+        key: 'updateProjects',
+        value: function updateProjects() {
+            var _this = this;
+
+            var projects = [];
+            this.originProjects.map(function (project) {
+                if (_this.filter.length == 0) {
+                    projects.push(project);
+                } else if (project.name.toLowerCase().indexOf(_this.filter.toLowerCase()) >= 0) {
+                    projects.push(project);
+                } else {
+                    var newProject = { name: project.name, lognames: [] };
+                    project.lognames.map(function (logname) {
+                        if (logname.toLowerCase().indexOf(_this.filter.toLowerCase()) >= 0) {
+                            newProject.lognames.push(logname);
+                        }
+                    });
+                    if (newProject.lognames.length > 0) {
+                        projects.push(newProject);
+                    }
+                }
+            });
+            this.projects = projects;
+        }
+    }, {
+        key: 'onChangeFilter',
+        value: function onChangeFilter(filter) {
+            this.filter = filter;
+            this.updateProjects();
+        }
+    }, {
         key: 'onGetProjectsSuccess',
         value: function onGetProjectsSuccess(data) {
-            this.projects = data;
+            this.originProjects = data;
+            this.updateProjects();
         }
     }, {
         key: 'onGetProjectsFail',

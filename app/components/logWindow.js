@@ -70,8 +70,48 @@ class LogPageBar extends React.Component {
     }
 }
 
+class LogSearchBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleChange = this.handleChange.bind(this);
+    }
 
+    handleChange(event) {
+        LogWindowActions.changeFilter(event.target.value);
+    }
 
+    render() {
+        return (
+            <div className="input-group custom-search-form">
+                <input type="text" onChange={this.handleChange} className="form-control" placeholder="Filter..." />
+                <div className="input-group-addon"><i className="fa fa-filter"></i></div>
+            </div>
+        );
+    }
+}
+
+class LogUserCommand extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick(event) {
+        // call this.props.url
+        $.ajax({
+            method: 'GET',
+            url: this.props.url,
+            cache: false,
+            success: function (data) {} // do nothing 
+        });
+    }
+
+    render() {
+        return (
+            <button onClick={this.handleClick} type="button" style={{marginTop:"2px", marginRight:"5px"}} className="btn btn-success">{this.props.name}</button>
+        );
+    }
+}
 
 
 
@@ -121,15 +161,19 @@ class LogWindow extends React.Component {
                                 <div className="col-md-4">
                                 </div>
                                 <div className="col-md-4 text-right">
-                                    <div className="input-group custom-search-form" style={{marginTop:"1%"}}>
-                                        <input type="text" className="form-control" placeholder="Filter... not avaliable now..." />
-                                        <div className="input-group-addon"><i className="fa fa-filter"></i></div>
-                                    </div>
+                                    <LogUserCommand name="Command0" url="nothing"/>
                                 </div>
                             </div>
                         </div>
                         <div className="panel-body">
-                            <LogPageBar page={this.state.page} pageSize={this.state.pageSize} />
+                            <div className="row">
+                                <div className="col-md-8">
+                                    <LogPageBar page={this.state.page} pageSize={this.state.pageSize} />
+                                </div>
+                                <div className="col-md-4 text-right">
+                                    <LogSearchBar />
+                                </div>
+                            </div>
                             <div className="dataTable_wrapper">                    
                                 <table className="table table-striped table-bordered table-hover" id="dataTables-example">
                                     <thead>
