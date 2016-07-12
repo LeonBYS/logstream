@@ -14,6 +14,7 @@ class LogWindowStore {
         this.page = 0;
         this.pageSize = 50;
         this.filter = '';
+        this.commands = [];
     }
 
     filterLogs(logs, filter) {
@@ -62,7 +63,14 @@ class LogWindowStore {
     }
 
     onGetLogsFail(jqXhr) {
-        // Handle multiple response formats, fallback to HTTP status code number.
+   	    toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+    }
+
+    onGetCommandsSuccess(commands) {
+        this.commands = commands;
+    }
+
+    onGetCommandsFail(jqXhr) {
    	    toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
     }
 }

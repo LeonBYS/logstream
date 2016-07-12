@@ -19,13 +19,29 @@ var LogWindowActions = function () {
     function LogWindowActions() {
         _classCallCheck(this, LogWindowActions);
 
-        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getLogsFail', 'changeFilter', 'changePage', 'changePageSize');
+        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getLogsFail', 'getCommandsSuccess', 'getCommandsFail', 'changeFilter', 'changePage', 'changePageSize');
         this.internalID = null;
         this.lastTimestamp = null;
-        // this.prevLogs = [];
     }
 
     _createClass(LogWindowActions, [{
+        key: 'getCommands',
+        value: function getCommands(project, logname) {
+            var _this = this;
+
+            var url = '/api/' + project + '/' + logname + '/commands';
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                cache: false
+            }).done(function (data) {
+                _this.getCommandsSuccess(data);
+            }).fail(function (jqXhr) {
+                _this.getCommandsFail(jqXhr);
+            });
+            return false;
+        }
+    }, {
         key: 'changeFocus',
         value: function changeFocus(project, logname) {
             if (this.internalID) {
@@ -33,6 +49,7 @@ var LogWindowActions = function () {
                 this.lastTimestamp = null;
             }
             this.getLogs(project, logname, this.lastTimestamp);
+            this.getCommands(project, logname);
             this.internalID = setInterval(function () {
                 this.getLogs(project, logname, this.lastTimestamp);
             }.bind(this), 1000);
@@ -40,7 +57,7 @@ var LogWindowActions = function () {
     }, {
         key: 'getLogs',
         value: function getLogs(project, logname, timestamp) {
-            var _this = this;
+            var _this2 = this;
 
             var url = '/api/' + project + '/' + logname + '/logs';
             if (timestamp) {
@@ -51,16 +68,19 @@ var LogWindowActions = function () {
                 dataType: 'json',
                 cache: false
             }).done(function (data) {
-                if (data.length > 0) {
-                    _this.lastTimestamp = data[0].timestamp;
+                if (data && data.length > 0) {
+                    _this2.lastTimestamp = data[0].timestamp;
                     if (timestamp) {
-                        _this.getLogsSuccessAppend(data);
+                        _this2.getLogsSuccessAppend(data);
                     } else {
-                        _this.getLogsSuccess({ logs: data, project: project, logname: logname });
+                        _this2.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
+                } else if (_this2.lastTimestamp == null) {
+                    // data is [] or null, this branch doesn't have log data
+                    _this2.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
             }).fail(function (jqXhr) {
-                _this.getLogsFail(jqXhr);
+                _this2.getLogsFail(jqXhr);
             });
             return false;
         }
@@ -610,7 +630,9 @@ var LogWindow = function (_React$Component5) {
                                 _react2.default.createElement(
                                     'div',
                                     { className: 'col-md-4 text-right' },
-                                    _react2.default.createElement(LogUserCommand, { name: 'Command0', url: 'nothing' })
+                                    this.state.commands.map(function (command) {
+                                        return _react2.default.createElement(LogUserCommand, { name: command.name, url: command.url });
+                                    })
                                 )
                             )
                         ),
@@ -1146,6 +1168,7 @@ var LogWindowStore = function () {
         this.page = 0;
         this.pageSize = 50;
         this.filter = '';
+        this.commands = [];
     }
 
     _createClass(LogWindowStore, [{
@@ -1208,7 +1231,16 @@ var LogWindowStore = function () {
     }, {
         key: 'onGetLogsFail',
         value: function onGetLogsFail(jqXhr) {
-            // Handle multiple response formats, fallback to HTTP status code number.
+            toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+        }
+    }, {
+        key: 'onGetCommandsSuccess',
+        value: function onGetCommandsSuccess(commands) {
+            this.commands = commands;
+        }
+    }, {
+        key: 'onGetCommandsFail',
+        value: function onGetCommandsFail(jqXhr) {
             toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
         }
     }]);
