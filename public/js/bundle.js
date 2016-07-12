@@ -19,7 +19,7 @@ var LogWindowActions = function () {
     function LogWindowActions() {
         _classCallCheck(this, LogWindowActions);
 
-        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getLogsFail', 'getCommandsSuccess', 'getCommandsFail', 'changeFilter', 'changePage', 'changePageSize');
+        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getCommandsSuccess', 'ajaxFail', 'changeFilter', 'changePage', 'changePageSize');
         this.internalID = null;
         this.lastTimestamp = null;
     }
@@ -37,7 +37,7 @@ var LogWindowActions = function () {
             }).done(function (data) {
                 _this.getCommandsSuccess(data);
             }).fail(function (jqXhr) {
-                _this.getCommandsFail(jqXhr);
+                _this.ajaxFail(jqXhr);
             });
             return false;
         }
@@ -80,7 +80,7 @@ var LogWindowActions = function () {
                     _this2.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
             }).fail(function (jqXhr) {
-                _this2.getLogsFail(jqXhr);
+                _this2.ajaxFail(jqXhr);
             });
             return false;
         }
@@ -559,17 +559,99 @@ var LogUserCommand = function (_React$Component4) {
     return LogUserCommand;
 }(_react2.default.Component);
 
-var LogWindow = function (_React$Component5) {
-    _inherits(LogWindow, _React$Component5);
+var MsgItem = function (_React$Component5) {
+    _inherits(MsgItem, _React$Component5);
+
+    function MsgItem() {
+        _classCallCheck(this, MsgItem);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(MsgItem).apply(this, arguments));
+    }
+
+    _createClass(MsgItem, [{
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement(
+                'p',
+                { style: { color: "#f1f1f1", margin: "0" } },
+                _react2.default.createElement(
+                    'span',
+                    null,
+                    "["
+                ),
+                _react2.default.createElement(
+                    'span',
+                    { style: { color: "#969696" } },
+                    this.props.time
+                ),
+                _react2.default.createElement(
+                    'span',
+                    null,
+                    "] "
+                ),
+                _react2.default.createElement(
+                    'span',
+                    null,
+                    this.props.text
+                )
+            );
+        }
+    }]);
+
+    return MsgItem;
+}(_react2.default.Component);
+
+var MsgWindow = function (_React$Component6) {
+    _inherits(MsgWindow, _React$Component6);
+
+    function MsgWindow(props) {
+        _classCallCheck(this, MsgWindow);
+
+        var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(MsgWindow).call(this, props));
+
+        _this7.styleOut = {
+            fontFamily: "Monaco, Inconsolata, monospace",
+            backgroundColor: "#222",
+            padding: "10px"
+        };
+        return _this7;
+    }
+
+    _createClass(MsgWindow, [{
+        key: 'render',
+        value: function render() {
+            var index = 0;
+            var logContent = this.props.logs.map(function (item) {
+                index = index + 1;
+                try {
+                    var timestring = new Date(Number(item.timestamp)).toLocaleString();
+                    return _react2.default.createElement(MsgItem, { key: index, time: timestring, text: item.logtext });
+                } catch (e) {
+                    return _react2.default.createElement(MsgItem, { key: index, time: 'NA', text: item.toString() });
+                }
+            });
+            return _react2.default.createElement(
+                'div',
+                { style: this.styleOut },
+                logContent
+            );
+        }
+    }]);
+
+    return MsgWindow;
+}(_react2.default.Component);
+
+var LogWindow = function (_React$Component7) {
+    _inherits(LogWindow, _React$Component7);
 
     function LogWindow(props) {
         _classCallCheck(this, LogWindow);
 
-        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
+        var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
 
-        _this6.state = _logWindowStore2.default.getState();
-        _this6.onChange = _this6.onChange.bind(_this6);
-        return _this6;
+        _this8.state = _logWindowStore2.default.getState();
+        _this8.onChange = _this8.onChange.bind(_this8);
+        return _this8;
     }
 
     _createClass(LogWindow, [{
@@ -653,37 +735,7 @@ var LogWindow = function (_React$Component5) {
                                     _react2.default.createElement(LogSearchBar, null)
                                 )
                             ),
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'dataTable_wrapper' },
-                                _react2.default.createElement(
-                                    'table',
-                                    { className: 'table table-striped table-bordered table-hover', id: 'dataTables-example' },
-                                    _react2.default.createElement(
-                                        'thead',
-                                        null,
-                                        _react2.default.createElement(
-                                            'tr',
-                                            null,
-                                            _react2.default.createElement(
-                                                'th',
-                                                { width: '20%' },
-                                                'Time'
-                                            ),
-                                            _react2.default.createElement(
-                                                'th',
-                                                null,
-                                                'Log'
-                                            )
-                                        )
-                                    ),
-                                    _react2.default.createElement(
-                                        'tbody',
-                                        null,
-                                        logs
-                                    )
-                                )
-                            )
+                            _react2.default.createElement(MsgWindow, { logs: this.state.logs.slice(start, start + this.state.pageSize) })
                         )
                     )
                 )
@@ -1176,7 +1228,7 @@ var LogWindowStore = function () {
         value: function filterLogs(logs, filter) {
             var newLogs = [];
             logs.map(function (log) {
-                if (filter.length == 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
+                if (filter.length === 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
                     newLogs.push(log);
                 }
             });
@@ -1227,11 +1279,8 @@ var LogWindowStore = function () {
             this.project = data.project;
             this.logname = data.logname;
             this.logs = this.filterLogs(this.logsOrigin, this.filter);
-        }
-    }, {
-        key: 'onGetLogsFail',
-        value: function onGetLogsFail(jqXhr) {
-            toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+            this.page = 0;
+            this.filter = '';
         }
     }, {
         key: 'onGetCommandsSuccess',
@@ -1239,8 +1288,8 @@ var LogWindowStore = function () {
             this.commands = commands;
         }
     }, {
-        key: 'onGetCommandsFail',
-        value: function onGetCommandsFail(jqXhr) {
+        key: 'onAjaxFail',
+        value: function onAjaxFail(jqXhr) {
             toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
         }
     }]);
