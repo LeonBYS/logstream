@@ -19,4 +19,5 @@ install:
 script: 
   - gulp build
   - npm test
+  - npm coverall
 
