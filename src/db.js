@@ -7,9 +7,27 @@ var dbRedis = {
             host: host,
             port: port,
             password: password,
-            tls: tls,
+            tls: tls
         });
         this.prefix = "logstream>";
+    },
+
+    /**
+     * get all list data
+     * @param {string} lkey
+     * @param {function(err, result)} callback 
+     */
+    returnListData: function(lkey, beg, end, callback) {
+        this.client.lrange(lkey, beg, end, function (err, data) {
+            if (err) {
+                callback(err, null);
+                return;
+            }else {
+                data = data.map(x => JSON.parse(x));
+                callback(null, data);
+                return;
+            }
+        });
     },
     
     /**
@@ -23,23 +41,17 @@ var dbRedis = {
     getLogs: function (project, logname, timestamp, callback) {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
         if (!timestamp) {
-            this.client.lrange(lkey, 0, -1, function (err, data) {
-                if (err) {
-                    callback(err, null);
-                }else {
-                    data = data.map(x => JSON.parse(x));
-                    callback(null, data);
-                }
-            });
+            this.returnListData(lkey, 0, -1, callback);
         } else {
             // get logs batch by batch, until exceed timestamp
             var getLogsSteply = function (start, batchsize, result, timestamp) {
                 this.client.lrange(lkey, start, start + batchsize - 1, function (err, data) {
                     if (err) {
                         callback(err, null);
+                        return;
                     } else {
                         result = result.concat(data.map(x => {return JSON.parse(x);}));
-                        if (result.length == 0) { // there is no log data in this branch (very hard to hit...)
+                        if (result.length === 0) { // there is no log data in this branch (very hard to hit...)
                             callback(null, []);
                             return;
                         } 
@@ -57,6 +69,7 @@ var dbRedis = {
                                 size--;
                             }
                             callback(null, result.slice(0, size));
+                            return;
                         }
                     }
                 });
@@ -88,6 +101,7 @@ var dbRedis = {
         this.client.keys(this.prefix + "logs:*", function (err, result) {
             if (err) {
                 callback(err, null);
+                return;
             }else {
                 var set = {};
                 for (var i=0; i<result.length; i++) {
@@ -104,6 +118,7 @@ var dbRedis = {
                     result.push({name:key, lognames:set[key]})
                 }
                 callback(null, result);
+                return;
             }
         });
     },
@@ -116,14 +131,7 @@ var dbRedis = {
      */
     getCommands: function (project, logname, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
-        this.client.lrange(lkey, 0, -1, function (err, data) {
-            if (err) {
-                callback(err, null);
-            }else {
-                data = data.map(x => JSON.parse(x));
-                callback(null, data);
-            }
-        });
+        this.returnListData(lkey, 0, -1, callback);
     },
 
     /**

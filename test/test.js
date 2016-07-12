@@ -13,7 +13,7 @@ describe('test api', function() {
         request(app)
             .post('/api/testProj/testLogname/logs')
             .set('Content-Type', 'text/plain')
-            .send("This is a test msg at" + new Date(Date.now()).toLocaleDateString())
+            .send("This is a test msg at " + new Date(Date.now()).toLocaleDateString())
             .expect(200, done);
     });
 
