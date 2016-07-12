@@ -8,7 +8,9 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'localhost', 3333, 'LogStream', 'Console'
+    process.env.LOGSTREAM_HOST || 'localhost', 
+    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
+    'LogStream', 'Console'
 );
 
 /* react */
@@ -106,7 +108,7 @@ app.post('/api/*/*/commands', function (req, res) {
     var logname = req.params[1];
     var commands = req.body;
 
-    if (!commands || typeof(commands) !== 'array') {
+    if (!commands || !Array.isArray(commands)) {
         res.status(500).send({error: 'command list is needed!'});
     }else {
         for (var i=0; i<commands.length; i++) {

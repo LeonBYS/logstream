@@ -17,7 +17,6 @@ class LogStream {
         for (var i=0; i<arguments.length; i++) {
             message += ' ' + arguments[i];
         }
-        message += '\n';
         var options = {
             hostname: this.host,
             port: this.port,
