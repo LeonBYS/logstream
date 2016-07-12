@@ -75,7 +75,7 @@ var LogWindowActions = function () {
                     } else {
                         _this2.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
-                } else if (_this2.lastTimestamp == null) {
+                } else if (_this2.lastTimestamp === null) {
                     // data is [] or null, this branch doesn't have log data
                     _this2.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
