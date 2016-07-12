@@ -161,7 +161,9 @@ class LogWindow extends React.Component {
                                 <div className="col-md-4">
                                 </div>
                                 <div className="col-md-4 text-right">
-                                    <LogUserCommand name="Command0" url="nothing"/>
+                                    {this.state.commands.map((command) => 
+                                        <LogUserCommand name={command.name} url={command.url}/>
+                                    )}
                                 </div>
                             </div>
                         </div>
