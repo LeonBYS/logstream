@@ -5,9 +5,8 @@ class LogWindowActions {
         this.generateActions(
             'getLogsSuccessAppend',
             'getLogsSuccess',
-            'getLogsFail',
             'getCommandsSuccess',
-            'getCommandsFail',
+            'ajaxFail',
             'changeFilter',
             'changePage',
             'changePageSize'
@@ -25,7 +24,7 @@ class LogWindowActions {
         }).done((data) => {
             this.getCommandsSuccess(data);
         }).fail((jqXhr) => {
-            this.getCommandsFail(jqXhr);
+            this.ajaxFail(jqXhr);
         });
         return false;
     }
@@ -65,7 +64,7 @@ class LogWindowActions {
                 this.getLogsSuccess({logs: [], project: project, logname: logname});
             }
         }).fail((jqXhr) => {
-            this.getLogsFail(jqXhr);
+            this.ajaxFail(jqXhr);
         });
         return false;
     }

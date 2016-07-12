@@ -20,7 +20,7 @@ class LogWindowStore {
     filterLogs(logs, filter) {
         var newLogs = [];
         logs.map((log) => {
-            if (filter.length == 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
+            if (filter.length === 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
                 newLogs.push(log);
             }
         });
@@ -60,17 +60,15 @@ class LogWindowStore {
         this.project = data.project;
         this.logname = data.logname;
         this.logs = this.filterLogs(this.logsOrigin, this.filter);
-    }
-
-    onGetLogsFail(jqXhr) {
-   	    toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+        this.page = 0;
+        this.filter = '';
     }
 
     onGetCommandsSuccess(commands) {
         this.commands = commands;
     }
 
-    onGetCommandsFail(jqXhr) {
+    onAjaxFail(jqXhr) {
    	    toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
     }
 }

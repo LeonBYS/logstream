@@ -113,6 +113,48 @@ class LogUserCommand extends React.Component {
     }
 }
 
+class MsgItem extends React.Component {
+    render() {
+        return (
+            <p style={{color: "#f1f1f1", margin:"0"}}>
+                <span>{"["}</span>
+                <span style={{color: "#969696"}}>{this.props.time}</span> 
+                <span>{"] "}</span> 
+                <span>{this.props.text}</span>
+            </p>
+        );
+    }
+}
+
+class MsgWindow extends React.Component {
+    constructor(props) {
+        super(props);
+        this.styleOut = {
+            fontFamily:"Monaco, Inconsolata, monospace", 
+            backgroundColor: "#222",
+            padding: "10px"
+        };
+    }
+    render() {
+        var index = 0;
+        var logContent = this.props.logs.map((item) => {
+            index = index + 1;
+            try {
+                var timestring = new Date(Number(item.timestamp)).toLocaleString();
+                return (
+                    <MsgItem key={index} time={timestring} text={item.logtext} />
+                );
+            } catch (e) {
+                return (<MsgItem key={index} time="NA" text={item.toString()} />);
+            }
+        });
+        return (
+            <div style={this.styleOut}>                    
+                {logContent}
+            </div>
+        );
+    }
+}
 
 
 class LogWindow extends React.Component {
@@ -176,16 +218,7 @@ class LogWindow extends React.Component {
                                     <LogSearchBar />
                                 </div>
                             </div>
-                            <div className="dataTable_wrapper">                    
-                                <table className="table table-striped table-bordered table-hover" id="dataTables-example">
-                                    <thead>
-                                        <tr><th width="20%">Time</th><th>Log</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        {logs}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <MsgWindow logs={this.state.logs.slice(start, start + this.state.pageSize)} />
                         </div>
                     </div>
                 </div>
