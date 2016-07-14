@@ -1,5 +1,5 @@
-import alt from '../alt'
-import LogWindowActions from '../actions/logWindowActions'
+import alt from '../alt';
+import LogWindowActions from '../actions/logWindowActions';
 
 class LogWindowStore {
     constructor () {
@@ -7,14 +7,26 @@ class LogWindowStore {
         // data
         this.logsOrigin = [];
         this.logs = [];
-        this.project = '';
-        this.logname = '';
 
         // data for component
-        this.page = 0;
-        this.pageSize = 50;
         this.filter = '';
-        this.commands = [];
+        this.height = 24;
+        this.start = -this.height;
+    }
+
+    onScroll(deltaY) {
+        if (deltaY === 0) { // pause
+            if (this.start < 0) this.start = this.logs.length - this.height;
+        }else {
+            deltaY = Math.floor(deltaY/50);
+            if (this.start < 0) {
+                this.start = this.logs.length - this.height + deltaY;
+            }else {
+                this.start += deltaY;
+            }
+            if (this.start < 0) { this.start = 0; }
+            if (this.start > this.logs.length - this.height) { this.start = -this.height; }
+        }
     }
 
     filterLogs(logs, filter) {
@@ -28,44 +40,31 @@ class LogWindowStore {
     }
 
     onChangeFilter(filter) {
-        this.filter = filter;
+        this.filter = filter.toLowerCase();
         this.logs = this.filterLogs(this.logsOrigin, this.filter);
-    }
-
-    onChangePage(move) {
-        var mod = (this.logs.length % this.pageSize);
-        var maxPage = (this.logs.length - mod) / this.pageSize;
-        if (mod !== 0) { maxPage++; }
-
-        // page in [0, maxPage-1]
-        var newPage = this.page + move;
-        if (newPage > maxPage - 1) { newPage = maxPage -1; }
-        if (newPage < 0) { newPage = 0; }
-
-        this.page = newPage;
-    }
-
-    onChangePageSize(pageSize) {
-        this.pageSize = pageSize;
     }
 
     onGetLogsSuccessAppend(logs) {
-        this.logsOrigin = logs.concat(this.logsOrigin);
+        logs.sort((a, b) => a.timestamp - b.timestamp);
+        // remove the repeated last element
+        if (logs[0].timestamp === this.logsOrigin[this.logsOrigin.length - 1].timestamp) {
+            this.logsOrigin.pop();
+        }
+        if (logs[0].timestamp === this.logs[this.logs.length - 1].timestamp) {
+            this.logs.pop();
+        }
+        // concat logsOrigin
+        this.logsOrigin = this.logsOrigin.concat(logs);
+        // concat logs with filted/sorted newLogs
         var newLogs = this.filterLogs(logs, this.filter);
-        this.logs = newLogs.concat(this.logs);
+        this.logs = this.logs.concat(newLogs.sort((a, b) => a.timestamp - b.timestamp));
     }
 
-    onGetLogsSuccess(data) {
-        this.logsOrigin = data.logs;
-        this.project = data.project;
-        this.logname = data.logname;
-        this.logs = this.filterLogs(this.logsOrigin, this.filter);
-        this.page = 0;
+    onGetLogsSuccess(data) {        
+        this.start = -this.height;
         this.filter = '';
-    }
-
-    onGetCommandsSuccess(commands) {
-        this.commands = commands;
+        this.logsOrigin = data.logs.sort((a, b) => a.timestamp - b.timestamp);
+        this.logs = this.filterLogs(this.logsOrigin, this.filter);
     }
 
     onAjaxFail(jqXhr) {
