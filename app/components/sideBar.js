@@ -1,7 +1,7 @@
 import React from 'react';
 import SideBarStore from '../stores/sideBarStore';
 import SideBarActions from '../actions/sideBarActions'
-import LogWindowActions from '../actions/logWindowActions';
+import ContentActions from '../actions/contentActions';
 
 class LognameButton extends React.Component {
     constructor (props) {
@@ -16,7 +16,7 @@ class LognameButton extends React.Component {
         );
     }
     handleClick() {
-        LogWindowActions.changeFocus(this.props.project, this.props.logname);
+        ContentActions.selectLogBranch(this.props.project, this.props.logname);
     }
 }
 
