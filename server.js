@@ -63,10 +63,10 @@ app.get('/api/*/*/logs', function (req, res) {
 app.post('/api/*/*/logs', function(req, res) {
     var project = req.params[0];
     var logname = req.params[1];
-    var logtext = req.body;
-    var timestamp = req.query.timestamp; 
+    var logtext = req.body.logtext;
+    var timestamp = req.body.timestamp; 
     if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
-        timestamp = Number(req.query.timestamp); // use user provided timestamp
+        timestamp = Number(req.body.timestamp); // use user provided timestamp
     }else {
         timestamp = Date.now(); // use server timestamp if user not provide it
     }
