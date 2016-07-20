@@ -78,7 +78,8 @@ app.post('/api/*/*/logs', function(req, res) {
         if (err) {
             res.status(500).send({error: err});
         }else {
-            res.status(200).send(logtext);
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(req.body));
         }
     });
 });
@@ -140,7 +141,8 @@ app.delete('/api/*/*/commands', function (req, res) {
         if (err) {
             res.status(500).send({error: err});
         }else {
-            res.status(200).send("DELETE OK!");
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send();
         }
     });
 });
