@@ -8,7 +8,9 @@ var http = require('http').Server(app);
 var db = require('./src/db').Database('redis');
 
 var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    'logstream-test.azurewebsites.net', 80, 'LogStream', 'Console'
+    process.env.LOGSTREAM_HOST || 'localhost', 
+    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
+    'LogStream', 'Console'
 );
 
 /* react */
@@ -61,10 +63,10 @@ app.get('/api/*/*/logs', function (req, res) {
 app.post('/api/*/*/logs', function(req, res) {
     var project = req.params[0];
     var logname = req.params[1];
-    var logtext = req.body;
-    var timestamp = req.query.timestamp; 
+    var logtext = req.body.logtext;
+    var timestamp = req.body.timestamp; 
     if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
-        timestamp = Number(req.query.timestamp); // use user provided timestamp
+        timestamp = Number(req.body.timestamp); // use user provided timestamp
     }else {
         timestamp = Date.now(); // use server timestamp if user not provide it
     }
@@ -82,66 +84,66 @@ app.post('/api/*/*/logs', function(req, res) {
 });
 
 
-// Commands, UNTEST
-// app.get('/api/*/*/commands', function (req, res) {
-//     console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
-//     logstream.log('GET commands');
+// Commands
+app.get('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
+    logstream.log('GET commands');
 
-//     var project = req.params[0];
-//     var logname = req.params[1];
-//     db.getCommands(project, logname, (err, result) => {
-//         if (err) {
-//             res.status(500).send({error: err});
-//         }else {
-//             res.setHeader('Content-Type', 'application/json');
-//             res.status(200).send(JSON.stringify(result));
-//         }
-//     });
-// });
+    var project = req.params[0];
+    var logname = req.params[1];
+    db.getCommands(project, logname, (err, result) => {
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(result));
+        }
+    });
+});
 
-// app.post('/api/*/*/commands', function (req, res) {
-//     console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
-//     logstream.log('POST commands');
+app.post('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
+    logstream.log('POST commands');
 
-//     var project = req.params[0];
-//     var logname = req.params[1];
-//     var commands = req.body;
+    var project = req.params[0];
+    var logname = req.params[1];
+    var commands = req.body;
 
-//     if (!commands || typeof(commands) !== 'array') {
-//         res.status(500).send({error: 'command list is needed!'});
-//     }else {
-//         for (var i=0; i<commands.length; i++) {
-//             if (!commands[i].name || commands[i].name.length === 0) {
-//                 res.status(500).send({error: 'command list is needed!'});
-//                 return;
-//             }
-//             commands[i].url = commands[i].url || '#';
-//         }
-//         db.addCommand(project, logname, commands, (err, result) => {
-//             if (err) {
-//                 res.status(500).send({error: err});
-//             }else {
-//                 res.setHeader('Content-Type', 'application/json');
-//                 res.status(200).send(commands);
-//             }
-//         });
-//     }
-// });
+    if (!commands || !Array.isArray(commands)) {
+        res.status(500).send({error: 'command list is needed!'});
+    }else {
+        for (var i=0; i<commands.length; i++) {
+            if (!commands[i].name || commands[i].name.length === 0) {
+                res.status(500).send({error: 'command list is needed!'});
+                return;
+            }
+            commands[i].url = commands[i].url || '#';
+        }
+        db.addCommand(project, logname, commands, (err, result) => {
+            if (err) {
+                res.status(500).send({error: err});
+            }else {
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(commands);
+            }
+        });
+    }
+});
 
-// app.delete('/api/*/*/commands', function (req, res) {
-//     console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
-//     logstream.log('DELETE commands');
+app.delete('/api/*/*/commands', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
+    logstream.log('DELETE commands');
 
-//     var project = req.params[0];
-//     var logname = req.params[1];
-//     db.delCommands(project, logname, (err, result) => {
-//         if (err) {
-//             res.status(500).send({error: err});
-//         }else {
-//             res.status(200).send("DELETE OK!");
-//         }
-//     });
-// });
+    var project = req.params[0];
+    var logname = req.params[1];
+    db.delCommands(project, logname, (err, result) => {
+        if (err) {
+            res.status(500).send({error: err});
+        }else {
+            res.status(200).send("DELETE OK!");
+        }
+    });
+});
 
 // meta data
 app.get('/api/projects', function (req, res) {

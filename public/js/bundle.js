@@ -15,14 +15,63 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var ContentActions = function () {
+    function ContentActions() {
+        _classCallCheck(this, ContentActions);
+
+        this.generateActions('selectLogBranchSuccess', 'ajaxFail');
+        this.internalID = null;
+        this.lastTimestamp = null;
+    }
+
+    _createClass(ContentActions, [{
+        key: 'selectLogBranch',
+        value: function selectLogBranch(project, logname) {
+            var _this = this;
+
+            var url = '/api/' + project + '/' + logname + '/commands';
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                cache: false
+            }).done(function (commands) {
+                _this.selectLogBranchSuccess({ commands: commands, project: project, logname: logname });
+            }).fail(function (jqXhr) {
+                _this.ajaxFail(jqXhr);
+            });
+            return false;
+        }
+    }]);
+
+    return ContentActions;
+}();
+
+exports.default = _alt2.default.createActions(ContentActions);
+
+},{"../alt":4}],2:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _alt = require('../alt');
+
+var _alt2 = _interopRequireDefault(_alt);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var LogWindowActions = function () {
     function LogWindowActions() {
         _classCallCheck(this, LogWindowActions);
 
-        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'getLogsFail', 'changeFilter', 'changePage', 'changePageSize');
+        this.generateActions('getLogsSuccessAppend', 'getLogsSuccess', 'ajaxFail', 'scroll', 'changeFilter', 'changePage', 'changePageSize');
         this.internalID = null;
         this.lastTimestamp = null;
-        // this.prevLogs = [];
     }
 
     _createClass(LogWindowActions, [{
@@ -51,18 +100,20 @@ var LogWindowActions = function () {
                 dataType: 'json',
                 cache: false
             }).done(function (data) {
-                if (data.length > 0) {
+                if (data && data.length > 0) {
                     _this.lastTimestamp = data[0].timestamp;
                     if (timestamp) {
                         _this.getLogsSuccessAppend(data);
                     } else {
                         _this.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
+                } else if (_this.lastTimestamp === null) {
+                    // data is [] or null, this branch doesn't have log data
+                    _this.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
             }).fail(function (jqXhr) {
-                _this.getLogsFail(jqXhr);
+                _this.ajaxFail(jqXhr);
             });
-            return false;
         }
     }]);
 
@@ -71,7 +122,7 @@ var LogWindowActions = function () {
 
 exports.default = _alt2.default.createActions(LogWindowActions);
 
-},{"../alt":3}],2:[function(require,module,exports){
+},{"../alt":4}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -123,7 +174,7 @@ var SideBarActions = function () {
 
 exports.default = _alt2.default.createActions(SideBarActions);
 
-},{"../alt":3}],3:[function(require,module,exports){
+},{"../alt":4}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -138,7 +189,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = new _alt2.default();
 
-},{"alt":"alt"}],4:[function(require,module,exports){
+},{"alt":"alt"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -186,7 +237,7 @@ var App = function (_React$Component) {
 
 exports.default = App;
 
-},{"react":"react"}],5:[function(require,module,exports){
+},{"react":"react"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -198,6 +249,14 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _contentStore = require('../stores/contentStore');
+
+var _contentStore2 = _interopRequireDefault(_contentStore);
+
+var _contentActions = require('../actions/contentActions');
+
+var _contentActions2 = _interopRequireDefault(_contentActions);
 
 var _logWindow = require('./logWindow');
 
@@ -211,23 +270,157 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Content = function (_React$Component) {
-    _inherits(Content, _React$Component);
+var LogUserCommand = function (_React$Component) {
+    _inherits(LogUserCommand, _React$Component);
 
-    function Content() {
-        _classCallCheck(this, Content);
+    function LogUserCommand(props) {
+        _classCallCheck(this, LogUserCommand);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Content).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LogUserCommand).call(this, props));
+
+        _this.handleClick = _this.handleClick.bind(_this);
+        return _this;
     }
 
-    _createClass(Content, [{
+    _createClass(LogUserCommand, [{
+        key: 'handleClick',
+        value: function handleClick(event) {
+            // call this.props.url
+            $.ajax({
+                method: 'GET',
+                url: this.props.url,
+                cache: false,
+                success: function success(data) {} // do nothing
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
             return _react2.default.createElement(
-                'div',
-                { id: 'page-wrapper' },
-                _react2.default.createElement(_logWindow2.default, null)
+                'button',
+                { onClick: this.handleClick, type: 'button', style: { marginTop: "2px", marginRight: "5px" }, className: 'btn btn-success' },
+                this.props.name
             );
+        }
+    }]);
+
+    return LogUserCommand;
+}(_react2.default.Component);
+
+var Content = function (_React$Component2) {
+    _inherits(Content, _React$Component2);
+
+    function Content(props) {
+        _classCallCheck(this, Content);
+
+        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(Content).call(this, props));
+
+        _this2.state = _contentStore2.default.getState();
+        _this2.onChange = _this2.onChange.bind(_this2);
+        return _this2;
+    }
+
+    _createClass(Content, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            _contentStore2.default.listen(this.onChange);
+        }
+    }, {
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {
+            _contentStore2.default.unlisten(this.onChange);
+        }
+    }, {
+        key: 'onChange',
+        value: function onChange(state) {
+            this.setState(state);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            if (this.state.project && this.state.logname) {
+                return _react2.default.createElement(
+                    'div',
+                    { id: 'page-wrapper' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'row' },
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'col-lg-12', style: { marginTop: "5px" } },
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'panel panel-default' },
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'panel-heading' },
+                                    _react2.default.createElement(
+                                        'div',
+                                        { className: 'row' },
+                                        _react2.default.createElement(
+                                            'div',
+                                            { className: 'col-md-4' },
+                                            _react2.default.createElement(
+                                                'h4',
+                                                null,
+                                                this.state.project + '/' + this.state.logname
+                                            )
+                                        ),
+                                        _react2.default.createElement('div', { className: 'col-md-4' }),
+                                        _react2.default.createElement(
+                                            'div',
+                                            { className: 'col-md-4 text-right' },
+                                            this.state.commands.map(function (command) {
+                                                return _react2.default.createElement(LogUserCommand, { name: command.name, url: command.url });
+                                            })
+                                        )
+                                    )
+                                ),
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'panel-body' },
+                                    _react2.default.createElement(_logWindow2.default, { project: this.state.project, logname: this.state.logname })
+                                )
+                            )
+                        )
+                    )
+                );
+            } else {
+                return _react2.default.createElement(
+                    'div',
+                    { id: 'page-wrapper' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'row' },
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'col-lg-12', style: { marginTop: "5px" } },
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'panel panel-default' },
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'panel-heading' },
+                                    _react2.default.createElement(
+                                        'h4',
+                                        null,
+                                        ' Hello '
+                                    )
+                                ),
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'panel-body' },
+                                    _react2.default.createElement(
+                                        'h5',
+                                        null,
+                                        ' Please choose a log :) '
+                                    )
+                                )
+                            )
+                        )
+                    )
+                );
+            }
         }
     }]);
 
@@ -236,7 +429,7 @@ var Content = function (_React$Component) {
 
 exports.default = Content;
 
-},{"./logWindow":7,"react":"react"}],6:[function(require,module,exports){
+},{"../actions/contentActions":1,"../stores/contentStore":13,"./logWindow":8,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -291,7 +484,7 @@ var Home = function (_React$Component) {
 
 exports.default = Home;
 
-},{"./content":5,"./navBar":8,"react":"react"}],7:[function(require,module,exports){
+},{"./content":6,"./navBar":9,"react":"react"}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -320,162 +513,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var LogItem = function (_React$Component) {
-    _inherits(LogItem, _React$Component);
-
-    function LogItem() {
-        _classCallCheck(this, LogItem);
-
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(LogItem).apply(this, arguments));
-    }
-
-    _createClass(LogItem, [{
-        key: 'render',
-        value: function render() {
-            return _react2.default.createElement(
-                'tr',
-                null,
-                _react2.default.createElement(
-                    'td',
-                    null,
-                    this.props.time
-                ),
-                _react2.default.createElement(
-                    'td',
-                    null,
-                    this.props.text
-                )
-            );
-        }
-    }]);
-
-    return LogItem;
-}(_react2.default.Component);
-
-var LogPageBar = function (_React$Component2) {
-    _inherits(LogPageBar, _React$Component2);
-
-    function LogPageBar(props) {
-        _classCallCheck(this, LogPageBar);
-
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(LogPageBar).call(this, props));
-    }
-
-    _createClass(LogPageBar, [{
-        key: 'handleChangePageSize',
-        value: function handleChangePageSize(pageSize) {
-            _logWindowActions2.default.changePageSize(pageSize);
-        }
-    }, {
-        key: 'handleChangePage',
-        value: function handleChangePage(move) {
-            _logWindowActions2.default.changePage(move);
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this3 = this;
-
-            var start = this.props.page * this.props.pageSize;
-            var end = start + this.props.pageSize - 1;
-
-            return _react2.default.createElement(
-                'div',
-                { style: { marginBottom: "6px" }, className: 'btn-toolbar', role: 'toolbar' },
-                _react2.default.createElement(
-                    'div',
-                    { className: 'btn-group', role: 'group', style: { marginRight: "15px" } },
-                    _react2.default.createElement(
-                        'button',
-                        { type: 'button', className: 'btn btn-default dropdown-toggle', 'data-toggle': 'dropdown', 'aria-haspopup': 'true', 'aria-expanded': 'false' },
-                        "PageSize:" + this.props.pageSize,
-                        _react2.default.createElement('span', { className: 'caret' })
-                    ),
-                    _react2.default.createElement(
-                        'ul',
-                        { className: 'dropdown-menu' },
-                        _react2.default.createElement(
-                            'li',
-                            null,
-                            _react2.default.createElement(
-                                'a',
-                                { href: '#', onClick: function onClick() {
-                                        _this3.handleChangePageSize(50);
-                                    } },
-                                '50'
-                            )
-                        ),
-                        _react2.default.createElement(
-                            'li',
-                            null,
-                            _react2.default.createElement(
-                                'a',
-                                { href: '#', onClick: function onClick() {
-                                        _this3.handleChangePageSize(100);
-                                    } },
-                                '100'
-                            )
-                        )
-                    )
-                ),
-                _react2.default.createElement(
-                    'div',
-                    { className: 'btn-group', role: 'group' },
-                    _react2.default.createElement(
-                        'button',
-                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
-                                _this3.handleChangePage(-_this3.props.page);
-                            } },
-                        _react2.default.createElement('span', { className: 'fa fa-fast-backward', 'aria-hidden': 'true' })
-                    ),
-                    _react2.default.createElement(
-                        'button',
-                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
-                                _this3.handleChangePage(-1);
-                            } },
-                        _react2.default.createElement('span', { className: 'fa fa-backward', 'aria-hidden': 'true' })
-                    )
-                ),
-                _react2.default.createElement(
-                    'span',
-                    { className: 'btn-group', style: { fontSize: "1.5em", marginLeft: "10px", marginRight: "5px", marginTop: "2px" } },
-                    start + "-" + end
-                ),
-                _react2.default.createElement(
-                    'div',
-                    { className: 'btn-group', role: 'group' },
-                    _react2.default.createElement(
-                        'button',
-                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
-                                _this3.handleChangePage(1);
-                            } },
-                        _react2.default.createElement('span', { className: 'fa fa-forward', 'aria-hidden': 'true' })
-                    ),
-                    _react2.default.createElement(
-                        'button',
-                        { type: 'button', className: 'btn btn-default', onClick: function onClick() {
-                                _this3.handleChangePage(100000000);
-                            } },
-                        _react2.default.createElement('span', { className: 'fa fa-fast-forward', 'aria-hidden': 'true' })
-                    )
-                )
-            );
-        }
-    }]);
-
-    return LogPageBar;
-}(_react2.default.Component);
-
-var LogSearchBar = function (_React$Component3) {
-    _inherits(LogSearchBar, _React$Component3);
+var LogSearchBar = function (_React$Component) {
+    _inherits(LogSearchBar, _React$Component);
 
     function LogSearchBar(props) {
         _classCallCheck(this, LogSearchBar);
 
-        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogSearchBar).call(this, props));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LogSearchBar).call(this, props));
 
-        _this4.handleChange = _this4.handleChange.bind(_this4);
-        return _this4;
+        _this.handleChange = _this.handleChange.bind(_this);
+        return _this;
     }
 
     _createClass(LogSearchBar, [{
@@ -488,13 +535,8 @@ var LogSearchBar = function (_React$Component3) {
         value: function render() {
             return _react2.default.createElement(
                 'div',
-                { className: 'input-group custom-search-form' },
-                _react2.default.createElement('input', { type: 'text', onChange: this.handleChange, className: 'form-control', placeholder: 'Filter...' }),
-                _react2.default.createElement(
-                    'div',
-                    { className: 'input-group-addon' },
-                    _react2.default.createElement('i', { className: 'fa fa-filter' })
-                )
+                { className: 'input-group custom-search-form pull-right' },
+                _react2.default.createElement('input', { type: 'text', onChange: this.handleChange, className: 'input-sm', placeholder: 'Filter...' })
             );
         }
     }]);
@@ -502,41 +544,132 @@ var LogSearchBar = function (_React$Component3) {
     return LogSearchBar;
 }(_react2.default.Component);
 
-var LogUserCommand = function (_React$Component4) {
-    _inherits(LogUserCommand, _React$Component4);
+var MsgItem = function (_React$Component2) {
+    _inherits(MsgItem, _React$Component2);
 
-    function LogUserCommand(props) {
-        _classCallCheck(this, LogUserCommand);
+    function MsgItem() {
+        _classCallCheck(this, MsgItem);
 
-        var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogUserCommand).call(this, props));
-
-        _this5.handleClick = _this5.handleClick.bind(_this5);
-        return _this5;
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(MsgItem).apply(this, arguments));
     }
 
-    _createClass(LogUserCommand, [{
-        key: 'handleClick',
-        value: function handleClick(event) {
-            // call this.props.url
-            $.ajax({
-                method: 'GET',
-                url: this.props.url,
-                cache: false,
-                success: function success(data) {} // do nothing
-            });
-        }
-    }, {
+    _createClass(MsgItem, [{
         key: 'render',
         value: function render() {
             return _react2.default.createElement(
-                'button',
-                { onClick: this.handleClick, type: 'button', style: { marginTop: "2px", marginRight: "5px" }, className: 'btn btn-success' },
-                this.props.name
+                'p',
+                { style: { color: "#f1f1f1", margin: "0" } },
+                _react2.default.createElement(
+                    'a',
+                    { style: { color: "#666" } },
+                    this.props.index
+                ),
+                _react2.default.createElement(
+                    'span',
+                    null,
+                    this.props.text
+                )
             );
         }
     }]);
 
-    return LogUserCommand;
+    return MsgItem;
+}(_react2.default.Component);
+
+var MsgHeader = function (_React$Component3) {
+    _inherits(MsgHeader, _React$Component3);
+
+    function MsgHeader(props) {
+        _classCallCheck(this, MsgHeader);
+
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(MsgHeader).call(this, props));
+
+        _this3.logHeaderStyle = { backgroundColor: "#666", margin: "0" };
+        _this3.iStyle = { cursor: "pointer", marginRight: "3px", marginLeft: "3px", color: "#000" };
+        _this3.handlePause = _this3.handlePause.bind(_this3);
+        _this3.handlePlay = _this3.handlePlay.bind(_this3);
+        return _this3;
+    }
+
+    _createClass(MsgHeader, [{
+        key: 'handlePause',
+        value: function handlePause(event) {
+            _logWindowActions2.default.scroll(0);
+        }
+    }, {
+        key: 'handlePlay',
+        value: function handlePlay(event) {
+            _logWindowActions2.default.scroll(100000000);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var iplay = _react2.default.createElement('i', { onClick: this.handlePlay, className: 'fa fa-play', 'aria-hidden': 'true', style: { cursor: "pointer", marginRight: "13px", marginLeft: "3px", color: "#000" } });
+            var ipause = _react2.default.createElement('i', { onClick: this.handlePause, className: 'fa fa-pause', 'aria-hidden': 'true', style: { cursor: "pointer", marginRight: "13px", marginLeft: "3px", color: "#000" } });
+            return _react2.default.createElement(
+                'div',
+                { className: 'row', style: this.logHeaderStyle },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'col-md-8', style: { paddingTop: "6px" } },
+                    this.props.pause ? iplay : ipause
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'col-md-4' },
+                    _react2.default.createElement(LogSearchBar, null)
+                )
+            );
+        }
+    }]);
+
+    return MsgHeader;
+}(_react2.default.Component);
+
+var MsgWindow = function (_React$Component4) {
+    _inherits(MsgWindow, _React$Component4);
+
+    function MsgWindow(props) {
+        _classCallCheck(this, MsgWindow);
+
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(MsgWindow).call(this, props));
+
+        _this4.styleOut = {
+            fontFamily: "Monaco, Inconsolata, monospace",
+            backgroundColor: "#222",
+            padding: "10px"
+        };
+        _this4.handleWheel = _this4.handleWheel.bind(_this4);
+        return _this4;
+    }
+
+    _createClass(MsgWindow, [{
+        key: 'handleWheel',
+        value: function handleWheel(event) {
+            _logWindowActions2.default.scroll(event.deltaY);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var index = this.props.start;
+            var logContent = this.props.logs.map(function (item) {
+                index = index + 1;
+                try {
+                    var timestring = new Date(Number(item.timestamp)).toLocaleString();
+                    return _react2.default.createElement(MsgItem, { key: index, index: index, time: timestring, text: item.logtext });
+                } catch (e) {
+                    return _react2.default.createElement(MsgItem, { key: index, index: index, time: 'NA', text: item.toString() });
+                }
+            });
+            return _react2.default.createElement(
+                'div',
+                { onWheel: this.handleWheel, style: this.styleOut },
+                logContent
+            );
+        }
+    }]);
+
+    return MsgWindow;
 }(_react2.default.Component);
 
 var LogWindow = function (_React$Component5) {
@@ -545,17 +678,25 @@ var LogWindow = function (_React$Component5) {
     function LogWindow(props) {
         _classCallCheck(this, LogWindow);
 
-        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
+        var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(LogWindow).call(this, props));
 
-        _this6.state = _logWindowStore2.default.getState();
-        _this6.onChange = _this6.onChange.bind(_this6);
-        return _this6;
+        _this5.state = _logWindowStore2.default.getState();
+        _this5.onChange = _this5.onChange.bind(_this5);
+        _this5.componentWillReceiveProps = _this5.componentWillReceiveProps.bind(_this5);
+        return _this5;
     }
 
     _createClass(LogWindow, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(nextProps) {
+            this.props = nextProps;
+            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
+        }
+    }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
             _logWindowStore2.default.listen(this.onChange);
+            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
         }
     }, {
         key: 'componentWillUnmount',
@@ -570,101 +711,16 @@ var LogWindow = function (_React$Component5) {
     }, {
         key: 'render',
         value: function render() {
-            var start = this.state.page * this.state.pageSize;
-            var index = start;
-            var logs = this.state.logs.slice(start, start + this.state.pageSize).map(function (item) {
-                index = index + 1;
-                try {
-                    var timestring = new Date(Number(item.timestamp)).toLocaleString();
-                    return _react2.default.createElement(LogItem, { key: index, time: timestring, text: item.logtext });
-                } catch (e) {
-                    return _react2.default.createElement(LogItem, { key: index, time: 'NA', text: item.toString() });
-                }
-            });
-
+            var start = this.state.start < 0 ? this.state.linesFilted.length - this.state.height : this.state.start;
+            start = Math.max(start, 0); // start >= 0
+            var end = start + this.state.height;
+            end = Math.min(end, this.state.linesFilted.length); // log <= logs.length
+            var logs = this.state.linesFilted.slice(start, end);
             return _react2.default.createElement(
                 'div',
-                { className: 'row' },
-                _react2.default.createElement(
-                    'div',
-                    { className: 'col-lg-12', style: { marginTop: "5px" } },
-                    _react2.default.createElement(
-                        'div',
-                        { className: 'panel panel-default' },
-                        _react2.default.createElement(
-                            'div',
-                            { className: 'panel-heading' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'row' },
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'col-md-4' },
-                                    _react2.default.createElement(
-                                        'h4',
-                                        null,
-                                        this.state.project + '/' + this.state.logname + '(' + this.state.logs.length + ')'
-                                    )
-                                ),
-                                _react2.default.createElement('div', { className: 'col-md-4' }),
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'col-md-4 text-right' },
-                                    _react2.default.createElement(LogUserCommand, { name: 'Command0', url: 'nothing' })
-                                )
-                            )
-                        ),
-                        _react2.default.createElement(
-                            'div',
-                            { className: 'panel-body' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'row' },
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'col-md-8' },
-                                    _react2.default.createElement(LogPageBar, { page: this.state.page, pageSize: this.state.pageSize })
-                                ),
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'col-md-4 text-right' },
-                                    _react2.default.createElement(LogSearchBar, null)
-                                )
-                            ),
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'dataTable_wrapper' },
-                                _react2.default.createElement(
-                                    'table',
-                                    { className: 'table table-striped table-bordered table-hover', id: 'dataTables-example' },
-                                    _react2.default.createElement(
-                                        'thead',
-                                        null,
-                                        _react2.default.createElement(
-                                            'tr',
-                                            null,
-                                            _react2.default.createElement(
-                                                'th',
-                                                { width: '20%' },
-                                                'Time'
-                                            ),
-                                            _react2.default.createElement(
-                                                'th',
-                                                null,
-                                                'Log'
-                                            )
-                                        )
-                                    ),
-                                    _react2.default.createElement(
-                                        'tbody',
-                                        null,
-                                        logs
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
+                null,
+                _react2.default.createElement(MsgHeader, { pause: this.state.start >= 0 }),
+                _react2.default.createElement(MsgWindow, { logs: logs, start: start })
             );
         }
     }]);
@@ -674,7 +730,7 @@ var LogWindow = function (_React$Component5) {
 
 exports.default = LogWindow;
 
-},{"../actions/logWindowActions":1,"../stores/logWindowStore":12,"react":"react"}],8:[function(require,module,exports){
+},{"../actions/logWindowActions":2,"../stores/logWindowStore":14,"react":"react"}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -833,7 +889,7 @@ var NavBar = function (_React$Component3) {
 
 exports.default = NavBar;
 
-},{"./sideBar":9,"react":"react"}],9:[function(require,module,exports){
+},{"./sideBar":10,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -854,9 +910,9 @@ var _sideBarActions = require('../actions/sideBarActions');
 
 var _sideBarActions2 = _interopRequireDefault(_sideBarActions);
 
-var _logWindowActions = require('../actions/logWindowActions');
+var _contentActions = require('../actions/contentActions');
 
-var _logWindowActions2 = _interopRequireDefault(_logWindowActions);
+var _contentActions2 = _interopRequireDefault(_contentActions);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -894,7 +950,7 @@ var LognameButton = function (_React$Component) {
     }, {
         key: 'handleClick',
         value: function handleClick() {
-            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
+            _contentActions2.default.selectLogBranch(this.props.project, this.props.logname);
         }
     }]);
 
@@ -1056,7 +1112,7 @@ var SideBar = function (_React$Component5) {
 
 exports.default = SideBar;
 
-},{"../actions/logWindowActions":1,"../actions/sideBarActions":2,"../stores/sideBarStore":13,"react":"react"}],10:[function(require,module,exports){
+},{"../actions/contentActions":1,"../actions/sideBarActions":3,"../stores/sideBarStore":15,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -1081,7 +1137,7 @@ _reactDom2.default.render(_react2.default.createElement(
     _routes2.default
 ), document.getElementById('app'));
 
-},{"./routes":11,"react":"react","react-dom":"react-dom","react-router":"react-router"}],11:[function(require,module,exports){
+},{"./routes":12,"react":"react","react-dom":"react-dom","react-router":"react-router"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1110,7 +1166,57 @@ exports.default = _react2.default.createElement(
     _react2.default.createElement(_reactRouter.Route, { path: '/', component: _home2.default })
 );
 
-},{"./components/app":4,"./components/home":6,"react":"react","react-router":"react-router"}],12:[function(require,module,exports){
+},{"./components/app":5,"./components/home":7,"react":"react","react-router":"react-router"}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _alt = require('../alt');
+
+var _alt2 = _interopRequireDefault(_alt);
+
+var _contentActions = require('../actions/contentActions.js');
+
+var _contentActions2 = _interopRequireDefault(_contentActions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var ContentStore = function () {
+    function ContentStore() {
+        _classCallCheck(this, ContentStore);
+
+        this.bindActions(_contentActions2.default);
+        this.commands = [];
+        this.project = '';
+        this.logname = '';
+    }
+
+    _createClass(ContentStore, [{
+        key: 'onSelectLogBranchSuccess',
+        value: function onSelectLogBranchSuccess(data) {
+            this.commands = data.commands;
+            this.project = data.project;
+            this.logname = data.logname;
+        }
+    }, {
+        key: 'onAjaxFail',
+        value: function onAjaxFail(jqXhr) {
+            toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
+        }
+    }]);
+
+    return ContentStore;
+}();
+
+exports.default = _alt2.default.createStore(ContentStore);
+
+},{"../actions/contentActions.js":1,"../alt":4}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1137,78 +1243,123 @@ var LogWindowStore = function () {
 
         this.bindActions(_logWindowActions2.default);
         // data
-        this.logsOrigin = [];
         this.logs = [];
-        this.project = '';
-        this.logname = '';
+        this.linesOrigin = [];
+        this.linesFilted = [];
 
         // data for component
-        this.page = 0;
-        this.pageSize = 50;
         this.filter = '';
+        this.height = 24;
+        this.start = -this.height;
     }
 
     _createClass(LogWindowStore, [{
-        key: 'filterLogs',
-        value: function filterLogs(logs, filter) {
-            var newLogs = [];
-            logs.map(function (log) {
-                if (filter.length == 0 || log.logtext.toLowerCase().indexOf(filter) >= 0) {
-                    newLogs.push(log);
-                }
+        key: 'filterLines',
+        value: function filterLines(lines, filter) {
+            if (!filter || filter.length === 0) {
+                return lines;
+            }
+            return lines.filter(function (line) {
+                return line.logtext.match(new RegExp(filter, 'i'));
             });
-            return newLogs;
+        }
+    }, {
+        key: 'convertLogsToLines',
+        value: function convertLogsToLines(logs) {
+            logs.sort(function (a, b) {
+                return a.timestamp - b.timestamp;
+            });
+            var lines = logs.reduce(function (a, b) {
+                return a + b.logtext;
+            }, '').split('\n');
+            if (lines[lines.length - 1].length === 0) {
+                lines.pop();
+            }
+
+            var pos = 0,
+                size = 0;
+            var results = [];
+            for (var i = 0; i < lines.length; i++) {
+                size += lines[i].length + 1; // +1 for '\n'
+                results.push({ timestamp: logs[pos].timestamp, logtext: lines[i] });
+                if (size >= logs[pos].logtext.length) {
+                    size -= logs[pos].logtext.length;
+                    pos++;
+                }
+            }
+            return results;
+        }
+    }, {
+        key: 'mergeLines',
+        value: function mergeLines(lines0, lines1) {
+            // merge two ordered line list
+            // a good solution is merge sort... but we naviely sort the added array now
+            var newLines = lines0.concat(lines1);
+            if (lines0.length > 0 && lines1.length > 0 && lines1[0].timestamp >= lines0[lines0.length - 1].timestamp) {
+                // sorted
+            } else {
+                newLines.sort(function (a, b) {
+                    return a.timestamp - b.timestamp;
+                });
+            }
+            return newLines;
+        }
+    }, {
+        key: 'onScroll',
+        value: function onScroll(deltaY) {
+            if (deltaY === 0) {
+                // pause
+                if (this.start < 0) {
+                    this.start = Math.max(0, this.linesFilted.length - this.height);
+                }
+            } else {
+                deltaY = Math.floor(deltaY / 50);
+                if (this.start < 0) {
+                    this.start = this.linesFilted.length - this.height + deltaY;
+                } else {
+                    this.start += deltaY;
+                }
+                if (this.start < 0) {
+                    this.start = 0;
+                }
+                if (this.start > this.linesFilted.length - this.height) {
+                    this.start = -this.height;
+                }
+            }
         }
     }, {
         key: 'onChangeFilter',
         value: function onChangeFilter(filter) {
-            this.filter = filter;
-            this.logs = this.filterLogs(this.logsOrigin, this.filter);
-        }
-    }, {
-        key: 'onChangePage',
-        value: function onChangePage(move) {
-            var mod = this.logs.length % this.pageSize;
-            var maxPage = (this.logs.length - mod) / this.pageSize;
-            if (mod !== 0) {
-                maxPage++;
-            }
-
-            // page in [0, maxPage-1]
-            var newPage = this.page + move;
-            if (newPage > maxPage - 1) {
-                newPage = maxPage - 1;
-            }
-            if (newPage < 0) {
-                newPage = 0;
-            }
-
-            this.page = newPage;
-        }
-    }, {
-        key: 'onChangePageSize',
-        value: function onChangePageSize(pageSize) {
-            this.pageSize = pageSize;
+            this.linesFilted = this.filterLines(this.linesOrigin, this.filter);
         }
     }, {
         key: 'onGetLogsSuccessAppend',
         value: function onGetLogsSuccessAppend(logs) {
-            this.logsOrigin = logs.concat(this.logsOrigin);
-            var newLogs = this.filterLogs(logs, this.filter);
-            this.logs = newLogs.concat(this.logs);
+            logs.sort(function (a, b) {
+                return a.timestamp - b.timestamp;
+            });
+            this.logs = this.logs.concat(logs);
+            // use lines
+            var linesOrigin = this.convertLogsToLines(logs);
+            this.linesOrigin = this.mergeLines(this.linesOrigin, this.convertLogsToLines(logs));
+            var linesFilted = this.filterLines(linesOrigin, this.filter);
+            this.linesFilted = this.mergeLines(this.linesFilted, linesFilted);
         }
     }, {
         key: 'onGetLogsSuccess',
         value: function onGetLogsSuccess(data) {
-            this.logsOrigin = data.logs;
-            this.project = data.project;
-            this.logname = data.logname;
-            this.logs = this.filterLogs(this.logsOrigin, this.filter);
+            this.start = -this.height;
+            this.filter = '';
+            this.logs = data.logs.sort(function (a, b) {
+                return a.timestamp - b.timestamp;
+            });
+            // use lines
+            this.linesOrigin = this.convertLogsToLines(this.logs);
+            this.linesFilted = this.filterLines(this.linesOrigin, this.filter);
         }
     }, {
-        key: 'onGetLogsFail',
-        value: function onGetLogsFail(jqXhr) {
-            // Handle multiple response formats, fallback to HTTP status code number.
+        key: 'onAjaxFail',
+        value: function onAjaxFail(jqXhr) {
             toastr.error(jqXhr.responseJSON && jqXhr.responseJSON.message || jqXhr.responseText || jqXhr.statusText);
         }
     }]);
@@ -1218,7 +1369,7 @@ var LogWindowStore = function () {
 
 exports.default = _alt2.default.createStore(LogWindowStore);
 
-},{"../actions/logWindowActions":1,"../alt":3}],13:[function(require,module,exports){
+},{"../actions/logWindowActions":2,"../alt":4}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1299,7 +1450,7 @@ var SideBarStore = function () {
 
 exports.default = _alt2.default.createStore(SideBarStore);
 
-},{"../actions/sideBarActions":2,"../alt":3}]},{},[10])
+},{"../actions/sideBarActions":3,"../alt":4}]},{},[11])
 
 
 //# sourceMappingURL=bundle.js.map

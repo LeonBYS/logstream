@@ -5,14 +5,14 @@ class LogWindowActions {
         this.generateActions(
             'getLogsSuccessAppend',
             'getLogsSuccess',
-            'getLogsFail',
+            'ajaxFail',
+            'scroll',
             'changeFilter',
             'changePage',
             'changePageSize'
         )
         this.internalID = null;
         this.lastTimestamp = null;
-        // this.prevLogs = [];
     }
 
     changeFocus(project, logname) {
@@ -37,18 +37,20 @@ class LogWindowActions {
             dataType: 'json',
             cache: false
         }).done((data) => {
-            if (data.length > 0) {
+            if (data && data.length > 0) {
                 this.lastTimestamp = data[0].timestamp;
                 if (timestamp) {
                     this.getLogsSuccessAppend(data);
                 }else {
                     this.getLogsSuccess({logs: data, project: project, logname: logname});
                 }
+            }else if (this.lastTimestamp === null) { 
+                // data is [] or null, this branch doesn't have log data
+                this.getLogsSuccess({logs: [], project: project, logname: logname});
             }
         }).fail((jqXhr) => {
-            this.getLogsFail(jqXhr);
+            this.ajaxFail(jqXhr);
         });
-        return false;
     }
 }
 
