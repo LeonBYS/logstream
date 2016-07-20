@@ -65,7 +65,7 @@ var dbRedis = {
                         }else {
                             // remove the logs before timestamp
                             var size = result.length;
-                            while (size > 0 && result[size - 1].timestamp < timestamp) {
+                            while (size > 0 && result[size - 1].timestamp <= timestamp) {
                                 size--;
                             }
                             callback(null, result.slice(0, size));

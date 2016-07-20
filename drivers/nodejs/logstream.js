@@ -18,6 +18,7 @@ class LogStream {
         for (var i=0; i<arguments.length; i++) {
             logtext += ' ' + arguments[i];
         }
+        logtext += '\n';
         var message = JSON.stringify({logtext: logtext, timestamp:timestamp});
         var options = {
             hostname: this.host,
