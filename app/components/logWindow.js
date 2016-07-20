@@ -126,9 +126,11 @@ class LogWindow extends React.Component {
     }
 
     render () {
-        var start = this.state.start < 0 ? this.state.logs.length - this.state.height : this.state.start;
+        var start = this.state.start < 0 ? this.state.linesFilted.length - this.state.height : this.state.start;
+        start = Math.max(start, 0); // start >= 0
         var end = start + this.state.height;
-        var logs = this.state.logs.slice(start, end);
+        end = Math.min(end, this.state.linesFilted.length); // log <= logs.length
+        var logs = this.state.linesFilted.slice(start, end);
         return (
             <div>
                 <MsgHeader pause={this.state.start >= 0} />
