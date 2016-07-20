@@ -5,9 +5,8 @@ class LogWindowActions {
         this.generateActions(
             'getLogsSuccessAppend',
             'getLogsSuccess',
-            'getLogsFail',
-            'getCommandsSuccess',
-            'getCommandsFail',
+            'ajaxFail',
+            'scroll',
             'changeFilter',
             'changePage',
             'changePageSize'
@@ -16,27 +15,12 @@ class LogWindowActions {
         this.lastTimestamp = null;
     }
 
-    getCommands(project, logname) {
-        var url = '/api/' + project + '/' + logname + '/commands';
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            cache: false
-        }).done((data) => {
-            this.getCommandsSuccess(data);
-        }).fail((jqXhr) => {
-            this.getCommandsFail(jqXhr);
-        });
-        return false;
-    }
-
     changeFocus(project, logname) {
         if (this.internalID) {
             clearInterval(this.internalID);
             this.lastTimestamp = null;
         }
         this.getLogs(project, logname, this.lastTimestamp);
-        this.getCommands(project, logname);
         this.internalID = setInterval(
             function() { this.getLogs(project, logname, this.lastTimestamp); }.bind(this), 
             1000
@@ -65,9 +49,8 @@ class LogWindowActions {
                 this.getLogsSuccess({logs: [], project: project, logname: logname});
             }
         }).fail((jqXhr) => {
-            this.getLogsFail(jqXhr);
+            this.ajaxFail(jqXhr);
         });
-        return false;
     }
 }
 

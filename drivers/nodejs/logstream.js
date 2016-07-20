@@ -13,16 +13,19 @@ class LogStream {
     }
 
     log(msg) {
-        var message = '';
+        var timestamp = Date.now();
+        var logtext = '';
         for (var i=0; i<arguments.length; i++) {
-            message += ' ' + arguments[i];
+            logtext += ' ' + arguments[i];
         }
+        logtext += '\n';
+        var message = JSON.stringify({logtext: logtext, timestamp:timestamp});
         var options = {
             hostname: this.host,
             port: this.port,
-            path: '/api/' + this.project + '/' + this.logname + '/logs?timestamp=' + Date.now(),
+            path: '/api/' + this.project + '/' + this.logname + '/logs',
             method: 'POST',
-            headers: {'Content-Type': 'text/plain', 'Content-Length': Buffer.byteLength(message)}
+            headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(message)}
         };
         var req = http.request(options);
         req.on('error', function (e) {
