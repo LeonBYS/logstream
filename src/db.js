@@ -158,6 +158,86 @@ var dbRedis = {
         var params = [lkey].concat(lvals);
         params.push(callback);
         this.client.lpush.apply(this.client, params);
+    },
+
+    /**
+     * get charts with it's log branchs
+     * @param {string} project
+     * @param {string} logname
+     * @param {function(err, result)} callback 
+     */
+    getCharts: function (project, logname, callback) {
+        var key = this.prefix + 'charts:' + project + ':' + logname + ':*';
+        this.client.keys(key, function (err, result) {
+            if (err) {
+                callback(err, null);
+                return;
+            }else {
+                var set = {};
+                for (var i=0; i<result.length; i++) {
+                    var arr = result[i].split(':');
+                    var chartName = arr[arr.length - 1];
+                    if (!(chartName in set)) {
+                        set[chartName] = true;
+                    }
+                }
+                callback(null, Object.keys(set));
+                return;
+            }
+        });
+    },
+
+    /**
+     * get specific chart data 
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} chartname
+     * @param {function(err, result)} callback 
+     */
+    getChartData: function (project, logname, chartname, callback) {
+        var key = this.prefix + 'charts:' + project + ':' + logname + ':' + chartname;
+        this.client.get(key, callback); 
+    },
+    
+    /**
+     * delete specific chart data 
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} chartname
+     * @param {function(err, result)} callback 
+     */
+    delChart: function (project, logname, chartname, callback) {
+        var key = this.prefix + 'charts:' + project + ':' + logname + ':' + chartname;
+        this.client.del(key, callback); 
+    },
+
+    /**
+     * get specific chart data 
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} chartname
+     * @param {dict} data
+     * @param {function(err, result)} callback 
+     */
+    addChartData: function (project, logname, chartname, timestamp, chartType, data, callback) {
+        var key = this.prefix + 'charts:' + project + ':' + logname + ':' + chartname;
+        this.client.get(key, (err, result) => {
+            var chartData = JSON.parse(result); 
+            var dataOrigin = chartData.sort((a, b) => -(a[1] - b[1])); // sort descend
+            data.map((item) => {
+                if (key in dataOrigin) {
+                    if (dataOrigin[key].length >= 128) {
+                        dataOrigin[key].pop();
+                    }
+                    dataOrigin[key].unshift([item.val, timestamp]);
+                }else {
+                    dataOrigin[key] = [[item.val, timestamp]];
+                }
+            });
+            chartData.type = charType;
+            charType.data = dataOrigin;
+            this.client.set(key, JSON.stringify(charData), callback);
+        });
     }
 };
 

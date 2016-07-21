@@ -10,10 +10,11 @@ describe('test api', function() {
     });
 
     it('reponse to POST /api/testProj/testLogname/logs', (done) => {
+        var log = {logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString()};
         request(app)
             .post('/api/testProj/testLogname/logs')
-            .set('Content-Type', 'text/plain')
-            .send("This is a test msg at " + new Date(Date.now()).toLocaleDateString())
+            .set('Content-Type', 'text/json')
+            .send(JSON.stringify(log))
             .expect(200, done);
     });
 
