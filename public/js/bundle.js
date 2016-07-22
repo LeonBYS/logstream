@@ -381,7 +381,64 @@ var Content = function (_React$Component2) {
                                 _react2.default.createElement(
                                     'div',
                                     { className: 'panel-body' },
-                                    _react2.default.createElement(_logWindow2.default, { project: this.state.project, logname: this.state.logname })
+                                    _react2.default.createElement(
+                                        'ul',
+                                        { className: 'nav nav-tabs' },
+                                        _react2.default.createElement(
+                                            'li',
+                                            { className: 'active' },
+                                            _react2.default.createElement(
+                                                'a',
+                                                { 'data-toggle': 'tab', href: '#logswindow' },
+                                                'Logs Window'
+                                            )
+                                        ),
+                                        _react2.default.createElement(
+                                            'li',
+                                            null,
+                                            _react2.default.createElement(
+                                                'a',
+                                                { 'data-toggle': 'tab', href: '#charts' },
+                                                'Charts'
+                                            )
+                                        ),
+                                        _react2.default.createElement(
+                                            'li',
+                                            null,
+                                            _react2.default.createElement(
+                                                'a',
+                                                { 'data-toggle': 'tab', href: '#settings' },
+                                                'Settings'
+                                            )
+                                        )
+                                    ),
+                                    _react2.default.createElement(
+                                        'div',
+                                        { className: 'tab-content' },
+                                        _react2.default.createElement(
+                                            'div',
+                                            { id: 'logswindow', className: 'tab-pane fade in active' },
+                                            _react2.default.createElement(_logWindow2.default, { project: this.state.project, logname: this.state.logname })
+                                        ),
+                                        _react2.default.createElement(
+                                            'div',
+                                            { id: 'charts', className: 'tab-pane fade' },
+                                            _react2.default.createElement(
+                                                'h3',
+                                                null,
+                                                'Here is your charts'
+                                            )
+                                        ),
+                                        _react2.default.createElement(
+                                            'div',
+                                            { id: 'settings', className: 'tab-pane fade' },
+                                            _react2.default.createElement(
+                                                'h3',
+                                                null,
+                                                'Here is your setting for this log branch'
+                                            )
+                                        )
+                                    )
                                 )
                             )
                         )
@@ -413,9 +470,27 @@ var Content = function (_React$Component2) {
                                     'div',
                                     { className: 'panel-body' },
                                     _react2.default.createElement(
-                                        'h5',
-                                        null,
-                                        ' Please choose a log :) '
+                                        'div',
+                                        { className: 'jumbotron', style: { paddingLeft: "10%" } },
+                                        _react2.default.createElement(
+                                            'h1',
+                                            null,
+                                            'LogStream'
+                                        ),
+                                        _react2.default.createElement(
+                                            'p',
+                                            null,
+                                            'log your everything!'
+                                        ),
+                                        _react2.default.createElement(
+                                            'p',
+                                            null,
+                                            _react2.default.createElement(
+                                                'a',
+                                                { className: 'btn btn-primary btn-lg', href: 'https://github.com/usstwxy/logstream', role: 'button' },
+                                                'Learn more'
+                                            )
+                                        )
                                     )
                                 )
                             )

@@ -71,7 +71,23 @@ class Content extends React.Component {
                                 </div>
 
                                 <div className="panel-body">
-                                    <LogWindow project={this.state.project} logname={this.state.logname} />
+                                    <ul className="nav nav-tabs">
+                                        <li className="active"><a data-toggle="tab" href="#logswindow">Logs Window</a></li>
+                                        <li><a data-toggle="tab" href="#charts">Charts</a></li>
+                                        <li><a data-toggle="tab" href="#settings">Settings</a></li>
+                                    </ul>
+                                    <div className="tab-content">
+                                        <div id="logswindow" className="tab-pane fade in active">
+                                            <LogWindow project={this.state.project} logname={this.state.logname} />
+                                        </div>
+                                        <div id="charts" className="tab-pane fade">
+                                            <h3>Here is your charts</h3>
+                                        </div>
+                                        <div id="settings" className="tab-pane fade">
+                                            <h3>Here is your setting for this log branch</h3>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -88,7 +104,11 @@ class Content extends React.Component {
                                     <h4> Hello </h4>
                                 </div>
                                 <div className="panel-body">
-                                    <h5> Please choose a log :) </h5>
+                                    <div className="jumbotron" style={{paddingLeft:"10%"}}>
+                                        <h1>LogStream</h1>
+                                        <p>log your everything!</p>
+                                        <p><a className="btn btn-primary btn-lg" href="https://github.com/usstwxy/logstream" role="button">Learn more</a></p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
