@@ -31,7 +31,7 @@ db.connect(
     process.env.REDIS_HOST,
     process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
     process.env.REDIS_PASSWORD,
-    process.env.REDIS_HOST ? {servername: process.env.REDIS_HOST} : null
+    process.env.REDIS_TLS ? JSON.parse(process.env.REDIS_TLS) : null
 );
 
 /* RESTful API*/
