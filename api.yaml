@@ -1,0 +1,276 @@
+# this is an example of the Uber API
+# as a demonstration of an API spec in YAML
+swagger: '2.0'
+info:
+  title: LogStream API
+  description: Stream your logs!
+  version: "1.0.0"
+# the domain of the service
+host: logstream-test.azurewebsites.net
+# array of all schemes that your API supports
+schemes:
+  - http
+# will be prefixed to all paths
+basePath: /api
+produces:
+  - application/json
+paths:
+  /projects:
+    get:
+      summary: Get all projects with it's log names
+      description: |
+        The Projects endpoint returns all the projects and log names in logstream.
+        The response includes the project name and a log name list belong this project.
+      tags:
+        - Projects
+      responses:
+        200:
+          description: An array of projects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+            
+  /{project}/{logname}/logs:
+    get:
+      summary: Get logs in a specific branch (project and log name).
+      description: |
+        get logs on specific project and log name. 
+        if a timestamp is provided, you will get the logs after the given time.
+        if parameter count is provided, the number of the return logs will not exceed count. 
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+        - name: timestamp
+          in: query
+          description: timestamp lower bound
+          required: false
+          type: number
+          format: int64
+        - name: count
+          in: query
+          description: max count logs this request want get
+          required: false
+          type: number
+          format: int32
+      tags: 
+        - Logs
+      responses:
+        200:
+          description: An array of logs
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Log'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Add a log into a specific branch (project and log name).
+      description: |
+        Add a log on specific project and log name. 
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+        - name: log
+          in: body
+          description: the log message
+          required: true
+          schema:
+            $ref: '#/definitions/Log'
+      tags: 
+        - Logs
+      responses:
+        200:
+          description: The log user posted
+          schema:
+            $ref: '#/definitions/Log'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /{project}/{logname}/commands:
+    get:
+      summary: Get user defined commands
+      description: Get user defined commands in a specific branch (project and log name).
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+      tags:
+        - Commands
+      responses:
+        200:
+          description: An array of commands
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Commands'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Add user defined commands
+      description: Add user defined commands in a specific branch (project and log name).
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+        - name: commands
+          in: body
+          description: the commands user want to add
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Commands'
+      tags:
+        - Commands
+      responses:
+        200:
+          description: User added commands
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Commands'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: Delete user defined commands
+      description: Delete all user defined commands in a specific branch (project and log name).
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+      tags:
+        - Commands
+      responses:
+        200:
+          description: deleted commands
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    
+  
+  /estimates/time:
+    get:
+      summary: Time Estimates
+      description: The Time Estimates endpoint returns ETAs for all products offered at a given location, with the responses expressed as integers in seconds. We recommend that this endpoint be called every minute to provide the most accurate, up-to-date ETAs.
+      parameters:
+        - name: start_latitude
+          in: query
+          description: Latitude component of start location.
+          required: true
+          type: number
+          format: double
+        - name: start_longitude
+          in: query
+          description: Longitude component of start location.
+          required: true
+          type: number
+          format: double
+        - name: customer_uuid
+          in: query
+          type: string
+          format: uuid
+          description: Unique customer identifier to be used for experience customization.
+        - name: product_id
+          in: query
+          type: string
+          description: Unique identifier representing a specific product for a given latitude & longitude.
+      tags:
+        - Estimates
+      responses:
+        200:
+          description: An array of products
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Project:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Unique identifier representing a specific project.
+      lognames:
+        type: array
+        items:
+          type: string
+  Log:
+    type: object
+    properties:
+      timestamp:
+        type: integer
+        format: int64
+        description: A int64 number represent the timestamp when this log send.
+      logtext:
+        type: string
+        description: The text of this log.
+  Commands:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Command name.
+      url:
+        type: string
+        description: the url this command what to call (HTTP GET Method)
+  Error:
+    type: object
+    properties:
+      error:
+        type: string
