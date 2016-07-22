@@ -131,7 +131,10 @@ var dbRedis = {
      */
     getCommands: function (project, logname, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
-        this.returnListData(lkey, 0, -1, callback);
+        this.returnListData(lkey, 0, -1, (err, result) => {
+            if (result) { result.sort((a, b) => a.name < b.name ? -1 : 1); }
+            callback(err, result);
+        });
     },
 
     /**
@@ -196,7 +199,9 @@ var dbRedis = {
      */
     getChartData: function (project, logname, chartname, callback) {
         var key = this.prefix + 'charts:' + project + ':' + logname + ':' + chartname;
-        this.client.get(key, callback); 
+        this.client.get(key, (err, res) => {
+            callback(err, JSON.parse(res));
+        }); 
     },
     
     /**
@@ -212,31 +217,33 @@ var dbRedis = {
     },
 
     /**
-     * get specific chart data 
+     * add specific chart data 
      * @param {string} project
      * @param {string} logname
      * @param {string} chartname
-     * @param {dict} data
+     * @param {number} timestamp
+     * @param {string} chartType 
+     * @param {array} data
      * @param {function(err, result)} callback 
      */
     addChartData: function (project, logname, chartname, timestamp, chartType, data, callback) {
         var key = this.prefix + 'charts:' + project + ':' + logname + ':' + chartname;
         this.client.get(key, (err, result) => {
-            var chartData = JSON.parse(result); 
-            var dataOrigin = chartData.sort((a, b) => -(a[1] - b[1])); // sort descend
+            var chartData = JSON.parse(result) || {}; 
+            var dataOrigin = chartData.data || {};
             data.map((item) => {
-                if (key in dataOrigin) {
-                    if (dataOrigin[key].length >= 128) {
-                        dataOrigin[key].pop();
+                if (item.key in dataOrigin) {
+                    if (dataOrigin[item.key].length >= 128) {
+                        dataOrigin[item.key].pop();
                     }
-                    dataOrigin[key].unshift([item.val, timestamp]);
+                    dataOrigin[item.key].unshift([item.value, timestamp]);
                 }else {
-                    dataOrigin[key] = [[item.val, timestamp]];
+                    dataOrigin[item.key] = [[item.value, timestamp]];
                 }
             });
-            chartData.type = charType;
-            charType.data = dataOrigin;
-            this.client.set(key, JSON.stringify(charData), callback);
+            chartData.type = chartType;
+            chartData.data = dataOrigin;
+            this.client.set(key, JSON.stringify(chartData), callback);
         });
     }
 };

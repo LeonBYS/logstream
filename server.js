@@ -37,12 +37,11 @@ db.connect(
 /* RESTful API*/
 function returnResult(res, successRet) {
     function ret(err, result) {
+        res.setHeader('Content-Type', 'application/json');
         if (err) {
             res.status(500).send({error:err});
         }else {
-            res.setHeader('Content-Type', 'application/json');
             if (successRet) {
-                console.log('success ret', successRet);
                 res.status(200).send(typeof(successRet) === 'string' ? successRet : JSON.stringify(successRet));
             }else {
                 res.status(200).send(JSON.stringify(result));
@@ -90,8 +89,11 @@ app.post('/api/*/*/logs', function(req, res) {
 
     console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
-
-    db.addLog(project, logname, logtext, timestamp, returnResult(res, req.body));
+    if (logtext) {
+        db.addLog(project, logname, logtext, timestamp, returnResult(res, req.body));
+    }else {
+        res.status(500).send({error:'invalid log'});
+    }
 });
 
 
@@ -176,7 +178,11 @@ app.post('/api/*/*/charts/*', function(req, res) {
     var timestamp = req.body.timestamp || Date.now();
     var chartType = req.body.chartType || 'line';
     var data = req.body.data;
-    db.addChartData(project, logname, chartname, timestamp, chartType, data, returnResult(res, data));
+    if (['line'].indexOf(chartType) >= 0) {
+        db.addChartData(project, logname, chartname, timestamp, chartType, data, returnResult(res, req.body));   
+    }else {
+        res.status(500).send({error:'invalid chart type'});
+    }
 });
 
 
