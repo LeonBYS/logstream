@@ -38,10 +38,10 @@ var dbRedis = {
      * @param {number} timestamp
      * @param {function(err, result)} callback 
      */
-    getLogs: function (project, logname, timestamp, callback) {
+    getLogs: function (project, logname, timestamp, count, callback) {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
         if (!timestamp) {
-            this.returnListData(lkey, 0, -1, callback);
+            this.returnListData(lkey, 0, count-1, callback);
         } else {
             // get logs batch by batch, until exceed timestamp
             var getLogsSteply = function (start, batchsize, result, timestamp) {
@@ -59,16 +59,20 @@ var dbRedis = {
 
                         // update start position and batchsize
                         if (lastTimestamp >= timestamp) {
+                            if (result.length >= count) {
+                                callback(null, result.slice(0, count));
+                                return;
+                            }
                             start += batchsize;
                             batchsize *= 2;
                             getLogsSteply(start, batchsize, result, timestamp);
                         }else {
                             // remove the logs before timestamp
                             var size = result.length;
-                            while (size > 0 && result[size - 1].timestamp < timestamp) {
+                            while (size > 0 && result[size - 1].timestamp <= timestamp) {
                                 size--;
                             }
-                            callback(null, result.slice(0, size));
+                            callback(null, result.slice(0, Math.min(size, count)));
                             return;
                         }
                     }

@@ -64,6 +64,8 @@ app.get('/api/*/*/logs', function (req, res) {
     var project = req.params[0];
     var logname = req.params[1];
     var timestamp = req.query.timestamp;
+    var count = req.query.count || 100000; // 100K logs, are you kidding me?
+
     if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
         timestamp = Number(req.query.timestamp); // use user provided timestamp
     }else {
@@ -73,7 +75,7 @@ app.get('/api/*/*/logs', function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
     logstream.log('get', project, logname, timestamp);
 
-    db.getLogs(project, logname, timestamp, returnResult(res));
+    db.getLogs(project, logname, timestamp, count, returnResult(res));
 });
 
 app.post('/api/*/*/logs', function(req, res) {

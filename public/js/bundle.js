@@ -94,6 +94,8 @@ var LogWindowActions = function () {
             var url = '/api/' + project + '/' + logname + '/logs';
             if (timestamp) {
                 url += '?timestamp=' + timestamp;
+            } else {
+                url += '?count=1000';
             }
             $.ajax({
                 url: url,

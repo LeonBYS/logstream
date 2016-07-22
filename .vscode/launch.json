@@ -41,6 +41,29 @@
             "outDir": null
         },
         {
+            "name": "Server Remote DB",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/server.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--nolazy"
+            ],
+            "env": {
+                "NODE_ENV": "development",
+                "REDIS_HOST": "openloc-test.redis.cache.windows.net",
+                "REDIS_PORT": 6380,
+                "REDIS_PASSWORD": "8/xO9iuqs+AqZvIBkx+pfLQrfaAMUju4kVS8u0ccaYY="
+            },
+            "externalConsole": false,
+            "sourceMaps": false,
+            "outDir": null
+        },
+        {
             "name": "Attach",
             "type": "node",
             "request": "attach",
