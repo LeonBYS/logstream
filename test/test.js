@@ -88,7 +88,7 @@ describe('API commands', function() {
     it('response to GET /api/testProj/testLogname/commands', (done) => {
         request(app)
             .get('/api/testProj/testLogname/commands')
-            .expect(200, [{name:"command1", url:"url1"}, {name:"command2", url:"url2"}], done);
+            .expect(200, ['command1', 'command2'], done);
     });
 
     it('response to DELETE /api/testProj/testLogname/commands', (done) => {

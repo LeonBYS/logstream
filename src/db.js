@@ -136,7 +136,9 @@ var dbRedis = {
     getCommands: function (project, logname, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
         this.returnListData(lkey, 0, -1, (err, result) => {
-            if (result) { result.sort((a, b) => a.name < b.name ? -1 : 1); }
+            if (result) { 
+                result = result.map((a) => a.name).sort();
+            }
             callback(err, result);
         });
     },
@@ -159,13 +161,62 @@ var dbRedis = {
      * @param {array of {name:xx, url:xx}} commands
      * @param {function(err, result)} callback 
      */
-    addCommand: function (project, logname, commands, callback) {
+    addCommands: function (project, logname, commands, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
         var lvals = commands.map(command => JSON.stringify(command));
         var params = [lkey].concat(lvals);
         params.push(callback);
         this.client.lpush.apply(this.client, params);
     },
+
+     /**
+     * execute commands to specific log branch
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} commands
+     * @param {function(err, result)} callback 
+     */
+    exeCommand: function (project, logname, command, callback) {
+        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        this.client.lrange(lkey, 0, -1, (err, result) => {
+            if (result) {
+                for (var i=1; i<result.length; i++) {
+                    if (result.name === command) {
+                        this.sendRequest(result[i].method, result[i].url, 80, result[i].headers, result[i].body, callback); 
+                    }
+                } 
+            }else {
+                callback(err, result);
+            }
+        });
+    },
+
+    // TODO, TO Test
+    sendRequest: function (method, url, port, headers, body, callback) {
+        var split_post = url.indexOf('/');
+        var host = url.slice(0, split_post);
+        var path = url.slice(split_post);
+        var method = method;
+        var body = body;
+        var headers = headers;
+        if (body) {
+            headers['Content-Length'] = Buffer.byteLength(body);
+        }
+        var options = {
+            hostname: host,
+            port: 80,
+            path: path,
+            method: method,
+            headers: headers                        
+        };
+        var req = http.request(options);
+        req.on('error', function (e) {
+            callback(e, null);
+        });
+        req.write(message);
+        req.end();
+    },
+       
 
     /**
      * get charts with it's log branchs
