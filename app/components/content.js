@@ -15,7 +15,7 @@ class LogUserCommand extends React.Component {
         // call this.props.url
         $.ajax({
             method: 'GET',
-            url: this.props.url,
+            url: '/api/' + this.props.project + '/' + this.props.logname + '/commands/' + this.props.command,
             cache: false,
             success: function (data) {} // do nothing 
         });
@@ -23,7 +23,7 @@ class LogUserCommand extends React.Component {
 
     render() {
         return (
-            <button onClick={this.handleClick} type="button" style={{marginTop:"2px", marginRight:"5px"}} className="btn btn-success">{this.props.name}</button>
+            <button onClick={this.handleClick} type="button" style={{marginTop:"2px", marginRight:"5px"}} className="btn btn-success">{this.props.command}</button>
         );
     }
 }
@@ -60,12 +60,10 @@ class Content extends React.Component {
                                         <div className="col-md-4">
                                             <h4>{this.state.project + '/' + this.state.logname}</h4>
                                         </div>
-                                        <div className="col-md-4">
-                                        </div>
-                                        <div className="col-md-4 text-right">
+                                        <div className="col-md-8 text-right">
                                             {this.state.commands.map((command) =>
-                                                <LogUserCommand name={command.name} url={command.url}/>
-                                            ) }
+                                                <LogUserCommand key={command} command={command} project={this.state.project} logname={this.state.logname}/>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -16,11 +16,12 @@ describe('API base', function() {
     it('404 everything else', (done) => {
         request(app).get('/api/some-strange-thing').expect(404, done);
     });
+
 });
 
 describe('API logs', function() {
     it('reponse to POST /api/testProj/testLogname/logs without timestamp', (done) => {
-        var log = {logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString()};
+        var log = {logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString() + '\n'};
         request(app)
             .post('/api/testProj/testLogname/logs')
             .send(log)
@@ -28,7 +29,7 @@ describe('API logs', function() {
     });
 
     it('reponse to POST /api/testProj/testLogname/logs with timestamp', (done) => {
-        var log = {logtext:"This is a test msg with timestamp", timestamp:Date.now()};
+        var log = {logtext:"This is a test msg with timestamp\n", timestamp: Date.now()};
         request(app)
             .post('/api/testProj/testLogname/logs')
             .send(log)
@@ -36,7 +37,7 @@ describe('API logs', function() {
     });
 
     it('reponse to POST /api/testProj/testLogname/logs with invalid log', (done) => {
-        var log = {invalid:"This is a test msg with timestamp", timestamp:Date.now()};
+        var log = {invalid:"This is a test msg with timestamp\n", timestamp: Date.now()};
         request(app)
             .post('/api/testProj/testLogname/logs')
             .send(log)
@@ -65,10 +66,12 @@ describe('API logs', function() {
 
 describe('API commands', function() {
     it('response to POST /api/testProj/testLogname/commands', (done) => {
+        var log = JSON.stringify({timestamp: Date.now(), logtext:'text from command1\n'});
+        var commands = [{name:"command1", url:"http://localhost:3333/api/testProj/testLogname/logs", method:'POST', headers:{'Content-Type':'application/json'}, body:log}, {name:"command2", url:"url2"}];
         request(app)
             .post('/api/testProj/testLogname/commands')
-            .send([{name:"command1", url:"url1"}, {name:"command2", url:"url2"}])
-            .expect(200, [{name:"command1", url:"url1"}, {name:"command2", url:"url2"}], done);
+            .send(commands)
+            .expect(200, commands, done);
     });
 
     it('response to POST /api/testProj/testLogname/commands with broken data', (done) => {
@@ -85,10 +88,16 @@ describe('API commands', function() {
             .expect(500, done);
     });
 
+    it('response to GET{EXECUTE} /api/testProj/testLogname/commands/command1', (done) => {
+        request(app)
+            .get('/api/testProj/testLogname/commands/command1')
+            .expect(200, done);
+    });
+
     it('response to GET /api/testProj/testLogname/commands', (done) => {
         request(app)
             .get('/api/testProj/testLogname/commands')
-            .expect(200, [{name:"command1", url:"url1"}, {name:"command2", url:"url2"}], done);
+            .expect(200, ['command1', 'command2'], done);
     });
 
     it('response to DELETE /api/testProj/testLogname/commands', (done) => {
