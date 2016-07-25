@@ -7,3 +7,15 @@
 A log stream service.
 
 View, manage, analyze your app logs centrally in real time.
+
+## Build & Run
+Redis is need.
+```
+git clone https://github.com/usstwxy/logstream.git
+cd logstream
+npm install -g gulp
+npm install -g bower
+npm install
+npm build
+npm run
+```

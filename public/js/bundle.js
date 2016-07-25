@@ -1344,9 +1344,6 @@ var LogWindowStore = function () {
     }, {
         key: 'convertLogsToLines',
         value: function convertLogsToLines(logs) {
-            logs.sort(function (a, b) {
-                return a.timestamp - b.timestamp;
-            });
             var lines = logs.reduce(function (a, b) {
                 return a + b.logtext;
             }, '').split('\n');
@@ -1428,7 +1425,9 @@ var LogWindowStore = function () {
         value: function onGetLogsSuccess(data) {
             this.start = -this.height;
             this.filter = '';
-            this.logs = data.logs.sort(function (a, b) {
+            this.logs = data.logs.filter(function (log) {
+                return log.logtext;
+            }).sort(function (a, b) {
                 return a.timestamp - b.timestamp;
             });
             // use lines

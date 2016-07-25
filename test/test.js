@@ -66,10 +66,12 @@ describe('API logs', function() {
 
 describe('API commands', function() {
     it('response to POST /api/testProj/testLogname/commands', (done) => {
+        var log = JSON.stringify({timestamp: Date.now(), logtext:'text from command1\n'});
+        var commands = [{name:"command1", url:"http://localhost:3333/api/testProj/testLogname/logs", method:'POST', headers:{'Content-Type':'application/json'}, body:log}, {name:"command2", url:"url2"}];
         request(app)
             .post('/api/testProj/testLogname/commands')
-            .send([{name:"command1", url:"http://localhost:3333/api/projects"}, {name:"command2", url:"url2"}])
-            .expect(200, [{name:"command1", url:"http://localhost:3333/api/projects"}, {name:"command2", url:"url2"}], done);
+            .send(commands)
+            .expect(200, commands, done);
     });
 
     it('response to POST /api/testProj/testLogname/commands with broken data', (done) => {
