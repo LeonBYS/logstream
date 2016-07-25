@@ -1,5 +1,8 @@
 'use strict'
 var Redis = new require('ioredis');
+var request = require("request");
+
+
 
 var dbRedis = {
     connect: function(host, port, password, tls) {
@@ -136,7 +139,9 @@ var dbRedis = {
     getCommands: function (project, logname, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
         this.returnListData(lkey, 0, -1, (err, result) => {
-            if (result) { result.sort((a, b) => a.name < b.name ? -1 : 1); }
+            if (result) { 
+                result = result.map((a) => a.name).sort();
+            }
             callback(err, result);
         });
     },
@@ -159,13 +164,67 @@ var dbRedis = {
      * @param {array of {name:xx, url:xx}} commands
      * @param {function(err, result)} callback 
      */
-    addCommand: function (project, logname, commands, callback) {
+    addCommands: function (project, logname, commands, callback) {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
         var lvals = commands.map(command => JSON.stringify(command));
         var params = [lkey].concat(lvals);
         params.push(callback);
         this.client.lpush.apply(this.client, params);
     },
+
+     /**
+     * execute commands to specific log branch
+     * @param {string} project
+     * @param {string} logname
+     * @param {string} commands
+     * @param {function(err, result)} callback 
+     */
+    exeCommand: function (project, logname, command, callback) {
+        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        this.client.lrange(lkey, 0, -1, (err, result) => {
+            if (result) {
+                result = result.map((x) => JSON.parse(x));
+                for (var i=1; i<result.length; i++) {
+                    if (result[i].name === command) {
+                        this.sendRequest(result[i].method, result[i].url, result[i].headers, result[i].body, callback);
+                        break; 
+                    }
+                } 
+            }else {
+                callback(err, result);
+            }
+        });
+    },
+
+    // TODO, TO Test
+    sendRequest: function (method, url, headers, body, callback) {
+        if (body) {
+            headers['Content-Length'] = Buffer.byteLength(body);
+        }
+        request({
+            uri: url,
+            method: method || 'GET',
+            timeout: 10000,
+            followRedirect: true,
+            maxRedirects: 10,
+            headers: headers || {},
+            body: body
+        }, function (error, response, body) {
+            if (error) {
+                callback(error, null);
+                return;
+            }else {
+                if (response.statusCode === 200) {
+                    callback(null, body);
+                    return;
+                }else {
+                    callback('command execute error!', null);
+                    return;
+                }            
+            }
+        });
+    },
+       
 
     /**
      * get charts with it's log branchs

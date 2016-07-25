@@ -21,7 +21,6 @@ class LogWindowStore {
     }
 
     convertLogsToLines(logs) {
-        logs.sort((a, b) => a.timestamp - b.timestamp);
         var lines = logs.reduce((a, b) => a + b.logtext, '').split('\n');
         if (lines[lines.length - 1].length === 0) { lines.pop(); }
 
@@ -82,7 +81,7 @@ class LogWindowStore {
     onGetLogsSuccess(data) {        
         this.start = -this.height;
         this.filter = '';
-        this.logs = data.logs.sort((a, b) => a.timestamp - b.timestamp);
+        this.logs = data.logs.filter((log) => log.logtext).sort((a, b) => a.timestamp - b.timestamp);
         // use lines
         this.linesOrigin = this.convertLogsToLines(this.logs);
         this.linesFilted = this.filterLines(this.linesOrigin, this.filter);

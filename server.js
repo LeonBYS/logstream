@@ -109,6 +109,17 @@ app.get('/api/*/*/commands', function (req, res) {
     db.getCommands(project, logname, returnResult(res));
 });
 
+app.get('/api/*/*/commands/*', function (req, res) {
+    console.log('[' + new Date().toLocaleString() + ']', 'GET commands/' + req.params[2]);
+    logstream.log('GET commands/' + req.params[2]);
+ 
+    var project = req.params[0];
+    var logname = req.params[1];
+    var command = req.params[2];
+    // excute this command
+    db.exeCommand(project, logname, command, returnResult(res));
+});
+
 app.post('/api/*/*/commands', function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
     logstream.log('POST commands');
@@ -127,7 +138,7 @@ app.post('/api/*/*/commands', function (req, res) {
             }
             commands[i].url = commands[i].url || '#';
         }
-        db.addCommand(project, logname, commands, returnResult(res, commands));    
+        db.addCommands(project, logname, commands, returnResult(res, commands));    
     }
 });
 
