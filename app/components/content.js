@@ -2,6 +2,7 @@ import React from 'react';
 import ContentStore from '../stores/contentStore';
 import ContentActions from '../actions/contentActions';
 import LogWindow from './logWindow'
+//import io from 'socket.io'
 
 
 
@@ -37,6 +38,11 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
+        var socket = io();
+        socket.on('connect', function() {
+            var sessionid = socket.io.engine.id;
+            console.log('sessionid', sessionid);
+        });
         ContentStore.listen(this.onChange);
     }
 
