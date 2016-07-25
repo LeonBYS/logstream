@@ -1,5 +1,8 @@
 'use strict'
 var Redis = new require('ioredis');
+var request = require("request");
+
+
 
 var dbRedis = {
     connect: function(host, port, password, tls) {
@@ -180,9 +183,11 @@ var dbRedis = {
         var lkey = this.prefix + "commands:" + project + '/' + logname;
         this.client.lrange(lkey, 0, -1, (err, result) => {
             if (result) {
+                result = result.map((x) => JSON.parse(x));
                 for (var i=1; i<result.length; i++) {
-                    if (result.name === command) {
-                        this.sendRequest(result[i].method, result[i].url, 80, result[i].headers, result[i].body, callback); 
+                    if (result[i].name === command) {
+                        this.sendRequest(result[i].method, result[i].url, result[i].headers, result[i].body, callback);
+                        break; 
                     }
                 } 
             }else {
@@ -192,29 +197,32 @@ var dbRedis = {
     },
 
     // TODO, TO Test
-    sendRequest: function (method, url, port, headers, body, callback) {
-        var split_post = url.indexOf('/');
-        var host = url.slice(0, split_post);
-        var path = url.slice(split_post);
-        var method = method;
-        var body = body;
-        var headers = headers;
+    sendRequest: function (method, url, headers, body, callback) {
         if (body) {
             headers['Content-Length'] = Buffer.byteLength(body);
         }
-        var options = {
-            hostname: host,
-            port: 80,
-            path: path,
-            method: method,
-            headers: headers                        
-        };
-        var req = http.request(options);
-        req.on('error', function (e) {
-            callback(e, null);
+        request({
+            uri: url,
+            method: method || 'GET',
+            timeout: 10000,
+            followRedirect: true,
+            maxRedirects: 10,
+            headers: headers || {},
+            body: body
+        }, function (error, response, body) {
+            if (error) {
+                callback(error, null);
+                return;
+            }else {
+                if (response.statusCode === 200) {
+                    callback(null, body);
+                    return;
+                }else {
+                    callback('command execute error!', null);
+                    return;
+                }            
+            }
         });
-        req.write(message);
-        req.end();
     },
        
 

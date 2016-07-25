@@ -290,7 +290,7 @@ var LogUserCommand = function (_React$Component) {
             // call this.props.url
             $.ajax({
                 method: 'GET',
-                url: this.props.url,
+                url: '/api/' + this.props.project + '/' + this.props.logname + '/commands/' + this.props.command,
                 cache: false,
                 success: function success(data) {} // do nothing
             });
@@ -301,7 +301,7 @@ var LogUserCommand = function (_React$Component) {
             return _react2.default.createElement(
                 'button',
                 { onClick: this.handleClick, type: 'button', style: { marginTop: "2px", marginRight: "5px" }, className: 'btn btn-success' },
-                this.props.name
+                this.props.command
             );
         }
     }]);
@@ -340,6 +340,8 @@ var Content = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
+            var _this3 = this;
+
             if (this.state.project && this.state.logname) {
                 return _react2.default.createElement(
                     'div',
@@ -368,12 +370,11 @@ var Content = function (_React$Component2) {
                                                 this.state.project + '/' + this.state.logname
                                             )
                                         ),
-                                        _react2.default.createElement('div', { className: 'col-md-4' }),
                                         _react2.default.createElement(
                                             'div',
-                                            { className: 'col-md-4 text-right' },
+                                            { className: 'col-md-8 text-right' },
                                             this.state.commands.map(function (command) {
-                                                return _react2.default.createElement(LogUserCommand, { name: command.name, url: command.url });
+                                                return _react2.default.createElement(LogUserCommand, { key: command, command: command, project: _this3.state.project, logname: _this3.state.logname });
                                             })
                                         )
                                     )
