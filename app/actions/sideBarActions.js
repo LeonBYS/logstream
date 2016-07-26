@@ -1,5 +1,5 @@
 import alt from '../alt';
-import api from '../api.js';
+import api from '../api';
 
 class SideBarActions {
     constructor () {

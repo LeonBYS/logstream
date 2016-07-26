@@ -3,7 +3,7 @@ import NavBar from './navBar';
 import Content from './content';
 import LogWindowActions from '../actions/logWindowActions';
 import SideBarActions from '../actions/sideBarActions';
-import api from '../api.js';
+import api from '../api';
 
 class Home extends React.Component {
     componentDidMount() {

@@ -17,18 +17,6 @@ var ReactDOMServer = require('react-dom/server')
 var Router = require('react-router');
 var routes = require('./app/routes');
 
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
-
-
-var sessionMiddleware = session({
-    secret: '34SDgsdgspxxxxxxxdfsG', // just a long random string
-    resave: false,
-    saveUninitialized: true
-});
-
-app.use(cookieParser());
-app.use(sessionMiddleware);
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
@@ -42,7 +30,7 @@ db.connect(
 );
 
 
-var connections = new Connections(http, sessionMiddleware);
+var connections = new Connections(http);
 
 var LogStream = require('./drivers/nodejs/logstream').LogStream;
 var logstream = new LogStream(

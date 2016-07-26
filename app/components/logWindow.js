@@ -1,5 +1,3 @@
-'use strict'
-
 import React from 'react';
 import LogWindowStore from '../stores/logWindowStore';
 import LogWindowActions from '../actions/logWindowActions';

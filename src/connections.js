@@ -7,12 +7,7 @@ class Connections {
         this.socketBySession = {};
 
         this.io = require('socket.io')(http);
-        this.sessionMiddleWare = sessionMiddleWare;
-        this.io.use((socket, next) => {
-            this.sessionMiddleWare(socket.request, socket.request.res, next);
-        });
         this.io.on('connection', (socket) => {
-            //var sid = socket.handshake.headers.cookie.match('sid=s%3A([^;]*)')[1].split('.')[0];
             var sid = socket.id.slice(2);
             console.log('sid', sid);
             this._newConnection(sid, socket);

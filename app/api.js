@@ -1,12 +1,8 @@
-'use strict'
-
 
 class API {
     constructor () {
         this.sessionId = null;
         this.reqQueue = [];
-
-        //this.ajax = this.ajax.bind(this);
     }
 
     ajax(options, success, fail) {
@@ -40,6 +36,5 @@ class API {
 }
 
 var api = new API();
-
 
 export default api;

@@ -11,7 +11,7 @@ var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
 
-var _api = require('../api.js');
+var _api = require('../api');
 
 var _api2 = _interopRequireDefault(_api);
 
@@ -52,7 +52,7 @@ var ContentActions = function () {
 
 exports.default = _alt2.default.createActions(ContentActions);
 
-},{"../alt":4,"../api.js":5}],2:[function(require,module,exports){
+},{"../alt":4,"../api":5}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -65,7 +65,7 @@ var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
 
-var _api = require('../api.js');
+var _api = require('../api');
 
 var _api2 = _interopRequireDefault(_api);
 
@@ -121,7 +121,7 @@ var LogWindowActions = function () {
 
 exports.default = _alt2.default.createActions(LogWindowActions);
 
-},{"../alt":4,"../api.js":5}],3:[function(require,module,exports){
+},{"../alt":4,"../api":5}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -134,7 +134,7 @@ var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
 
-var _api = require('../api.js');
+var _api = require('../api');
 
 var _api2 = _interopRequireDefault(_api);
 
@@ -177,7 +177,7 @@ var SideBarActions = function () {
 
 exports.default = _alt2.default.createActions(SideBarActions);
 
-},{"../alt":4,"../api.js":5}],4:[function(require,module,exports){
+},{"../alt":4,"../api":5}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -210,8 +210,6 @@ var API = function () {
 
         this.sessionId = null;
         this.reqQueue = [];
-
-        //this.ajax = this.ajax.bind(this);
     }
 
     _createClass(API, [{
@@ -608,7 +606,7 @@ var _sideBarActions = require('../actions/sideBarActions');
 
 var _sideBarActions2 = _interopRequireDefault(_sideBarActions);
 
-var _api = require('../api.js');
+var _api = require('../api');
 
 var _api2 = _interopRequireDefault(_api);
 
@@ -662,7 +660,7 @@ var Home = function (_React$Component) {
 
 exports.default = Home;
 
-},{"../actions/logWindowActions":2,"../actions/sideBarActions":3,"../api.js":5,"./content":7,"./navBar":10,"react":"react"}],9:[function(require,module,exports){
+},{"../actions/logWindowActions":2,"../actions/sideBarActions":3,"../api":5,"./content":7,"./navBar":10,"react":"react"}],9:[function(require,module,exports){
 (function (process){
 'use strict';
 
