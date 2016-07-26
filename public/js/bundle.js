@@ -11,6 +11,10 @@ var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
 
+var _api = require('../api.js');
+
+var _api2 = _interopRequireDefault(_api);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -30,13 +34,13 @@ var ContentActions = function () {
             var _this = this;
 
             var url = '/api/' + project + '/' + logname + '/commands';
-            $.ajax({
+            _api2.default.ajax({
                 url: url,
                 dataType: 'json',
                 cache: false
-            }).done(function (commands) {
+            }, function (commands) {
                 _this.selectLogBranchSuccess({ commands: commands, project: project, logname: logname });
-            }).fail(function (jqXhr) {
+            }, function (jqXhr) {
                 _this.ajaxFail(jqXhr);
             });
             return false;
@@ -48,7 +52,7 @@ var ContentActions = function () {
 
 exports.default = _alt2.default.createActions(ContentActions);
 
-},{"../alt":4}],2:[function(require,module,exports){
+},{"../alt":4,"../api.js":5}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -60,6 +64,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
+
+var _api = require('../api.js');
+
+var _api2 = _interopRequireDefault(_api);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -75,18 +83,6 @@ var LogWindowActions = function () {
     }
 
     _createClass(LogWindowActions, [{
-        key: 'changeFocus',
-        value: function changeFocus(project, logname) {
-            if (this.internalID) {
-                clearInterval(this.internalID);
-                this.lastTimestamp = null;
-            }
-            this.getLogs(project, logname, this.lastTimestamp);
-            this.internalID = setInterval(function () {
-                this.getLogs(project, logname, this.lastTimestamp);
-            }.bind(this), 1000);
-        }
-    }, {
         key: 'getLogs',
         value: function getLogs(project, logname, timestamp) {
             var _this = this;
@@ -97,11 +93,11 @@ var LogWindowActions = function () {
             } else {
                 url += '?count=1000';
             }
-            $.ajax({
+            _api2.default.ajax({
                 url: url,
                 dataType: 'json',
                 cache: false
-            }).done(function (data) {
+            }, function (data) {
                 if (data && data.length > 0) {
                     _this.lastTimestamp = data[0].timestamp;
                     if (timestamp) {
@@ -113,9 +109,10 @@ var LogWindowActions = function () {
                     // data is [] or null, this branch doesn't have log data
                     _this.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
-            }).fail(function (jqXhr) {
+            }, function (jqXhr) {
                 _this.ajaxFail(jqXhr);
             });
+            return false;
         }
     }]);
 
@@ -124,7 +121,7 @@ var LogWindowActions = function () {
 
 exports.default = _alt2.default.createActions(LogWindowActions);
 
-},{"../alt":4}],3:[function(require,module,exports){
+},{"../alt":4,"../api.js":5}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -136,6 +133,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _alt = require('../alt');
 
 var _alt2 = _interopRequireDefault(_alt);
+
+var _api = require('../api.js');
+
+var _api2 = _interopRequireDefault(_api);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -158,13 +159,13 @@ var SideBarActions = function () {
         value: function getProjects() {
             var _this = this;
 
-            $.ajax({
+            _api2.default.ajax({
                 url: '/api/projects',
                 dataType: 'json',
                 cache: false
-            }).done(function (data) {
+            }, function (data) {
                 _this.getProjectsSuccess(data);
-            }).fail(function (jqXhr) {
+            }, function (jqXhr) {
                 _this.getProjectsFail(jqXhr);
             });
             return false;
@@ -176,7 +177,7 @@ var SideBarActions = function () {
 
 exports.default = _alt2.default.createActions(SideBarActions);
 
-},{"../alt":4}],4:[function(require,module,exports){
+},{"../alt":4,"../api.js":5}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -192,6 +193,77 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 exports.default = new _alt2.default();
 
 },{"alt":"alt"}],5:[function(require,module,exports){
+(function (process){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var API = function () {
+    function API() {
+        _classCallCheck(this, API);
+
+        this.sessionId = null;
+        this.reqQueue = [];
+
+        //this.ajax = this.ajax.bind(this);
+    }
+
+    _createClass(API, [{
+        key: 'ajax',
+        value: function ajax(options, success, fail) {
+            var _this = this;
+
+            var req = function req() {
+                if (options.url.indexOf('?') >= 0) {
+                    options.url = options.url + '&sessionId=' + _this.sessionId;
+                } else {
+                    options.url = options.url + '?sessionId=' + _this.sessionId;
+                }
+                $.ajax(options).done(success).fail(fail);
+            };
+            this._addReq(req);
+        }
+    }, {
+        key: 'setSessionId',
+        value: function setSessionId(sessionId) {
+            this.sessionId = sessionId;
+            for (var i = this.reqQueue.length - 1; i >= 0; i--) {
+                var req = this.reqQueue[i];
+                process.nextTick(function () {
+                    req();
+                });
+            }
+            this.reqQueue = [];
+        }
+    }, {
+        key: '_addReq',
+        value: function _addReq(req) {
+            if (this.sessionId) {
+                process.nextTick(function () {
+                    req();
+                });
+            } else {
+                this.reqQueue.push(req);
+            }
+        }
+    }]);
+
+    return API;
+}();
+
+var api = new API();
+
+exports.default = api;
+
+}).call(this,require('_process'))
+
+},{"_process":17}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -239,7 +311,7 @@ var App = function (_React$Component) {
 
 exports.default = App;
 
-},{"react":"react"}],6:[function(require,module,exports){
+},{"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -271,8 +343,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-//import io from 'socket.io'
 
 var LogUserCommand = function (_React$Component) {
     _inherits(LogUserCommand, _React$Component);
@@ -327,11 +397,6 @@ var Content = function (_React$Component2) {
     _createClass(Content, [{
         key: 'componentDidMount',
         value: function componentDidMount() {
-            var socket = io();
-            socket.on('connect', function () {
-                var sessionid = socket.io.engine.id;
-                console.log('sessionid', sessionid);
-            });
             _contentStore2.default.listen(this.onChange);
         }
     }, {
@@ -514,7 +579,7 @@ var Content = function (_React$Component2) {
 
 exports.default = Content;
 
-},{"../actions/contentActions":1,"../stores/contentStore":13,"./logWindow":8,"react":"react"}],7:[function(require,module,exports){
+},{"../actions/contentActions":1,"../stores/contentStore":14,"./logWindow":9,"react":"react"}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -535,6 +600,18 @@ var _content = require('./content');
 
 var _content2 = _interopRequireDefault(_content);
 
+var _logWindowActions = require('../actions/logWindowActions');
+
+var _logWindowActions2 = _interopRequireDefault(_logWindowActions);
+
+var _sideBarActions = require('../actions/sideBarActions');
+
+var _sideBarActions2 = _interopRequireDefault(_sideBarActions);
+
+var _api = require('../api.js');
+
+var _api2 = _interopRequireDefault(_api);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -553,6 +630,22 @@ var Home = function (_React$Component) {
     }
 
     _createClass(Home, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            var _this2 = this;
+
+            this.socket = io();
+            this.socket.on('connect', function () {
+                var sid = _this2.socket.io.engine.id;
+                console.log('socket sessionid', sid);
+                _api2.default.setSessionId(sid);
+            });
+            this.socket.on('log', function (data) {
+                console.log(data);
+                _logWindowActions2.default.getLogsSuccessAppend(data);
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
             return _react2.default.createElement(
@@ -569,7 +662,8 @@ var Home = function (_React$Component) {
 
 exports.default = Home;
 
-},{"./content":6,"./navBar":9,"react":"react"}],8:[function(require,module,exports){
+},{"../actions/logWindowActions":2,"../actions/sideBarActions":3,"../api.js":5,"./content":7,"./navBar":10,"react":"react"}],9:[function(require,module,exports){
+(function (process){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -774,14 +868,22 @@ var LogWindow = function (_React$Component5) {
     _createClass(LogWindow, [{
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
+            var _this6 = this;
+
             this.props = nextProps;
-            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
+            process.nextTick(function () {
+                _logWindowActions2.default.getLogs(_this6.props.project, _this6.props.logname);
+            });
         }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
+            var _this7 = this;
+
             _logWindowStore2.default.listen(this.onChange);
-            _logWindowActions2.default.changeFocus(this.props.project, this.props.logname);
+            process.nextTick(function () {
+                _logWindowActions2.default.getLogs(_this7.props.project, _this7.props.logname);
+            });
         }
     }, {
         key: 'componentWillUnmount',
@@ -815,7 +917,9 @@ var LogWindow = function (_React$Component5) {
 
 exports.default = LogWindow;
 
-},{"../actions/logWindowActions":2,"../stores/logWindowStore":14,"react":"react"}],9:[function(require,module,exports){
+}).call(this,require('_process'))
+
+},{"../actions/logWindowActions":2,"../stores/logWindowStore":15,"_process":17,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -974,7 +1078,7 @@ var NavBar = function (_React$Component3) {
 
 exports.default = NavBar;
 
-},{"./sideBar":10,"react":"react"}],10:[function(require,module,exports){
+},{"./sideBar":11,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1197,7 +1301,7 @@ var SideBar = function (_React$Component5) {
 
 exports.default = SideBar;
 
-},{"../actions/contentActions":1,"../actions/sideBarActions":3,"../stores/sideBarStore":15,"react":"react"}],11:[function(require,module,exports){
+},{"../actions/contentActions":1,"../actions/sideBarActions":3,"../stores/sideBarStore":16,"react":"react"}],12:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -1222,7 +1326,7 @@ _reactDom2.default.render(_react2.default.createElement(
     _routes2.default
 ), document.getElementById('app'));
 
-},{"./routes":12,"react":"react","react-dom":"react-dom","react-router":"react-router"}],12:[function(require,module,exports){
+},{"./routes":13,"react":"react","react-dom":"react-dom","react-router":"react-router"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1251,7 +1355,7 @@ exports.default = _react2.default.createElement(
     _react2.default.createElement(_reactRouter.Route, { path: '/', component: _home2.default })
 );
 
-},{"./components/app":5,"./components/home":7,"react":"react","react-router":"react-router"}],13:[function(require,module,exports){
+},{"./components/app":6,"./components/home":8,"react":"react","react-router":"react-router"}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1301,7 +1405,7 @@ var ContentStore = function () {
 
 exports.default = _alt2.default.createStore(ContentStore);
 
-},{"../actions/contentActions.js":1,"../alt":4}],14:[function(require,module,exports){
+},{"../actions/contentActions.js":1,"../alt":4}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1453,7 +1557,7 @@ var LogWindowStore = function () {
 
 exports.default = _alt2.default.createStore(LogWindowStore);
 
-},{"../actions/logWindowActions":2,"../alt":4}],15:[function(require,module,exports){
+},{"../actions/logWindowActions":2,"../alt":4}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1534,7 +1638,128 @@ var SideBarStore = function () {
 
 exports.default = _alt2.default.createStore(SideBarStore);
 
-},{"../actions/sideBarActions":3,"../alt":4}]},{},[11])
+},{"../actions/sideBarActions":3,"../alt":4}],17:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+(function () {
+  try {
+    cachedSetTimeout = setTimeout;
+  } catch (e) {
+    cachedSetTimeout = function () {
+      throw new Error('setTimeout is not defined');
+    }
+  }
+  try {
+    cachedClearTimeout = clearTimeout;
+  } catch (e) {
+    cachedClearTimeout = function () {
+      throw new Error('clearTimeout is not defined');
+    }
+  }
+} ())
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = cachedSetTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    cachedClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        cachedSetTimeout(drainQueue, 0);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}]},{},[12])
 
 
 //# sourceMappingURL=bundle.js.map

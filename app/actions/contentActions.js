@@ -1,4 +1,5 @@
 import alt from '../alt';
+import api from '../api.js';
 
 class ContentActions {
     constructor () {
@@ -12,13 +13,13 @@ class ContentActions {
 
     selectLogBranch(project, logname) {
         var url = '/api/' + project + '/' + logname + '/commands';
-        $.ajax({
+        api.ajax({
             url: url,
             dataType: 'json',
             cache: false
-        }).done((commands) => {
+        }, (commands) => {
             this.selectLogBranchSuccess({commands:commands, project:project, logname:logname});
-        }).fail((jqXhr) => {
+        }, (jqXhr) => {
             this.ajaxFail(jqXhr);
         });
         return false;

@@ -1,4 +1,5 @@
 import alt from '../alt';
+import api from '../api.js';
 
 class LogWindowActions {
     constructor () {
@@ -14,18 +15,6 @@ class LogWindowActions {
         this.internalID = null;
         this.lastTimestamp = null;
     }
-
-    changeFocus(project, logname) {
-        if (this.internalID) {
-            clearInterval(this.internalID);
-            this.lastTimestamp = null;
-        }
-        this.getLogs(project, logname, this.lastTimestamp);
-        this.internalID = setInterval(
-            function() { this.getLogs(project, logname, this.lastTimestamp); }.bind(this), 
-            1000
-        );
-    }
     
     getLogs(project, logname, timestamp) {
         var url = '/api/' + project + '/' + logname + '/logs';
@@ -34,11 +23,11 @@ class LogWindowActions {
         }else {
             url += '?count=1000';
         }
-        $.ajax({
+        api.ajax({
             url: url,
             dataType: 'json',
             cache: false
-        }).done((data) => {
+        }, (data) => {
             if (data && data.length > 0) {
                 this.lastTimestamp = data[0].timestamp;
                 if (timestamp) {
@@ -50,9 +39,10 @@ class LogWindowActions {
                 // data is [] or null, this branch doesn't have log data
                 this.getLogsSuccess({logs: [], project: project, logname: logname});
             }
-        }).fail((jqXhr) => {
+        }, (jqXhr) => {
             this.ajaxFail(jqXhr);
         });
+        return false;
     }
 }
 

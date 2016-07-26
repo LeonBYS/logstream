@@ -7,11 +7,8 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var db = require('./src/db').Database('redis');
-var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    process.env.LOGSTREAM_HOST || 'localhost', 
-    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
-    'LogStream', 'Console'
-);
+var Connections = require('./src/connections').Connections;
+
 /* react */
 var swig = require('swig');
 var React = require('react');
@@ -20,19 +17,18 @@ var ReactDOMServer = require('react-dom/server')
 var Router = require('react-router');
 var routes = require('./app/routes');
 
-
-
 var cookieParser = require('cookie-parser');
-var session = require('express-session')
-app.use(cookieParser());
+var session = require('express-session');
+
 
 var sessionMiddleware = session({
     secret: '34SDgsdgspxxxxxxxdfsG', // just a long random string
     resave: false,
     saveUninitialized: true
 });
-app.use(sessionMiddleware);
 
+app.use(cookieParser());
+app.use(sessionMiddleware);
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
@@ -46,24 +42,17 @@ db.connect(
 );
 
 
-io.use(function(socket, next) {
-    sessionMiddleware(socket.request, socket.request.res, next);
-});
+var connections = new Connections(http, sessionMiddleware);
 
-var socketClientBySessionID = {};
-var sessionsByFocus = {};
-var logbranchBySession = {};
+var LogStream = require('./drivers/nodejs/logstream').LogStream;
+var logstream = new LogStream(
+    process.env.LOGSTREAM_HOST || 'localhost', 
+    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
+    'LogStream', 
+    'Console'
+);
 
-io.on('connection', function(socket) {
-    var sid = socket.handshake.headers.cookie.match('sid=s%3A([^;]*)')[1].split('.')[0];
-    socketClientBySessionID[sid] = socket;
-    console.log('socket.io session', sid);
-    socket.on('disconnect', () => {
-        delete socketClientBySessionID[sid];
-    });
-});
 
-function genFocus(project, logname) { return project + ':' + logname; }
 
 /* RESTful API*/
 function returnResult(res, successRet) {
@@ -84,7 +73,7 @@ function returnResult(res, successRet) {
 
 // meta data
 app.get('/api/projects', function (req, res) {
-    console.log('projects session', req.sessionID);
+    console.log('projects session', req.query.sessionId);
 
     console.log('[' + new Date().toLocaleString() + ']', 'get projects');
     logstream.log('GET projects');
@@ -110,15 +99,7 @@ app.get('/api/*/*/logs', function (req, res) {
 
     db.getLogs(project, logname, timestamp, count, (err, result) => {
         if (timestamp === null) {
-            var focus = genFocus(project, logname);
-            if (focusBySession[req.sessionID] !== focus) {
-                var focusOrigin = focusBySession[req.sessionID];
-                if (focusOrigin) {
-                    delete sessionsByFocus[focusOrigin][req.sessionID];
-                }
-            }
-            sessionsByFocus[focus][req.sessionID] = true;
-            focusBySession[req.sessionID] = focus;
+            connections.changeFocus(req.query.sessionId, project, logname);
         }
         returnResult(res)(err, result);
     });
@@ -137,10 +118,11 @@ app.post('/api/*/*/logs', function(req, res) {
 
     console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
+
     if (logtext) {
         db.addLog(project, logname, logtext, timestamp, (err, result) => {
-            var focus = genFocus(project, logname);
-            
+            var logs = [{timestamp: timestamp, logtext: logtext}];
+            connections.pushMessage('log', logs, project, logname);
             returnResult(res, req.body)(err, result);
         });
     }else {
