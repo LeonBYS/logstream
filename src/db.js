@@ -1,4 +1,5 @@
 'use strict'
+
 var Redis = new require('ioredis');
 var request = require("request");
 

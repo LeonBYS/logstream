@@ -1,7 +1,7 @@
 import React from 'react';
 import ContentStore from '../stores/contentStore';
 import ContentActions from '../actions/contentActions';
-import LogWindow from './logWindow'
+import LogWindow from './logWindow';
 
 
 

@@ -5,13 +5,9 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
 var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var db = require('./src/db').Database('redis');
-
-var logstream = new (require('./drivers/nodejs/logstream').LogStream)(
-    process.env.LOGSTREAM_HOST || 'localhost', 
-    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
-    'LogStream', 'Console'
-);
+var Connections = require('./src/connections').Connections;
 
 /* react */
 var swig = require('swig');
@@ -20,7 +16,6 @@ var ReactDOM = require('react-dom');
 var ReactDOMServer = require('react-dom/server')
 var Router = require('react-router');
 var routes = require('./app/routes');
-
 
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
@@ -33,6 +28,19 @@ db.connect(
     process.env.REDIS_PASSWORD,
     process.env.REDIS_TLS ? JSON.parse(process.env.REDIS_TLS) : null
 );
+
+
+var connections = new Connections(http);
+
+var LogStream = require('./drivers/nodejs/logstream').LogStream;
+var logstream = new LogStream(
+    process.env.LOGSTREAM_HOST || 'localhost', 
+    process.env.LOGSTREAM_PORT ? Number(process.env.LOGSTREAM_PORT) : 3333, 
+    'LogStream', 
+    'Console'
+);
+
+
 
 /* RESTful API*/
 function returnResult(res, successRet) {
@@ -53,6 +61,8 @@ function returnResult(res, successRet) {
 
 // meta data
 app.get('/api/projects', function (req, res) {
+    console.log('projects session', req.query.sessionId);
+
     console.log('[' + new Date().toLocaleString() + ']', 'get projects');
     logstream.log('GET projects');
         
@@ -75,7 +85,12 @@ app.get('/api/*/*/logs', function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'get', project, logname, timestamp);
     logstream.log('get', project, logname, timestamp);
 
-    db.getLogs(project, logname, timestamp, count, returnResult(res));
+    db.getLogs(project, logname, timestamp, count, (err, result) => {
+        if (timestamp === null) {
+            connections.changeFocus(req.query.sessionId, project, logname);
+        }
+        returnResult(res)(err, result);
+    });
 });
 
 app.post('/api/*/*/logs', function(req, res) {
@@ -91,8 +106,13 @@ app.post('/api/*/*/logs', function(req, res) {
 
     console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
+
     if (logtext) {
-        db.addLog(project, logname, logtext, timestamp, returnResult(res, req.body));
+        db.addLog(project, logname, logtext, timestamp, (err, result) => {
+            var logs = [{timestamp: timestamp, logtext: logtext}];
+            connections.pushMessage('log', logs, project, logname);
+            returnResult(res, req.body)(err, result);
+        });
     }else {
         res.status(500).send({error:'invalid log'});
     }
