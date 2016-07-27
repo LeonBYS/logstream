@@ -1,5 +1,3 @@
-'use strict'
-
 import React from 'react';
 import LogWindowStore from '../stores/logWindowStore';
 import LogWindowActions from '../actions/logWindowActions';
@@ -109,12 +107,16 @@ class LogWindow extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         this.props = nextProps;
-        LogWindowActions.changeFocus(this.props.project, this.props.logname);
+        process.nextTick(() => {
+            LogWindowActions.getLogs(this.props.project, this.props.logname);
+        });
     }
 
     componentDidMount() {
         LogWindowStore.listen(this.onChange);
-        LogWindowActions.changeFocus(this.props.project, this.props.logname);
+        process.nextTick(() => {
+            LogWindowActions.getLogs(this.props.project, this.props.logname);
+        });
     }
 
     componentWillUnmount() {

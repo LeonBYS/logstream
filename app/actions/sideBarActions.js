@@ -1,4 +1,5 @@
 import alt from '../alt';
+import api from '../api';
 
 class SideBarActions {
     constructor () {
@@ -13,13 +14,13 @@ class SideBarActions {
     }
     
     getProjects() {
-        $.ajax({
+        api.ajax({
             url: '/api/projects',
             dataType: 'json',
             cache: false
-        }).done((data) => {
+        }, (data) => {
             this.getProjectsSuccess(data);
-        }).fail((jqXhr) => {
+        }, (jqXhr) => {
             this.getProjectsFail(jqXhr);
         });
         return false;
