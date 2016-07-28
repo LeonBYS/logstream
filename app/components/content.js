@@ -2,6 +2,7 @@ import React from 'react';
 import ContentStore from '../stores/contentStore';
 import ContentActions from '../actions/contentActions';
 import LogWindow from './logWindow';
+import ChartsWindow from './chartsWindow';
 
 
 
@@ -79,7 +80,7 @@ class Content extends React.Component {
                                             <LogWindow project={this.state.project} logname={this.state.logname} />
                                         </div>
                                         <div id="charts" className="tab-pane fade">
-                                            <h3>Here is your charts</h3>
+                                            <ChartsWindow project={this.state.project} logname={this.state.logname} />
                                         </div>
                                         <div id="settings" className="tab-pane fade">
                                             <h3>Here is your setting for this log branch</h3>

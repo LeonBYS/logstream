@@ -34,6 +34,26 @@ class LogStream {
         req.write(message);
         req.end();
     }
+
+    addChartData(chartname, data, chartType) {
+        var timestamp = Date.now();
+        var chartData = {timestamp: timestamp, chartType: chartType, data:data};
+        chartData = JSON.stringify(chartData);
+        
+        var options = {
+            hostname: this.host,
+            port: this.port,
+            path: '/api/' + this.project + '/' + this.logname + '/charts/' + chartname,
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(message)}
+        };
+        var req = http.request(options);
+        req.on('error', function (e) {
+            console.log('LogStream.Log(', message, ') FAILED!');
+        });
+        req.write(message);
+        req.end();
+    }
 }
 
 

@@ -61,7 +61,7 @@ function returnResult(res, successRet) {
 
 // meta data
 app.get('/api/projects', function (req, res) {
-    console.log('projects session', req.query.sessionId);
+    console.log('projects session', req.query.sessionID);
 
     console.log('[' + new Date().toLocaleString() + ']', 'get projects');
     logstream.log('GET projects');
@@ -87,7 +87,7 @@ app.get('/api/*/*/logs', function (req, res) {
 
     db.getLogs(project, logname, timestamp, count, (err, result) => {
         if (timestamp === null) {
-            connections.changeFocus(req.query.sessionId, project, logname);
+            connections.subscribe(req.query.sessionID, 'log', project, logname);
         }
         returnResult(res)(err, result);
     });
@@ -110,7 +110,7 @@ app.post('/api/*/*/logs', function(req, res) {
     if (logtext) {
         db.addLog(project, logname, logtext, timestamp, (err, result) => {
             var logs = [{timestamp: timestamp, logtext: logtext}];
-            connections.pushMessage('log', logs, project, logname);
+            connections.publish('log', project, logname, logs);
             returnResult(res, req.body)(err, result);
         });
     }else {
@@ -178,7 +178,10 @@ app.get('/api/*/*/charts', function (req, res) {
 
     var project = req.params[0];
     var logname = req.params[1];
-    db.getCharts(project, logname, returnResult(res));
+    db.getCharts(project, logname, (err, result) => {
+        connections.subscribe(req.query.sessionID, 'chart', project, logname);
+        returnResult(res)(err, result);
+    });
 });
 
 app.get('/api/*/*/charts/*', function(req, res) {
@@ -209,10 +212,18 @@ app.post('/api/*/*/charts/*', function(req, res) {
     var logname = req.params[1];
     var chartname = req.params[2];
     var timestamp = req.body.timestamp || Date.now();
-    var chartType = req.body.chartType || 'line';
+    var chartType = req.body.chartType;
     var data = req.body.data;
-    if (['line'].indexOf(chartType) >= 0) {
-        db.addChartData(project, logname, chartname, timestamp, chartType, data, returnResult(res, req.body));   
+    if (!chartType || ['line'].indexOf(chartType) >= 0) {
+        db.addChartData(project, logname, chartname, timestamp, chartType, data, (err, result) => {
+            var appendData = Object.assign({
+                chartname: chartname,
+                timestamp: timestamp
+            }, req.body);
+            connections.publish('chart', project, logname, appendData);
+            console.log(err, result);
+            returnResult(res, req.body)(err, result);
+        });   
     }else {
         res.status(500).send({error:'invalid chart type'});
     }
