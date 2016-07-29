@@ -2,7 +2,7 @@ import React from 'react';
 import NavBar from './navBar';
 import Content from './content';
 import LogWindowActions from '../actions/logWindowActions';
-import SideBarActions from '../actions/sideBarActions';
+import ChartsWindowActions from '../actions/chartsWindowActions';
 import api from '../api';
 
 class Home extends React.Component {
@@ -11,11 +11,14 @@ class Home extends React.Component {
         this.socket.on('connect', () => {
             var sid = this.socket.io.engine.id;
             console.log('socket sessionid', sid);
-            api.setSessionId(sid);
+            api.setSessionID(sid);
         });
-        this.socket.on('log', function(data) {
+        this.socket.on('log', (data) => {
             console.log(data);
             LogWindowActions.getLogsSuccessAppend(data);
+        });
+        this.socket.on('chart', (data) => {
+            ChartsWindowActions.updateChartData(data);
         });
     }
 

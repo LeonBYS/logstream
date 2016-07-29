@@ -1,33 +1,28 @@
 'use strict'
 
 class Connections {
-    constructor (http, sessionMiddleWare) {
-        this.focusBySession = {};
-        this.sessionsByFocus = {};
+    constructor (http) {
+        this.subscription = {};
         this.socketBySession = {};
 
         this.io = require('socket.io')(http);
         this.io.on('connection', (socket) => {
             var sid = socket.id.slice(2);
-            console.log('sid', sid);
             this._newConnection(sid, socket);
-        });
+        })
     }
 
     _newConnection(sessionID, socket) {
+        console.log('new connection:', sessionID);
         this.socketBySession[sessionID] = socket;
         socket.on('disconnect', () => {
-            this._delConnection(sessionID);    
-        });
+            this._delConnection(sessionID);
+        })
     }
 
     _delConnection(sessionID) {
-        console.log('delete session', sessionID);
-        var focus = this.focusBySession[sessionID];
-        if (focus) {
-            delete this.sessionsByFocus[focus][sessionID];
-        }
-        delete this.focusBySession[sessionID];
+        console.log('del connection', sessionID);
+        delete this.subscription[sessionID];
         delete this.socketBySession[sessionID];
     }
 
@@ -35,41 +30,20 @@ class Connections {
         return project + ':' + logname;
     }
 
-    changeFocus(sessionID, project, logname) {
-        if (!sessionID || !this.socketBySession[sessionID]) {
-            return;
+    subscribe(sessionID, channel, project, logname) {
+        if (!sessionID || !this.socketBySession[sessionID]) return;
+        if (!this.subscription[sessionID]) {
+            this.subscription[sessionID] = {};
         }
-        console.log('changeFocus', sessionID, project, logname);
-        var focusNew = this._genFocus(project, logname);
-        var focusOld = this.focusBySession[sessionID]; 
-        if (focusOld && focusNew !== focusOld) {
-            delete this.sessionsByFocus[focusOld][sessionID];
-        }
-        // session -> focus
-        this.focusBySession[sessionID] = focusNew;
-        // focus -> {session1, ...} 
-        if (!this.sessionsByFocus[focusNew]) { 
-            this.sessionsByFocus[focusNew] = {}; 
-        }
-        this.sessionsByFocus[focusNew][sessionID] = true;
+        this.subscription[sessionID][channel] = this._genFocus(project, logname);
     }
 
-    pushMessage(msgType, msgBody, project, logname) {
-        console.log('pushMessage', project, logname);
-
+    publish(channel, project, logname, message) {
         var focus = this._genFocus(project, logname);
-        var sessions = [];
-        if (project) {
-            if (this.sessionsByFocus[focus]) {
-                sessions = Object.keys(this.sessionsByFocus[focus]);
+        for (var sid in this.subscription) {
+            if (this.subscription[sid][channel] === focus) {
+                this.socketBySession[sid].emit(channel, message);
             }
-        }else {// if project & logname is null, sessions <- all sessions
-            sessions = Object.keys(this.focusBySession);
-        }
-        for (var i=0; i<sessions.length; i++) {
-            var client = this.socketBySession[sessions[i]];
-            console.log('emit to ', sessions[i]);
-            client.emit(msgType, msgBody);
         }
     }
 }
