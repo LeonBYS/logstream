@@ -65,6 +65,7 @@ class LogWindowStore {
     }
 
     onChangeFilter(filter) {
+        this.filter = filter;
         this.linesFilted = this.filterLines(this.linesOrigin, this.filter);
     }
 
