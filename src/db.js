@@ -106,7 +106,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     getProjects: function (callback) {
-        this.client.keys(this.prefix + "logs:*", function (err, result) {
+        this.client.keys(this.prefix + "*:*", function (err, result) {
             if (err) {
                 callback(err, null);
                 return;
