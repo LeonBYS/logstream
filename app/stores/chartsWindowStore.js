@@ -43,7 +43,7 @@ class ChartsWindowStore {
                 this.chartsData[chartname].data[key] = [];
             }
             this.chartsData[chartname].data[key].push([val, timestamp]);
-            this.chartsData[chartname].data[key].sort((a, b) => a[1] - b[1]);
+            //this.chartsData[chartname].data[key].sort((a, b) => a[1] - b[1]);
         }
         if (chartType) {
             this.chartsData[chartname].type = chartType;

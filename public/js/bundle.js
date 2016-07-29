@@ -412,36 +412,87 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Chart = function (_React$Component) {
     _inherits(Chart, _React$Component);
 
-    function Chart() {
+    function Chart(props) {
         _classCallCheck(this, Chart);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Chart).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Chart).call(this, props));
+
+        _this.state = {
+            timeSpanBase: 1000,
+            timeSpanBaseName: 'seconds',
+            timeSpan: 60 };
+        _this.timeoutID = null;
+        return _this;
     }
 
     _createClass(Chart, [{
-        key: 'render',
-        value: function render() {
-            var chartData = _chartsWindowStore2.default.getState().chartsData[this.props.name];
-            console.log(this.props, chartData);
-            if (!chartData) return _react2.default.createElement('div', null);
+        key: 'changeTimeSpan',
+        value: function changeTimeSpan(span, base, name) {
+            var state = this.state;
+            state.timeSpan = span;
+            state.timeSpanBase = base;
+            state.timeSpanBaseName = name;
+            this.setState(state);
+        }
+    }, {
+        key: 'makeDataInSpan',
+        value: function makeDataInSpan(data, x_start, x_end) {
+            var dataNew = [];
+            //dataNew.push({x:x_start, y:null});
 
-            var data = {
-                datasets: []
-            };
-            for (var key in chartData.data) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].x >= x_start && data[i].x <= x_end) {
+                    if (dataNew.length > 0) {
+                        var sum_x = dataNew[dataNew.length - 1].x;
+                        var sum_y = dataNew[dataNew.length - 1].y;
+                        var count = 1;
+                        while (Math.floor(dataNew[dataNew.length - 1].x) === Math.floor(data[i].x)) {
+                            sum_x += data[i].x;
+                            sum_y += data[i].y;
+                            count++;
+                            i++;
+                            if (i >= data.length) break;
+                        }
+                        dataNew[dataNew.length - 1] = { x: sum_x / count, y: sum_y / count };
+                    }
+                    if (i < data.length) dataNew.push(data[i]);
+                }
+            }
+            dataNew.unshift({ x: x_start, y: null });
+            dataNew.push({ x: x_end, y: null });
+            return dataNew;
+        }
+    }, {
+        key: 'convertData',
+        value: function convertData() {
+            var _this2 = this;
+
+            if (!this.props.data) return null;
+            var tnow = Date.now();
+            tnow += -(tnow % this.state.timeSpanBase);
+            var data = { datasets: [] };
+            for (var key in this.props.data) {
                 data.datasets.push({
                     label: key,
-                    data: chartData.data[key].map(function (o) {
-                        return { x: o[1], y: o[0] };
+                    data: this.props.data[key].map(function (o) {
+                        return { x: (o[1] - tnow) / _this2.state.timeSpanBase, y: o[0] };
+                    }).sort(function (a, b) {
+                        return a.x - b.x;
                     })
                 });
             }
             for (var i = 0; i < data.datasets.length; i++) {
-                var arr = data.datasets[i].data;
-                if (arr.length > 10) {
-                    data.datasets[i].data = arr.slice(arr.length - 10);
-                }
+                data.datasets[i].data = this.makeDataInSpan(data.datasets[i].data, -this.state.timeSpan, 1);
             }
+            return data;
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this3 = this;
+
+            var data = this.convertData();
+            if (!data) return _react2.default.createElement('div', null);
 
             var options = {
                 scales: {
@@ -453,17 +504,86 @@ var Chart = function (_React$Component) {
                 animation: false
             };
 
-            var graph;
             if (!window) {
-                graph = _react2.default.createElement('div', null);
-            } else {
-                if (chartData.type === 'line') {
-                    var Line = require('react-chartjs-2').Line;
-                    graph = _react2.default.createElement(Line, { data: data, options: options, redraw: true });
-                }
+                return _react2.default.createElement('div', null);
             }
-            return graph;
-        }
+
+            if (this.props.type === 'line') {
+                if (this.timeoutID) {
+                    clearTimeout(this.timeoutID);
+                }
+                this.timeoutID = setTimeout(function () {
+                    _this3.forceUpdate();
+                }, this.state.timeSpanBase);
+                var Line = require('react-chartjs-2').Line;
+                return _react2.default.createElement(
+                    'div',
+                    null,
+                    _react2.default.createElement(
+                        'h2',
+                        null,
+                        ' ',
+                        this.props.name,
+                        ' '
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'btn-group', role: 'group', style: { marginRight: "15px" } },
+                        _react2.default.createElement(
+                            'button',
+                            { type: 'button', className: 'btn btn-default dropdown-toggle', 'data-toggle': 'dropdown', 'aria-haspopup': 'true', 'aria-expanded': 'false' },
+                            "Time Span: last " + this.state.timeSpan + " " + this.state.timeSpanBaseName,
+                            _react2.default.createElement('span', { className: 'caret' })
+                        ),
+                        _react2.default.createElement(
+                            'ul',
+                            { className: 'dropdown-menu' },
+                            _react2.default.createElement(
+                                'li',
+                                null,
+                                _react2.default.createElement(
+                                    'a',
+                                    { style: { cursor: "pointer" }, onClick: function onClick() {
+                                            _this3.changeTimeSpan(60, 1000, 'seconds');
+                                        } },
+                                    'last 60 seconds'
+                                )
+                            ),
+                            _react2.default.createElement(
+                                'li',
+                                null,
+                                _react2.default.createElement(
+                                    'a',
+                                    { style: { cursor: "pointer" }, onClick: function onClick() {
+                                            _this3.changeTimeSpan(60, 60 * 1000, 'minutes');
+                                        } },
+                                    'last 60 minutes'
+                                )
+                            ),
+                            _react2.default.createElement(
+                                'li',
+                                null,
+                                _react2.default.createElement(
+                                    'a',
+                                    { style: { cursor: "pointer" }, onClick: function onClick() {
+                                            _this3.changeTimeSpan(24, 60 * 60 * 1000, 'hour');
+                                        } },
+                                    'last 24 hour'
+                                )
+                            )
+                        )
+                    ),
+                    _react2.default.createElement(Line, { data: data, options: options, redraw: true, height: 50 })
+                );
+            } else {
+                return _react2.default.createElement(
+                    'h1',
+                    null,
+                    ' Invalid chart types! '
+                );
+            }
+        } // end render
+
     }]);
 
     return Chart;
@@ -472,46 +592,35 @@ var Chart = function (_React$Component) {
 var ChartsWindow = function (_React$Component2) {
     _inherits(ChartsWindow, _React$Component2);
 
-    _createClass(ChartsWindow, [{
-        key: 'rand',
-        value: function rand(min, max, num) {
-            var rtn = [];
-            while (rtn.length < num) {
-                rtn.push(Math.random() * (max - min) + min);
-            }
-            return rtn;
-        }
-    }]);
-
     function ChartsWindow(props) {
         _classCallCheck(this, ChartsWindow);
 
-        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
 
-        _this2.state = _chartsWindowStore2.default.getState();
-        _this2.onChange = _this2.onChange.bind(_this2);
-        _this2.componentWillReceiveProps = _this2.componentWillReceiveProps.bind(_this2);
-        return _this2;
+        _this4.state = _chartsWindowStore2.default.getState();
+        _this4.onChange = _this4.onChange.bind(_this4);
+        _this4.componentWillReceiveProps = _this4.componentWillReceiveProps.bind(_this4);
+        return _this4;
     }
 
     _createClass(ChartsWindow, [{
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            var _this3 = this;
+            var _this5 = this;
 
             this.props = nextProps;
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this3.props.project, _this3.props.logname);
+                _chartsWindowActions2.default.getCharts(_this5.props.project, _this5.props.logname);
             });
         }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
-            var _this4 = this;
+            var _this6 = this;
 
             _chartsWindowStore2.default.listen(this.onChange);
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this4.props.project, _this4.props.logname);
+                _chartsWindowActions2.default.getCharts(_this6.props.project, _this6.props.logname);
             });
         }
     }, {
@@ -527,12 +636,20 @@ var ChartsWindow = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
+            var _this7 = this;
+
             console.log('charts window render!');
             return _react2.default.createElement(
                 'div',
                 null,
                 this.state.charts.map(function (chartname) {
-                    return _react2.default.createElement(Chart, { key: chartname, name: chartname, height: '400px' });
+                    var chart = _this7.state.chartsData[chartname];
+                    var data = chart ? chart.data : null;
+                    var type = chart ? chart.type : null;
+                    return _react2.default.createElement(Chart, { key: chartname,
+                        name: chartname,
+                        data: data,
+                        type: type });
                 })
             );
         }
@@ -1662,9 +1779,7 @@ var ChartsWindowStore = function () {
                     this.chartsData[chartname].data[key] = [];
                 }
                 this.chartsData[chartname].data[key].push([val, timestamp]);
-                this.chartsData[chartname].data[key].sort(function (a, b) {
-                    return a[1] - b[1];
-                });
+                //this.chartsData[chartname].data[key].sort((a, b) => a[1] - b[1]);
             }
             if (chartType) {
                 this.chartsData[chartname].type = chartType;
