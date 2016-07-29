@@ -305,7 +305,8 @@ var dbRedis = {
                     dataOrigin[item.key] = [[item.value, timestamp]];
                 }
             });
-            chartData.type = chartType;
+            if (chartType) { chartData.type = chartType; }
+            chartData.type = chartData.type || 'line'; // default chart type: line
             chartData.data = dataOrigin;
             this.client.set(key, JSON.stringify(chartData), callback);
         });

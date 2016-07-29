@@ -6,7 +6,7 @@ class SideBarActions {
         this.generateActions(
             'getProjectsSuccess',
             'getProjectsFail'
-        )
+        );
     }
 
     changeFilter(filter) {

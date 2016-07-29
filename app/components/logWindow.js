@@ -142,4 +142,4 @@ class LogWindow extends React.Component {
     }
 }
 
-export default LogWindow; 
+export default LogWindow;
