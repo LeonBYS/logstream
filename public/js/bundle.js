@@ -175,7 +175,7 @@ var LogWindowActions = function () {
                     } else {
                         _this.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
-                } else if (_this.lastTimestamp === null) {
+                } else if (!_this.lastTimestamp) {
                     // data is [] or null, this branch doesn't have log data
                     _this.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
@@ -1961,6 +1961,7 @@ var LogWindowStore = function () {
     }, {
         key: 'onChangeFilter',
         value: function onChangeFilter(filter) {
+            this.filter = filter;
             this.linesFilted = this.filterLines(this.linesOrigin, this.filter);
         }
     }, {
