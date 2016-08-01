@@ -9,6 +9,8 @@ var io = require('socket.io')(http);
 var db = require('./src/db').Database('redis');
 var Connections = require('./src/connections').Connections;
 
+
+global.navigator = { userAgent: 'all' };
 /* react */
 var swig = require('swig');
 var React = require('react');
@@ -20,6 +22,12 @@ var routes = require('./app/routes');
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
 app.use(express.static('public'));
+app.use(function(req, res, next) {
+    global.navigator = {
+        userAgent: req.headers['user-agent']
+    }
+    next();
+});
 
 
 db.connect(

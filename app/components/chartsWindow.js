@@ -2,6 +2,9 @@ import React from 'react';
 import ChartsWindowActions from '../actions/chartsWindowActions.js';
 import ChartsWindowStore from '../stores/chartsWindowStore.js'
 
+import DropDownMenu from 'material-ui/DropDownMenu';
+import MenuItem from 'material-ui/MenuItem';
+
 
 class Chart extends React.Component {
     constructor (props) {
@@ -10,12 +13,26 @@ class Chart extends React.Component {
             timeSpanBase: 1000,
             timeSpanBaseName: 'seconds',
             timeSpan: 60, // 60s
+            timeSpanIndex: 1,
         };
         this.timeoutID = null;
+
+        this.handleChange = this.handleChange.bind(this);
     }
 
-    changeTimeSpan(span, base, name) {
+    componentDidMount() {
+    }
+
+    componentWillUnmount() {
+        if (this.timeoutID) {
+            clearTimeout(this.timeoutID);
+        }
+    }
+
+
+    changeTimeSpan(index, span, base, name) {
         var state = this.state;
+        state.timeSpanIndex = index;
         state.timeSpan = span;
         state.timeSpanBase = base;
         state.timeSpanBaseName = name;
@@ -68,6 +85,16 @@ class Chart extends React.Component {
         return data;
     }
 
+    handleChange(event, index, value) {
+        if (value === 1) {
+            this.changeTimeSpan(1, 60, 1000, 'seconds');
+        } else if (value === 2) {
+            this.changeTimeSpan(2, 60, 60 * 1000, 'minutes');
+        } else if (value === 3) {
+            this.changeTimeSpan(3, 24, 60 * 60 * 1000, 'hour');
+        }
+    }
+
     render () {
         var data = this.convertData();
         if (!data) return <div/>; 
@@ -88,22 +115,16 @@ class Chart extends React.Component {
             if (this.timeoutID) {
                 clearTimeout(this.timeoutID);
             }
-            this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
+            //this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
             var Line = require('react-chartjs-2').Line;
             return (
                 <div>
                     <h2> {this.props.name} </h2>
-                    <div className="btn-group" role="group" style={{ marginRight: "15px" }}>
-                        <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            {"Time Span: last " + this.state.timeSpan + " " + this.state.timeSpanBaseName}
-                            <span className="caret"></span>
-                        </button>
-                        <ul className="dropdown-menu">
-                            <li><a style={{cursor:"pointer"}} onClick={() => { this.changeTimeSpan(60, 1000, 'seconds'); } }>last 60 seconds</a></li>
-                            <li><a style={{cursor:"pointer"}} onClick={() => { this.changeTimeSpan(60, 60 * 1000, 'minutes'); } }>last 60 minutes</a></li>
-                            <li><a style={{cursor:"pointer"}} onClick={() => { this.changeTimeSpan(24, 60 * 60 * 1000, 'hour'); } }>last 24 hour</a></li>
-                        </ul>
-                    </div>
+                    <DropDownMenu value={this.state.timeSpanIndex} onChange={this.handleChange}>
+                        <MenuItem value={1} primaryText="Last 60 seconds" />
+                        <MenuItem value={2} primaryText="Last 60 minutes" />
+                        <MenuItem value={3} primaryText="Last 24 hour" />
+                    </DropDownMenu>
                     <Line data={data} options={options} redraw={true} height={50}/>
                 </div>
             );
@@ -145,7 +166,7 @@ class ChartsWindow extends React.Component {
     }
 
     render () {
-        console.log('charts window render!');
+        console.log('charts window render!', this.state.charts);
         return (
             <div> 
                 {this.state.charts.map((chartname) => {
@@ -153,7 +174,8 @@ class ChartsWindow extends React.Component {
                     var data = chart ? chart.data : null;
                     var type = chart ? chart.type : null;
                     return (
-                        <Chart key={chartname} 
+                        <Chart 
+                            key={this.state.project + '/' + this.state.logname + '/chart/' + chartname}
                             name={chartname} 
                             data={data}
                             type={type}/>

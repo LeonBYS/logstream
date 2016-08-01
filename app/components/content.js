@@ -4,7 +4,8 @@ import ContentActions from '../actions/contentActions';
 import LogWindow from './logWindow';
 import ChartsWindow from './chartsWindow';
 
-
+import {Tabs, Tab} from 'material-ui/Tabs';
+import Divider from 'material-ui/Divider';
 
 class LogUserCommand extends React.Component {
     constructor(props) {
@@ -51,69 +52,30 @@ class Content extends React.Component {
 
     render () {
         if (this.state.project && this.state.logname) {
-            return (
-                <div id="page-wrapper">
-                    <div className="row">
-                        <div className="col-lg-12" style={{ marginTop: "5px" }}>
-                            <div className="panel panel-default">
-                                <div className="panel-heading">
-                                    <div className="row">
-                                        <div className="col-md-4">
-                                            <h4>{this.state.project + '/' + this.state.logname}</h4>
-                                        </div>
-                                        <div className="col-md-8 text-right">
-                                            {this.state.commands.map((command) =>
-                                                <LogUserCommand key={command} command={command} project={this.state.project} logname={this.state.logname}/>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="panel-body">
-                                    <ul className="nav nav-tabs">
-                                        <li className="active"><a data-toggle="tab" href="#logswindow">Logs Window</a></li>
-                                        <li><a data-toggle="tab" href="#charts">Charts</a></li>
-                                        <li><a data-toggle="tab" href="#settings">Settings</a></li>
-                                    </ul>
-                                    <div className="tab-content">
-                                        <div id="logswindow" className="tab-pane fade in active">
-                                            <LogWindow project={this.state.project} logname={this.state.logname} />
-                                        </div>
-                                        <div id="charts" className="tab-pane fade">
-                                            <ChartsWindow project={this.state.project} logname={this.state.logname} />
-                                        </div>
-                                        <div id="settings" className="tab-pane fade">
-                                            <h3>Here is your setting for this log branch</h3>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            return (<div>
+                <h2> {this.state.project + '/' + this.state.logname}</h2>
+                <Divider style={{ marginBottom: "20px" }}/>
+                <div>
+                    {this.state.commands.map((command) =>
+                        <LogUserCommand key={command} command={command} project={this.state.project} logname={this.state.logname}/>
+                    )}
                 </div>
-            );
+                <Tabs>
+                    <Tab label="Logggs" >
+                        <LogWindow project={this.state.project} logname={this.state.logname} />
+                    </Tab>
+                    <Tab label="Charts" >
+                        <ChartsWindow project={this.state.project} logname={this.state.logname} />
+                    </Tab>
+                    <Tab label="Setting" >
+                        <h2>
+                            Settings!!!! \^O^/
+                        </h2>
+                    </Tab>
+                </Tabs>
+            </div>);
         }else {
-            return (
-                <div id="page-wrapper">
-                    <div className="row">
-                        <div className="col-lg-12" style={{ marginTop: "5px" }}>
-                            <div className="panel panel-default">
-                                <div className="panel-heading">
-                                    <h4> Hello </h4>
-                                </div>
-                                <div className="panel-body">
-                                    <div className="jumbotron" style={{paddingLeft:"10%"}}>
-                                        <h1>LogStream</h1>
-                                        <p>log your everything!</p>
-                                        <p><a className="btn btn-primary btn-lg" href="https://github.com/usstwxy/logstream" role="button">Learn more</a></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
+            return <h1> hello! </h1>;
         }
     }
 }

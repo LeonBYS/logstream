@@ -18,6 +18,7 @@ class ChartsWindowStore {
         this.project = data.project;
         this.logname = data.logname;
         this.charts = data.charts;
+        this.chartData = {};
     }
 
     onGetChartDataSuccess(chartData) {

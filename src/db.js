@@ -119,7 +119,9 @@ var dbRedis = {
                     if (!(project in set)) {
                         set[project] = []
                     }
-                    set[project].push(logname);
+                    if (set[project].indexOf(logname) < 0) {
+                        set[project].push(logname);
+                    }
                 }
                 var result = [];
                 for (var key in set) {

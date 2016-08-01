@@ -21,6 +21,9 @@ var dependencies = [
   'react',
   'react-dom',
   'react-router',
+  'react-addons-transition-group',
+  'react-addons-create-fragment',
+  'react-tap-event-plugin',
   'underscore'
 ];
 
@@ -32,9 +35,9 @@ var dependencies = [
 gulp.task('vendor', function() {
   return gulp.src([
     'bower_components/jquery/dist/jquery.js',
-    'bower_components/bootstrap/dist/js/bootstrap.js',
-    'bower_components/startbootstrap-sb-admin-2/dist/js/sb-admin-2.js',
-    'bower_components/metisMenu/dist/metisMenu.js',
+    //'bower_components/bootstrap/dist/js/bootstrap.js',
+    //'bower_components/startbootstrap-sb-admin-2/dist/js/sb-admin-2.js',
+    //'bower_components/metisMenu/dist/metisMenu.js',
     'bower_components/toastr/toastr.js',
     'node_modules/socket.io/node_modules/socket.io-client/socket.io.js'
   ]).pipe(concat('vendor.js'))

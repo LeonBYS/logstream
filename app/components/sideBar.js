@@ -3,35 +3,34 @@ import SideBarStore from '../stores/sideBarStore';
 import SideBarActions from '../actions/sideBarActions'
 import ContentActions from '../actions/contentActions';
 
-class LognameButton extends React.Component {
-    constructor (props) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-    render () {
-        return (
-            <li onClick={this.handleClick}>
-                <a style={{cursor:"pointer"}}>{this.props.logname}</a>
-            </li>
-        );
-    }
-    handleClick() {
-        ContentActions.selectLogBranch(this.props.project, this.props.logname);
-    }
-}
+import TextField from 'material-ui/TextField';
+import {List, ListItem} from 'material-ui/List';
 
 class ProjectMenu extends React.Component {
+    constructor (props) {
+        super(props);
+        this.handleLognameClick = this.handleLognameClick.bind(this);
+    }
+
+    handleLognameClick(logname) {
+        ContentActions.selectLogBranch(this.props.project, logname);
+    }
+
     render() {
-        var loglist = this.props.lognames.map(logname => {
-            return (<LognameButton key={logname} logname={logname} project={this.props.project} />); 
-        });
+        var lognamelist = this.props.lognames.map(logname => 
+            <ListItem 
+                key={this.props.project + '/' + logname}
+                primaryText={logname}
+                onClick={() => this.handleLognameClick(logname)}
+            />
+        );
         return (
-            <li>
-                <a href="#"><i className="fa fa-fw"></i>{this.props.project}<span className="fa arrow"></span></a>
-                <ul className="nav nav-second-level">
-                    {loglist}
-                </ul>
-            </li>
+            <ListItem
+                primaryText={this.props.project}
+                initiallyOpen={true}
+                primaryTogglesNestedList={true}
+                nestedItems={lognamelist}
+            />
         );
     }
 }
@@ -48,26 +47,14 @@ class MenuSearchbar extends React.Component {
 
     render () {
         return (
-            <li className="sidebar-search">
-                <div className="input-group custom-search-form">
-                    <input type="text" onChange={this.handleChange} className="form-control" placeholder="Search..." />
-                    <div className="input-group-addon"><i className="fa fa-search"></i></div>
-                </div> 
-            </li>
-        );
-    }
-}
-
-class SideMenu extends React.Component {
-    render () {
-        var data = this.props.data;
-        return (
-            <ul className="nav" id="side-menu">
-                <MenuSearchbar />
-                {data.map(function (project) {
-                    return (<ProjectMenu key={project.name} project={project.name} lognames={project.lognames} />);
-                })}
-            </ul>
+            <div style={{paddingLeft:"15px", paddingRight:"15px"}}>
+                <TextField
+                    hintText="Filter"
+                    floatingLabelText="Filter"
+                    fullWidth={true}
+                    onChange={this.handleChange}
+                />
+            </div>
         );
     }
 }
@@ -93,11 +80,13 @@ class SideBar extends React.Component {
     }
 
     render () {
+        var listConent = this.state.projects.map(project =>
+            <ProjectMenu key={project.name} project={project.name} lognames={project.lognames} />
+        );
         return (
-            <div className="navbar-default sidebar" role="navigation">
-                <div className="sidebar-nav navbar-collapse">
-                    <SideMenu data={this.state.projects}/>
-                </div>
+            <div>
+                <MenuSearchbar />
+                <List> {listConent} </List>
             </div>
         );
     }
