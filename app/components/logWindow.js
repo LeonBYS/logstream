@@ -24,10 +24,14 @@ class LogSearchBar extends React.Component {
 class MsgItem extends React.Component {
     render() {
         return (
-            <p style={{color: "#f1f1f1", margin:"0"}}>
-                <a style={{color: "#666"}}>{this.props.index}</a>
-                <span>{this.props.text}</span>
-            </p>
+            <tr style={{color: "#f1f1f1", margin:"0"}}>
+                <td>
+                    <a style={{color: "#666", marginRight:"10px"}}>{this.props.index}</a>
+                </td>
+                <td>
+                    <span>{this.props.text}</span>
+                </td>
+            </tr>
         );
     }
 }
@@ -66,6 +70,7 @@ class MsgWindow extends React.Component {
     constructor(props) {
         super(props);
         this.styleOut = {
+            fontSize:"1em",
             fontFamily:"Monaco, Inconsolata, monospace", 
             backgroundColor: "#222",
             padding: "10px"
@@ -89,8 +94,12 @@ class MsgWindow extends React.Component {
             }
         });
         return (
-            <div onWheel={this.handleWheel} style={this.styleOut}>                    
-                {logContent}
+            <div onWheel={this.handleWheel} style={this.styleOut}>    
+                <table>   
+                    <tbody>             
+                    {logContent}
+                    </tbody>
+                </table>
             </div>
         );
     }

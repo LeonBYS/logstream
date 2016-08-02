@@ -9,3 +9,7 @@
 #side-menu > li > ul > li.active > a {
     background-color: #eee;
 }
+
+html {
+  font-family: 'Roboto', sans-serif;
+}

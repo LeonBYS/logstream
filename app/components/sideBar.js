@@ -3,38 +3,44 @@ import SideBarStore from '../stores/sideBarStore';
 import SideBarActions from '../actions/sideBarActions'
 import ContentActions from '../actions/contentActions';
 
-class LognameButton extends React.Component {
-    constructor (props) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-    render () {
-        return (
-            <li onClick={this.handleClick}>
-                <a style={{cursor:"pointer"}}>{this.props.logname}</a>
-            </li>
-        );
-    }
-    handleClick() {
-        ContentActions.selectLogBranch(this.props.project, this.props.logname);
-    }
-}
+import TextField from 'material-ui/TextField';
+import {List, ListItem, MakeSelectable} from 'material-ui/List';
 
-class ProjectMenu extends React.Component {
-    render() {
-        var loglist = this.props.lognames.map(logname => {
-            return (<LognameButton key={logname} logname={logname} project={this.props.project} />); 
+
+let SelectableListNaive = MakeSelectable(List);
+
+class SelectableList extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleRequestChange = this.handleRequestChange.bind(this);
+    }
+
+    componentWillMount() {
+        this.setState({
+            selectedIndex: this.props.defaultValue,
         });
+    }
+
+    handleRequestChange(event, index) {
+        if (index) {
+            this.setState({
+                selectedIndex: index,
+            });
+        }
+    };
+
+    render() {
         return (
-            <li>
-                <a href="#"><i className="fa fa-fw"></i>{this.props.project}<span className="fa arrow"></span></a>
-                <ul className="nav nav-second-level">
-                    {loglist}
-                </ul>
-            </li>
+            <SelectableListNaive
+                value={this.state.selectedIndex}
+                onChange={this.handleRequestChange}
+                >
+                {this.props.children}
+            </SelectableListNaive>
         );
     }
-}
+};
+
 
 class MenuSearchbar extends React.Component {
     constructor (props) {
@@ -48,26 +54,14 @@ class MenuSearchbar extends React.Component {
 
     render () {
         return (
-            <li className="sidebar-search">
-                <div className="input-group custom-search-form">
-                    <input type="text" onChange={this.handleChange} className="form-control" placeholder="Search..." />
-                    <div className="input-group-addon"><i className="fa fa-search"></i></div>
-                </div> 
-            </li>
-        );
-    }
-}
-
-class SideMenu extends React.Component {
-    render () {
-        var data = this.props.data;
-        return (
-            <ul className="nav" id="side-menu">
-                <MenuSearchbar />
-                {data.map(function (project) {
-                    return (<ProjectMenu key={project.name} project={project.name} lognames={project.lognames} />);
-                })}
-            </ul>
+            <div style={{paddingLeft:"15px", paddingRight:"15px"}}>
+                <TextField
+                    hintText="Filter"
+                    floatingLabelText="Filter"
+                    fullWidth={true}
+                    onChange={this.handleChange}
+                />
+            </div>
         );
     }
 }
@@ -77,6 +71,7 @@ class SideBar extends React.Component {
         super(props);
         this.state = SideBarStore.getState();
         this.onChange = this.onChange.bind(this);
+        this.handleLognameClick = this.handleLognameClick.bind(this);
     }
 
     componentDidMount() {
@@ -88,16 +83,41 @@ class SideBar extends React.Component {
         SideBarStore.unlisten(this.onChange);
     }
 
-    onChange (state) {
+    handleLognameClick(project, logname) {
+        ContentActions.selectLogBranch(project, logname);
+    }
+
+    onChange(state) {
         this.setState(state);
     }
 
     render () {
+        var listConent = this.state.projects.map(project => {
+            var lognamelist = project.lognames ? project.lognames.map(logname => 
+                <ListItem 
+                    value={project.name + '/' + logname}
+                    key={project.name + '/' + logname}
+                    primaryText={logname}
+                    onClick={() => this.handleLognameClick(project.name, logname)}
+                />
+            ) : [];
+            return (
+                <ListItem
+                    key={project.name}
+                    primaryText={project.name}
+                    initiallyOpen={true}
+                    primaryTogglesNestedList={true}
+                    nestedItems={lognamelist}
+                />
+            );
+        });
+
+        if (!listConent) listConent = [];
+
         return (
-            <div className="navbar-default sidebar" role="navigation">
-                <div className="sidebar-nav navbar-collapse">
-                    <SideMenu data={this.state.projects}/>
-                </div>
+            <div>
+                <MenuSearchbar />
+                <SelectableList defaultValue={"None"}> {listConent} </SelectableList>
             </div>
         );
     }

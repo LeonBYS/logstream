@@ -119,7 +119,9 @@ var dbRedis = {
                     if (!(project in set)) {
                         set[project] = []
                     }
-                    set[project].push(logname);
+                    if (set[project].indexOf(logname) < 0) {
+                        set[project].push(logname);
+                    }
                 }
                 var result = [];
                 for (var key in set) {
@@ -297,7 +299,7 @@ var dbRedis = {
             var dataOrigin = chartData.data || {};
             data.map((item) => {
                 if (item.key in dataOrigin) {
-                    if (dataOrigin[item.key].length >= 128) {
+                    if (dataOrigin[item.key].length >= 512) {
                         dataOrigin[item.key].pop();
                     }
                     dataOrigin[item.key].unshift([item.value, timestamp]);
