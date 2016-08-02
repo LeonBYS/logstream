@@ -175,7 +175,7 @@ var LogWindowActions = function () {
                     } else {
                         _this.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
-                } else if (!_this.lastTimestamp) {
+                } else if (!timestamp) {
                     // data is [] or null, this branch doesn't have log data
                     _this.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
@@ -873,15 +873,6 @@ var Content = function (_React$Component2) {
                             _Tabs.Tab,
                             { label: 'Charts' },
                             _react2.default.createElement(_chartsWindow2.default, { project: this.state.project, logname: this.state.logname })
-                        ),
-                        _react2.default.createElement(
-                            _Tabs.Tab,
-                            { label: 'Setting' },
-                            _react2.default.createElement(
-                                'h2',
-                                null,
-                                'Settings!!!! \\^O^/'
-                            )
                         )
                     )
                 );

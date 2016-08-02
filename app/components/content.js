@@ -68,11 +68,6 @@ class Content extends React.Component {
                     <Tab label="Charts" >
                         <ChartsWindow project={this.state.project} logname={this.state.logname} />
                     </Tab>
-                    <Tab label="Setting" >
-                        <h2>
-                            Settings!!!! \^O^/
-                        </h2>
-                    </Tab>
                 </Tabs>
             </div>);
         }else {
