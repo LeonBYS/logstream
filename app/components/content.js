@@ -6,6 +6,7 @@ import ChartsWindow from './chartsWindow';
 
 import {Tabs, Tab} from 'material-ui/Tabs';
 import Divider from 'material-ui/Divider';
+import RaisedButton from 'material-ui/RaisedButton';
 
 class LogUserCommand extends React.Component {
     constructor(props) {
@@ -75,7 +76,17 @@ class Content extends React.Component {
                 </Tabs>
             </div>);
         }else {
-            return <h1> hello! </h1>;
+            return (<div style={{textAlign: 'center', paddingTop:"100px", paddingBottom:"100px"}}> 
+                <h1> LogStream </h1>
+                <h4 style={{marginTop:"20px", marginBottom:"50px"}}> 
+                    View, manage, analyze your app logs centrally in real time :) 
+                </h4> 
+                <RaisedButton
+                    label="Github"
+                    secondary={true}
+                    href="https://github.com/usstwxy/logstream"
+                />
+            </div>);
         }
     }
 }

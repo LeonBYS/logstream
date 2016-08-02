@@ -26,12 +26,30 @@ import Divider from 'material-ui/Divider';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import Slider from 'material-ui/Slider';
 
+import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
+import lightBaseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
+
 
 const muiTheme = getMuiTheme({
   palette: {
     accent1Color: deepOrange500,
   },
 });
+
+
+const muiTheme2 = getMuiTheme({
+    palette: {
+        primary1Color: "#1690DB",
+        primary2Color: "#2173B3",
+        primary3Color: "#A9D2EB",
+        accent1Color: "#ED3B3B",
+        accent2Color: "#ED2B2B",
+        accent3Color: "#F58C8C"
+    },
+});
+
+
+
 
 const paperStyle = {
     marginLeft: "256px",
@@ -42,16 +60,15 @@ const paperStyle = {
     paddingBottom: "25px"
 };
 
-const tabHeaderstyles = {
-  headline: {
-    fontSize: 24,
-    paddingTop: 16,
-    marginBottom: 12,
-    fontWeight: 400,
-  },
-};
-
 class Home extends React.Component {
+    constructor(props) {
+        super(props);
+        this.themes = [getMuiTheme(lightBaseTheme), muiTheme2];
+        this.state = {
+            theme: 0
+        }
+    }
+
     componentDidMount() {
         this.socket = io();
         this.socket.on('connect', () => {
@@ -60,16 +77,18 @@ class Home extends React.Component {
             api.setSessionID(sid);
         });
         this.socket.on('log', (data) => {
+            console.log('log coming', data);
             LogWindowActions.getLogsSuccessAppend(data);
         });
         this.socket.on('chart', (data) => {
+            console.log('chart coming', data);
             ChartsWindowActions.updateChartData(data);
         });
     }
 
     render() {                    
         return (
-            <MuiThemeProvider muiTheme={muiTheme}>
+            <MuiThemeProvider muiTheme={this.themes[this.state.theme]}>
                 <div>
                     <AppBar
                         title="LogStream" 
@@ -81,7 +100,13 @@ class Home extends React.Component {
                     />
 
                     <Drawer open={true}>
-                        <AppBar title="LogStream" />
+                        <AppBar title="LogStream" 
+                            onLeftIconButtonTouchTap={()=>{
+                                this.setState({
+                                    theme: (this.state.theme + 1) % this.themes.length
+                                });
+                            }}
+                        />
                         <SideBar />
                     </Drawer>
 
@@ -91,15 +116,6 @@ class Home extends React.Component {
 
                 </div>
             </MuiThemeProvider>
-        );
-    }
-
-    renderOld() {
-        return (
-            <div id="wrapper">
-                <NavBar />
-                <Content />
-            </div>
         );
     }
 }

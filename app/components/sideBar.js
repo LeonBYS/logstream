@@ -4,36 +4,43 @@ import SideBarActions from '../actions/sideBarActions'
 import ContentActions from '../actions/contentActions';
 
 import TextField from 'material-ui/TextField';
-import {List, ListItem} from 'material-ui/List';
+import {List, ListItem, MakeSelectable} from 'material-ui/List';
 
-class ProjectMenu extends React.Component {
-    constructor (props) {
+
+let SelectableListNaive = MakeSelectable(List);
+
+class SelectableList extends React.Component {
+    constructor(props) {
         super(props);
-        this.handleLognameClick = this.handleLognameClick.bind(this);
+        this.handleRequestChange = this.handleRequestChange.bind(this);
     }
 
-    handleLognameClick(logname) {
-        ContentActions.selectLogBranch(this.props.project, logname);
+    componentWillMount() {
+        this.setState({
+            selectedIndex: this.props.defaultValue,
+        });
     }
+
+    handleRequestChange(event, index) {
+        if (index) {
+            this.setState({
+                selectedIndex: index,
+            });
+        }
+    };
 
     render() {
-        var lognamelist = this.props.lognames.map(logname => 
-            <ListItem 
-                key={this.props.project + '/' + logname}
-                primaryText={logname}
-                onClick={() => this.handleLognameClick(logname)}
-            />
-        );
         return (
-            <ListItem
-                primaryText={this.props.project}
-                initiallyOpen={true}
-                primaryTogglesNestedList={true}
-                nestedItems={lognamelist}
-            />
+            <SelectableListNaive
+                value={this.state.selectedIndex}
+                onChange={this.handleRequestChange}
+                >
+                {this.props.children}
+            </SelectableListNaive>
         );
     }
-}
+};
+
 
 class MenuSearchbar extends React.Component {
     constructor (props) {
@@ -64,6 +71,7 @@ class SideBar extends React.Component {
         super(props);
         this.state = SideBarStore.getState();
         this.onChange = this.onChange.bind(this);
+        this.handleLognameClick = this.handleLognameClick.bind(this);
     }
 
     componentDidMount() {
@@ -75,18 +83,41 @@ class SideBar extends React.Component {
         SideBarStore.unlisten(this.onChange);
     }
 
-    onChange (state) {
+    handleLognameClick(project, logname) {
+        ContentActions.selectLogBranch(project, logname);
+    }
+
+    onChange(state) {
         this.setState(state);
     }
 
     render () {
-        var listConent = this.state.projects.map(project =>
-            <ProjectMenu key={project.name} project={project.name} lognames={project.lognames} />
-        );
+        var listConent = this.state.projects.map(project => {
+            var lognamelist = project.lognames ? project.lognames.map(logname => 
+                <ListItem 
+                    value={project.name + '/' + logname}
+                    key={project.name + '/' + logname}
+                    primaryText={logname}
+                    onClick={() => this.handleLognameClick(project.name, logname)}
+                />
+            ) : [];
+            return (
+                <ListItem
+                    key={project.name}
+                    primaryText={project.name}
+                    initiallyOpen={true}
+                    primaryTogglesNestedList={true}
+                    nestedItems={lognamelist}
+                />
+            );
+        });
+
+        if (!listConent) listConent = [];
+
         return (
             <div>
                 <MenuSearchbar />
-                <List> {listConent} </List>
+                <SelectableList defaultValue={"None"}> {listConent} </SelectableList>
             </div>
         );
     }

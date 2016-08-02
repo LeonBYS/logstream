@@ -10,10 +10,6 @@ class ChartsWindowStore {
         this.logname = null;
     }
 
-    getChartData(chartname) {
-        return this.chartsData[chartname];
-    }
-
     onGetChartsSuccess(data) {
         this.project = data.project;
         this.logname = data.logname;
@@ -31,7 +27,7 @@ class ChartsWindowStore {
         var chartType = data.chartType;
         var appendData = data.data;
 
-        if (!this.chartsData[chartname]) { 
+        if (!this.chartsData[chartname]) {
             this.chartsData[chartname] = {};
             this.chartsData[chartname].data = {};
             this.charts.push(chartname);

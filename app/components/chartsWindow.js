@@ -5,6 +5,77 @@ import ChartsWindowStore from '../stores/chartsWindowStore.js'
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 
+var Line = null;
+
+function rgb2hex(rgb){
+ rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+ return (rgb && rgb.length === 4) ? "#" +
+  ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+  ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+  ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+}
+
+const defaultColors = [
+    { // blue
+        backgroundColor: "rgba(151,187,205,0.2)",
+        borderColor: "rgba(151,187,205,1)",
+        pointBorderColor: "rgba(151,187,205,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+    { // red
+        backgroundColor: "rgba(247,70,74,0.2)",
+        borderColor: "rgba(247,70,74,1)",
+        pointBorderColor: "rgba(247,70,74,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(247,70,74,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+    { // green
+        backgroundColor: "rgba(70,191,189,0.2)",
+        borderColor: "rgba(70,191,189,1)",
+        pointBorderColor: "rgba(70,191,189,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(70,191,189,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+    { // yellow
+        backgroundColor: "rgba(253,180,92,0.2)",
+        borderColor: "rgba(253,180,92,1)",
+        pointBorderColor: "rgba(253,180,92,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(253,180,92,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+    { // light grey
+        backgroundColor: "rgba(220,220,220,0.2)",
+        borderColor: "rgba(220,220,220,1)",
+        pointBorderColor: "rgba(220,220,220,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(220,220,220,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+
+    // { // grey
+    //     fillColor: "rgba(148,159,177,0.2)",
+    //     strokeColor: "rgba(148,159,177,1)",
+    //     pointColor: "rgba(148,159,177,1)",
+    //     pointStrokeColor: "#fff",
+    //     pointHighlightFill: "#fff",
+    //     pointHighlightStroke: "rgba(148,159,177,0.8)"
+    // },
+    // { // dark grey
+    //     fillColor: "rgba(77,83,96,0.2)",
+    //     strokeColor: "rgba(77,83,96,1)",
+    //     pointColor: "rgba(77,83,96,1)",
+    //     pointStrokeColor: "#fff",
+    //     pointHighlightFill: "#fff",
+    //     pointHighlightStroke: "rgba(77,83,96,1)"
+    // }
+];
+
+
 
 class Chart extends React.Component {
     constructor (props) {
@@ -21,12 +92,14 @@ class Chart extends React.Component {
     }
 
     componentDidMount() {
+        console.log('mount chart', this.props.name);
     }
 
     componentWillUnmount() {
         if (this.timeoutID) {
             clearTimeout(this.timeoutID);
         }
+        console.log('unmount chart', this.props.name);
     }
 
 
@@ -41,7 +114,6 @@ class Chart extends React.Component {
 
     makeDataInSpan(data, x_start, x_end) {
         var dataNew = [];
-        //dataNew.push({x:x_start, y:null});
         
         for (var i=0; i<data.length; i++) {
             if (data[i].x >= x_start && data[i].x <= x_end) {
@@ -63,6 +135,10 @@ class Chart extends React.Component {
         }
         dataNew.unshift({x:x_start, y:null});
         dataNew.push({x:x_end, y:null});
+        if (dataNew.length === 2) {
+            dataNew[0].y = 0;
+            //dataNew[1].y = 0;
+        }
         return dataNew;
     }
 
@@ -71,13 +147,25 @@ class Chart extends React.Component {
         var tnow = Date.now();
         tnow += -(tnow % this.state.timeSpanBase);
         var data = { datasets: [] };
+        var i = 0;
         for (var key in this.props.data) {
-            data.datasets.push({
+            data.datasets.push(Object.assign({
                 label: key,
                 data: this.props.data[key]
                         .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
-                        .sort((a, b) => a.x - b.x)
-            });
+                        .sort((a, b) => a.x - b.x),
+                        borderCapStyle: 'butt',
+                // style options
+                fill:false,
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderWidth: 1,
+                pointHoverRadius: 5,
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+            }, defaultColors[i++]));
         }
         for (var i=0; i<data.datasets.length; i++) {
             data.datasets[i].data = this.makeDataInSpan(data.datasets[i].data, -this.state.timeSpan, 1);
@@ -97,7 +185,7 @@ class Chart extends React.Component {
 
     render () {
         var data = this.convertData();
-        if (!data) return <div/>; 
+        //if (!data) data = [];
 
         var options = {
             scales: {
@@ -109,14 +197,18 @@ class Chart extends React.Component {
             animation : false
         };
 
-        if(!window) { return <div/>; } 
+        if(!window || !data) { return <div/>; } 
+
+        console.log('render chart', this.props.name, data);
 
         if (this.props.type === 'line') {
             if (this.timeoutID) {
                 clearTimeout(this.timeoutID);
             }
-            //this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
-            var Line = require('react-chartjs-2').Line;
+            this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
+            if (!Line) {
+                Line = require('react-chartjs-2').Line;
+            }
             return (
                 <div>
                     <h2> {this.props.name} </h2>
@@ -125,7 +217,7 @@ class Chart extends React.Component {
                         <MenuItem value={2} primaryText="Last 60 minutes" />
                         <MenuItem value={3} primaryText="Last 24 hour" />
                     </DropDownMenu>
-                    <Line data={data} options={options} redraw={true} height={50}/>
+                    <Line data={data} options={options} redraw={false} height={50}/>
                 </div>
             );
         }else {
@@ -144,6 +236,7 @@ class ChartsWindow extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log('will recieve props');
         this.props = nextProps;
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);
@@ -151,6 +244,7 @@ class ChartsWindow extends React.Component {
     }
 
     componentDidMount() {
+        console.log('did mount');
         ChartsWindowStore.listen(this.onChange);
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);
@@ -162,6 +256,7 @@ class ChartsWindow extends React.Component {
     }
 
     onChange(state) {
+        console.log('on change', state);
         this.setState(state);
     }
 

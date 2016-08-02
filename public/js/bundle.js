@@ -417,6 +417,50 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var Line = null;
+
+function rgb2hex(rgb) {
+    rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+    return rgb && rgb.length === 4 ? "#" + ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2) : '';
+}
+
+var defaultColors = [{ // blue
+    backgroundColor: "rgba(151,187,205,0.2)",
+    borderColor: "rgba(151,187,205,1)",
+    pointBorderColor: "rgba(151,187,205,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}, { // red
+    backgroundColor: "rgba(247,70,74,0.2)",
+    borderColor: "rgba(247,70,74,1)",
+    pointBorderColor: "rgba(247,70,74,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(247,70,74,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}, { // green
+    backgroundColor: "rgba(70,191,189,0.2)",
+    borderColor: "rgba(70,191,189,1)",
+    pointBorderColor: "rgba(70,191,189,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(70,191,189,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}, { // yellow
+    backgroundColor: "rgba(253,180,92,0.2)",
+    borderColor: "rgba(253,180,92,1)",
+    pointBorderColor: "rgba(253,180,92,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(253,180,92,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}, { // light grey
+    backgroundColor: "rgba(220,220,220,0.2)",
+    borderColor: "rgba(220,220,220,1)",
+    pointBorderColor: "rgba(220,220,220,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(220,220,220,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}];
+
 var Chart = function (_React$Component) {
     _inherits(Chart, _React$Component);
 
@@ -439,13 +483,16 @@ var Chart = function (_React$Component) {
 
     _createClass(Chart, [{
         key: 'componentDidMount',
-        value: function componentDidMount() {}
+        value: function componentDidMount() {
+            console.log('mount chart', this.props.name);
+        }
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
             if (this.timeoutID) {
                 clearTimeout(this.timeoutID);
             }
+            console.log('unmount chart', this.props.name);
         }
     }, {
         key: 'changeTimeSpan',
@@ -461,7 +508,6 @@ var Chart = function (_React$Component) {
         key: 'makeDataInSpan',
         value: function makeDataInSpan(data, x_start, x_end) {
             var dataNew = [];
-            //dataNew.push({x:x_start, y:null});
 
             for (var i = 0; i < data.length; i++) {
                 if (data[i].x >= x_start && data[i].x <= x_end) {
@@ -483,6 +529,10 @@ var Chart = function (_React$Component) {
             }
             dataNew.unshift({ x: x_start, y: null });
             dataNew.push({ x: x_end, y: null });
+            if (dataNew.length === 2) {
+                dataNew[0].y = 0;
+                //dataNew[1].y = 0;
+            }
             return dataNew;
         }
     }, {
@@ -494,15 +544,27 @@ var Chart = function (_React$Component) {
             var tnow = Date.now();
             tnow += -(tnow % this.state.timeSpanBase);
             var data = { datasets: [] };
+            var i = 0;
             for (var key in this.props.data) {
-                data.datasets.push({
+                data.datasets.push(Object.assign({
                     label: key,
                     data: this.props.data[key].map(function (o) {
                         return { x: (o[1] - tnow) / _this2.state.timeSpanBase, y: o[0] };
                     }).sort(function (a, b) {
                         return a.x - b.x;
-                    })
-                });
+                    }),
+                    borderCapStyle: 'butt',
+                    // style options
+                    fill: false,
+                    borderDash: [],
+                    borderDashOffset: 0.0,
+                    borderJoinStyle: 'miter',
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 5,
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 1,
+                    pointHitRadius: 10
+                }, defaultColors[i++]));
             }
             for (var i = 0; i < data.datasets.length; i++) {
                 data.datasets[i].data = this.makeDataInSpan(data.datasets[i].data, -this.state.timeSpan, 1);
@@ -523,8 +585,10 @@ var Chart = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
+            var _this3 = this;
+
             var data = this.convertData();
-            if (!data) return _react2.default.createElement('div', null);
+            //if (!data) data = [];
 
             var options = {
                 scales: {
@@ -536,16 +600,22 @@ var Chart = function (_React$Component) {
                 animation: false
             };
 
-            if (!window) {
+            if (!window || !data) {
                 return _react2.default.createElement('div', null);
             }
+
+            console.log('render chart', this.props.name, data);
 
             if (this.props.type === 'line') {
                 if (this.timeoutID) {
                     clearTimeout(this.timeoutID);
                 }
-                //this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
-                var Line = require('react-chartjs-2').Line;
+                this.timeoutID = setTimeout(function () {
+                    _this3.forceUpdate();
+                }, this.state.timeSpanBase);
+                if (!Line) {
+                    Line = require('react-chartjs-2').Line;
+                }
                 return _react2.default.createElement(
                     'div',
                     null,
@@ -563,7 +633,7 @@ var Chart = function (_React$Component) {
                         _react2.default.createElement(_MenuItem2.default, { value: 2, primaryText: 'Last 60 minutes' }),
                         _react2.default.createElement(_MenuItem2.default, { value: 3, primaryText: 'Last 24 hour' })
                     ),
-                    _react2.default.createElement(Line, { data: data, options: options, redraw: true, height: 50 })
+                    _react2.default.createElement(Line, { data: data, options: options, redraw: false, height: 50 })
                 );
             } else {
                 return _react2.default.createElement(
@@ -585,32 +655,34 @@ var ChartsWindow = function (_React$Component2) {
     function ChartsWindow(props) {
         _classCallCheck(this, ChartsWindow);
 
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
+        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
 
-        _this3.state = _chartsWindowStore2.default.getState();
-        _this3.onChange = _this3.onChange.bind(_this3);
-        _this3.componentWillReceiveProps = _this3.componentWillReceiveProps.bind(_this3);
-        return _this3;
+        _this4.state = _chartsWindowStore2.default.getState();
+        _this4.onChange = _this4.onChange.bind(_this4);
+        _this4.componentWillReceiveProps = _this4.componentWillReceiveProps.bind(_this4);
+        return _this4;
     }
 
     _createClass(ChartsWindow, [{
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            var _this4 = this;
+            var _this5 = this;
 
+            console.log('will recieve props');
             this.props = nextProps;
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this4.props.project, _this4.props.logname);
+                _chartsWindowActions2.default.getCharts(_this5.props.project, _this5.props.logname);
             });
         }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
-            var _this5 = this;
+            var _this6 = this;
 
+            console.log('did mount');
             _chartsWindowStore2.default.listen(this.onChange);
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this5.props.project, _this5.props.logname);
+                _chartsWindowActions2.default.getCharts(_this6.props.project, _this6.props.logname);
             });
         }
     }, {
@@ -621,23 +693,24 @@ var ChartsWindow = function (_React$Component2) {
     }, {
         key: 'onChange',
         value: function onChange(state) {
+            console.log('on change', state);
             this.setState(state);
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this6 = this;
+            var _this7 = this;
 
             console.log('charts window render!', this.state.charts);
             return _react2.default.createElement(
                 'div',
                 null,
                 this.state.charts.map(function (chartname) {
-                    var chart = _this6.state.chartsData[chartname];
+                    var chart = _this7.state.chartsData[chartname];
                     var data = chart ? chart.data : null;
                     var type = chart ? chart.type : null;
                     return _react2.default.createElement(Chart, {
-                        key: _this6.state.project + '/' + _this6.state.logname + '/chart/' + chartname,
+                        key: _this7.state.project + '/' + _this7.state.logname + '/chart/' + chartname,
                         name: chartname,
                         data: data,
                         type: type });
@@ -653,7 +726,7 @@ exports.default = ChartsWindow;
 
 }).call(this,require('_process'))
 
-},{"../actions/chartsWindowActions.js":1,"../stores/chartsWindowStore.js":15,"_process":19,"material-ui/DropDownMenu":73,"material-ui/MenuItem":87,"react":"react","react-chartjs-2":320}],9:[function(require,module,exports){
+},{"../actions/chartsWindowActions.js":1,"../stores/chartsWindowStore.js":15,"_process":19,"material-ui/DropDownMenu":73,"material-ui/MenuItem":87,"react":"react","react-chartjs-2":321}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -687,6 +760,10 @@ var _Tabs = require('material-ui/Tabs');
 var _Divider = require('material-ui/Divider');
 
 var _Divider2 = _interopRequireDefault(_Divider);
+
+var _RaisedButton = require('material-ui/RaisedButton');
+
+var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -810,9 +887,23 @@ var Content = function (_React$Component2) {
                 );
             } else {
                 return _react2.default.createElement(
-                    'h1',
-                    null,
-                    ' hello! '
+                    'div',
+                    { style: { textAlign: 'center', paddingTop: "100px", paddingBottom: "100px" } },
+                    _react2.default.createElement(
+                        'h1',
+                        null,
+                        ' LogStream '
+                    ),
+                    _react2.default.createElement(
+                        'h4',
+                        { style: { marginTop: "20px", marginBottom: "50px" } },
+                        'View, manage, analyze your app logs centrally in real time :)'
+                    ),
+                    _react2.default.createElement(_RaisedButton2.default, {
+                        label: 'Github',
+                        secondary: true,
+                        href: 'https://github.com/usstwxy/logstream'
+                    })
                 );
             }
         }
@@ -823,7 +914,7 @@ var Content = function (_React$Component2) {
 
 exports.default = Content;
 
-},{"../actions/contentActions":2,"../stores/contentStore":16,"./chartsWindow":8,"./logWindow":11,"material-ui/Divider":69,"material-ui/Tabs":107,"react":"react"}],10:[function(require,module,exports){
+},{"../actions/contentActions":2,"../stores/contentStore":16,"./chartsWindow":8,"./logWindow":11,"material-ui/Divider":69,"material-ui/RaisedButton":96,"material-ui/Tabs":107,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -928,6 +1019,14 @@ var _Slider = require('material-ui/Slider');
 
 var _Slider2 = _interopRequireDefault(_Slider);
 
+var _darkBaseTheme = require('material-ui/styles/baseThemes/darkBaseTheme');
+
+var _darkBaseTheme2 = _interopRequireDefault(_darkBaseTheme);
+
+var _lightBaseTheme = require('material-ui/styles/baseThemes/lightBaseTheme');
+
+var _lightBaseTheme2 = _interopRequireDefault(_lightBaseTheme);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -942,6 +1041,17 @@ var muiTheme = (0, _getMuiTheme2.default)({
     }
 });
 
+var muiTheme2 = (0, _getMuiTheme2.default)({
+    palette: {
+        primary1Color: "#1690DB",
+        primary2Color: "#2173B3",
+        primary3Color: "#A9D2EB",
+        accent1Color: "#ED3B3B",
+        accent2Color: "#ED2B2B",
+        accent3Color: "#F58C8C"
+    }
+});
+
 var paperStyle = {
     marginLeft: "256px",
     height: "100%",
@@ -951,22 +1061,19 @@ var paperStyle = {
     paddingBottom: "25px"
 };
 
-var tabHeaderstyles = {
-    headline: {
-        fontSize: 24,
-        paddingTop: 16,
-        marginBottom: 12,
-        fontWeight: 400
-    }
-};
-
 var Home = function (_React$Component) {
     _inherits(Home, _React$Component);
 
-    function Home() {
+    function Home(props) {
         _classCallCheck(this, Home);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(Home).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Home).call(this, props));
+
+        _this.themes = [(0, _getMuiTheme2.default)(_lightBaseTheme2.default), muiTheme2];
+        _this.state = {
+            theme: 0
+        };
+        return _this;
     }
 
     _createClass(Home, [{
@@ -981,18 +1088,22 @@ var Home = function (_React$Component) {
                 _api2.default.setSessionID(sid);
             });
             this.socket.on('log', function (data) {
+                console.log('log coming', data);
                 _logWindowActions2.default.getLogsSuccessAppend(data);
             });
             this.socket.on('chart', function (data) {
+                console.log('chart coming', data);
                 _chartsWindowActions2.default.updateChartData(data);
             });
         }
     }, {
         key: 'render',
         value: function render() {
+            var _this3 = this;
+
             return _react2.default.createElement(
                 _MuiThemeProvider2.default,
-                { muiTheme: muiTheme },
+                { muiTheme: this.themes[this.state.theme] },
                 _react2.default.createElement(
                     'div',
                     null,
@@ -1007,7 +1118,13 @@ var Home = function (_React$Component) {
                     _react2.default.createElement(
                         _Drawer2.default,
                         { open: true },
-                        _react2.default.createElement(_AppBar2.default, { title: 'LogStream' }),
+                        _react2.default.createElement(_AppBar2.default, { title: 'LogStream',
+                            onLeftIconButtonTouchTap: function onLeftIconButtonTouchTap() {
+                                _this3.setState({
+                                    theme: (_this3.state.theme + 1) % _this3.themes.length
+                                });
+                            }
+                        }),
                         _react2.default.createElement(_sideBar2.default, null)
                     ),
                     _react2.default.createElement(
@@ -1018,16 +1135,6 @@ var Home = function (_React$Component) {
                 )
             );
         }
-    }, {
-        key: 'renderOld',
-        value: function renderOld() {
-            return _react2.default.createElement(
-                'div',
-                { id: 'wrapper' },
-                _react2.default.createElement(NavBar, null),
-                _react2.default.createElement(_content2.default, null)
-            );
-        }
     }]);
 
     return Home;
@@ -1035,7 +1142,7 @@ var Home = function (_React$Component) {
 
 exports.default = Home;
 
-},{"../actions/chartsWindowActions":1,"../actions/logWindowActions":3,"../api":6,"./content":9,"./sideBar":12,"material-ui/AppBar":65,"material-ui/Dialog":67,"material-ui/Divider":69,"material-ui/Drawer":71,"material-ui/FlatButton":76,"material-ui/IconButton":80,"material-ui/Paper":91,"material-ui/RaisedButton":96,"material-ui/Slider":98,"material-ui/Subheader":100,"material-ui/Tabs":107,"material-ui/TextField":113,"material-ui/styles/MuiThemeProvider":293,"material-ui/styles/colors":295,"material-ui/styles/getMuiTheme":296,"material-ui/svg-icons/action/grade":301,"material-ui/svg-icons/content/drafts":302,"material-ui/svg-icons/content/inbox":303,"material-ui/svg-icons/content/send":304,"react":"react"}],11:[function(require,module,exports){
+},{"../actions/chartsWindowActions":1,"../actions/logWindowActions":3,"../api":6,"./content":9,"./sideBar":12,"material-ui/AppBar":65,"material-ui/Dialog":67,"material-ui/Divider":69,"material-ui/Drawer":71,"material-ui/FlatButton":76,"material-ui/IconButton":80,"material-ui/Paper":91,"material-ui/RaisedButton":96,"material-ui/Slider":98,"material-ui/Subheader":100,"material-ui/Tabs":107,"material-ui/TextField":113,"material-ui/styles/MuiThemeProvider":293,"material-ui/styles/baseThemes/darkBaseTheme":294,"material-ui/styles/baseThemes/lightBaseTheme":295,"material-ui/styles/colors":296,"material-ui/styles/getMuiTheme":297,"material-ui/svg-icons/action/grade":302,"material-ui/svg-icons/content/drafts":303,"material-ui/svg-icons/content/inbox":304,"material-ui/svg-icons/content/send":305,"react":"react"}],11:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -1109,17 +1216,25 @@ var MsgItem = function (_React$Component2) {
         key: 'render',
         value: function render() {
             return _react2.default.createElement(
-                'p',
+                'tr',
                 { style: { color: "#f1f1f1", margin: "0" } },
                 _react2.default.createElement(
-                    'a',
-                    { style: { color: "#666" } },
-                    this.props.index
+                    'td',
+                    null,
+                    _react2.default.createElement(
+                        'a',
+                        { style: { color: "#666", marginRight: "10px" } },
+                        this.props.index
+                    )
                 ),
                 _react2.default.createElement(
-                    'span',
+                    'td',
                     null,
-                    this.props.text
+                    _react2.default.createElement(
+                        'span',
+                        null,
+                        this.props.text
+                    )
                 )
             );
         }
@@ -1187,6 +1302,7 @@ var MsgWindow = function (_React$Component4) {
         var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(MsgWindow).call(this, props));
 
         _this4.styleOut = {
+            fontSize: "1em",
             fontFamily: "Monaco, Inconsolata, monospace",
             backgroundColor: "#222",
             padding: "10px"
@@ -1216,7 +1332,15 @@ var MsgWindow = function (_React$Component4) {
             return _react2.default.createElement(
                 'div',
                 { onWheel: this.handleWheel, style: this.styleOut },
-                logContent
+                _react2.default.createElement(
+                    'table',
+                    null,
+                    _react2.default.createElement(
+                        'tbody',
+                        null,
+                        logContent
+                    )
+                )
             );
         }
     }]);
@@ -1331,48 +1455,54 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ProjectMenu = function (_React$Component) {
-    _inherits(ProjectMenu, _React$Component);
+var SelectableListNaive = (0, _List.MakeSelectable)(_List.List);
 
-    function ProjectMenu(props) {
-        _classCallCheck(this, ProjectMenu);
+var SelectableList = function (_React$Component) {
+    _inherits(SelectableList, _React$Component);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ProjectMenu).call(this, props));
+    function SelectableList(props) {
+        _classCallCheck(this, SelectableList);
 
-        _this.handleLognameClick = _this.handleLognameClick.bind(_this);
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SelectableList).call(this, props));
+
+        _this.handleRequestChange = _this.handleRequestChange.bind(_this);
         return _this;
     }
 
-    _createClass(ProjectMenu, [{
-        key: 'handleLognameClick',
-        value: function handleLognameClick(logname) {
-            _contentActions2.default.selectLogBranch(this.props.project, logname);
+    _createClass(SelectableList, [{
+        key: 'componentWillMount',
+        value: function componentWillMount() {
+            this.setState({
+                selectedIndex: this.props.defaultValue
+            });
+        }
+    }, {
+        key: 'handleRequestChange',
+        value: function handleRequestChange(event, index) {
+            if (index) {
+                this.setState({
+                    selectedIndex: index
+                });
+            }
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this2 = this;
-
-            var lognamelist = this.props.lognames.map(function (logname) {
-                return _react2.default.createElement(_List.ListItem, {
-                    key: _this2.props.project + '/' + logname,
-                    primaryText: logname,
-                    onClick: function onClick() {
-                        return _this2.handleLognameClick(logname);
-                    }
-                });
-            });
-            return _react2.default.createElement(_List.ListItem, {
-                primaryText: this.props.project,
-                initiallyOpen: true,
-                primaryTogglesNestedList: true,
-                nestedItems: lognamelist
-            });
+            return _react2.default.createElement(
+                SelectableListNaive,
+                {
+                    value: this.state.selectedIndex,
+                    onChange: this.handleRequestChange
+                },
+                this.props.children
+            );
         }
     }]);
 
-    return ProjectMenu;
+    return SelectableList;
 }(_react2.default.Component);
+
+;
 
 var MenuSearchbar = function (_React$Component2) {
     _inherits(MenuSearchbar, _React$Component2);
@@ -1380,10 +1510,10 @@ var MenuSearchbar = function (_React$Component2) {
     function MenuSearchbar(props) {
         _classCallCheck(this, MenuSearchbar);
 
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(MenuSearchbar).call(this, props));
+        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(MenuSearchbar).call(this, props));
 
-        _this3.handleChange = _this3.handleChange.bind(_this3);
-        return _this3;
+        _this2.handleChange = _this2.handleChange.bind(_this2);
+        return _this2;
     }
 
     _createClass(MenuSearchbar, [{
@@ -1416,11 +1546,12 @@ var SideBar = function (_React$Component3) {
     function SideBar(props) {
         _classCallCheck(this, SideBar);
 
-        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(SideBar).call(this, props));
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(SideBar).call(this, props));
 
-        _this4.state = _sideBarStore2.default.getState();
-        _this4.onChange = _this4.onChange.bind(_this4);
-        return _this4;
+        _this3.state = _sideBarStore2.default.getState();
+        _this3.onChange = _this3.onChange.bind(_this3);
+        _this3.handleLognameClick = _this3.handleLognameClick.bind(_this3);
+        return _this3;
     }
 
     _createClass(SideBar, [{
@@ -1435,6 +1566,11 @@ var SideBar = function (_React$Component3) {
             _sideBarStore2.default.unlisten(this.onChange);
         }
     }, {
+        key: 'handleLognameClick',
+        value: function handleLognameClick(project, logname) {
+            _contentActions2.default.selectLogBranch(project, logname);
+        }
+    }, {
         key: 'onChange',
         value: function onChange(state) {
             this.setState(state);
@@ -1442,16 +1578,37 @@ var SideBar = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
+            var _this4 = this;
+
             var listConent = this.state.projects.map(function (project) {
-                return _react2.default.createElement(ProjectMenu, { key: project.name, project: project.name, lognames: project.lognames });
+                var lognamelist = project.lognames ? project.lognames.map(function (logname) {
+                    return _react2.default.createElement(_List.ListItem, {
+                        value: project.name + '/' + logname,
+                        key: project.name + '/' + logname,
+                        primaryText: logname,
+                        onClick: function onClick() {
+                            return _this4.handleLognameClick(project.name, logname);
+                        }
+                    });
+                }) : [];
+                return _react2.default.createElement(_List.ListItem, {
+                    key: project.name,
+                    primaryText: project.name,
+                    initiallyOpen: true,
+                    primaryTogglesNestedList: true,
+                    nestedItems: lognamelist
+                });
             });
+
+            if (!listConent) listConent = [];
+
             return _react2.default.createElement(
                 'div',
                 null,
                 _react2.default.createElement(MenuSearchbar, null),
                 _react2.default.createElement(
-                    _List.List,
-                    null,
+                    SelectableList,
+                    { defaultValue: "None" },
                     ' ',
                     listConent,
                     ' '
@@ -1560,11 +1717,6 @@ var ChartsWindowStore = function () {
     }
 
     _createClass(ChartsWindowStore, [{
-        key: 'getChartData',
-        value: function getChartData(chartname) {
-            return this.chartsData[chartname];
-        }
-    }, {
         key: 'onGetChartsSuccess',
         value: function onGetChartsSuccess(data) {
             this.project = data.project;
@@ -16969,7 +17121,7 @@ AppBar.contextTypes = {
 exports.default = AppBar;
 }).call(this,require('_process'))
 
-},{"../IconButton":80,"../Paper":91,"../svg-icons/navigation/menu":309,"../utils/propTypes":318,"_process":19,"react":"react","simple-assign":291,"warning":292}],65:[function(require,module,exports){
+},{"../IconButton":80,"../Paper":91,"../svg-icons/navigation/menu":310,"../utils/propTypes":319,"_process":19,"react":"react","simple-assign":291,"warning":292}],65:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -17561,7 +17713,7 @@ Dialog.defaultProps = {
   repositionOnUpdate: true
 };
 exports.default = Dialog;
-},{"../Paper":91,"../internal/Overlay":121,"../internal/RenderToLayer":122,"../styles/transitions":298,"keycode":157,"react":"react","react-addons-transition-group":"react-addons-transition-group","react-dom":"react-dom","react-event-listener":322,"simple-assign":291}],67:[function(require,module,exports){
+},{"../Paper":91,"../internal/Overlay":121,"../internal/RenderToLayer":122,"../styles/transitions":299,"keycode":157,"react":"react","react-addons-transition-group":"react-addons-transition-group","react-dom":"react-dom","react-event-listener":323,"simple-assign":291}],67:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18115,7 +18267,7 @@ Drawer.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Drawer;
-},{"../Paper":91,"../internal/Overlay":121,"../styles/transitions":298,"../utils/autoPrefix":310,"../utils/propTypes":318,"keycode":157,"react":"react","react-dom":"react-dom","react-event-listener":322,"simple-assign":291}],71:[function(require,module,exports){
+},{"../Paper":91,"../internal/Overlay":121,"../styles/transitions":299,"../utils/autoPrefix":311,"../utils/propTypes":319,"keycode":157,"react":"react","react-dom":"react-dom","react-event-listener":323,"simple-assign":291}],71:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18532,7 +18684,7 @@ DropDownMenu.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = DropDownMenu;
-},{"../Menu/Menu":88,"../Popover/Popover":92,"../Popover/PopoverAnimationVertical":94,"../internal/ClearFix":117,"../styles/transitions":298,"../svg-icons/navigation/arrow-drop-down":305,"react":"react","simple-assign":291}],73:[function(require,module,exports){
+},{"../Menu/Menu":88,"../Popover/Popover":92,"../Popover/PopoverAnimationVertical":94,"../internal/ClearFix":117,"../styles/transitions":299,"../svg-icons/navigation/arrow-drop-down":306,"react":"react","simple-assign":291}],73:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18869,7 +19021,7 @@ FlatButton.contextTypes = {
 exports.default = FlatButton;
 }).call(this,require('_process'))
 
-},{"../internal/EnhancedButton":119,"../styles/transitions":298,"../utils/childUtils":313,"../utils/colorManipulator":314,"./FlatButtonLabel":75,"_process":19,"react":"react","simple-assign":291}],75:[function(require,module,exports){
+},{"../internal/EnhancedButton":119,"../styles/transitions":299,"../utils/childUtils":314,"../utils/colorManipulator":315,"./FlatButtonLabel":75,"_process":19,"react":"react","simple-assign":291}],75:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19103,7 +19255,7 @@ FontIcon.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = FontIcon;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],78:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],78:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19425,7 +19577,7 @@ IconButton.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = IconButton;
-},{"../FontIcon":78,"../internal/EnhancedButton":119,"../internal/Tooltip":125,"../styles/transitions":298,"../utils/childUtils":313,"../utils/propTypes":318,"react":"react","simple-assign":291}],80:[function(require,module,exports){
+},{"../FontIcon":78,"../internal/EnhancedButton":119,"../internal/Tooltip":125,"../styles/transitions":299,"../utils/childUtils":314,"../utils/propTypes":319,"react":"react","simple-assign":291}],80:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19584,7 +19736,7 @@ List.contextTypes = {
 exports.default = List;
 }).call(this,require('_process'))
 
-},{"../Subheader":100,"../utils/deprecatedPropType":315,"../utils/propTypes":318,"_process":19,"react":"react","simple-assign":291,"warning":292}],82:[function(require,module,exports){
+},{"../Subheader":100,"../utils/deprecatedPropType":316,"../utils/propTypes":319,"_process":19,"react":"react","simple-assign":291,"warning":292}],82:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -20249,7 +20401,7 @@ ListItem.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = ListItem;
-},{"../IconButton":80,"../internal/EnhancedButton":119,"../styles/transitions":298,"../svg-icons/navigation/expand-less":307,"../svg-icons/navigation/expand-more":308,"../utils/colorManipulator":314,"./NestedList":84,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],83:[function(require,module,exports){
+},{"../IconButton":80,"../internal/EnhancedButton":119,"../styles/transitions":299,"../svg-icons/navigation/expand-less":308,"../svg-icons/navigation/expand-more":309,"../utils/colorManipulator":315,"./NestedList":84,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],83:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -20417,7 +20569,7 @@ var MakeSelectable = exports.MakeSelectable = function MakeSelectable(Component)
 };
 
 exports.default = MakeSelectable;
-},{"../utils/colorManipulator":314,"../utils/deprecatedPropType":315,"react":"react","simple-assign":291}],84:[function(require,module,exports){
+},{"../utils/colorManipulator":315,"../utils/deprecatedPropType":316,"react":"react","simple-assign":291}],84:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -20887,7 +21039,7 @@ MenuItem.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = MenuItem;
-},{"../List/ListItem":82,"../Menu/Menu":88,"../Popover/Popover":92,"../svg-icons/navigation/check":306,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],87:[function(require,module,exports){
+},{"../List/ListItem":82,"../Menu/Menu":88,"../Popover/Popover":92,"../svg-icons/navigation/check":307,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],87:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21625,7 +21777,7 @@ var _initialiseProps = function _initialiseProps() {
 exports.default = Menu;
 }).call(this,require('_process'))
 
-},{"../List/List":81,"../internal/ClickAwayListener":118,"../styles/transitions":298,"../utils/autoPrefix":310,"../utils/deprecatedPropType":315,"../utils/propTypes":318,"./menuUtils":89,"_process":19,"keycode":157,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291,"warning":292}],89:[function(require,module,exports){
+},{"../List/List":81,"../internal/ClickAwayListener":118,"../styles/transitions":299,"../utils/autoPrefix":311,"../utils/deprecatedPropType":316,"../utils/propTypes":319,"./menuUtils":89,"_process":19,"keycode":157,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291,"warning":292}],89:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21794,7 +21946,7 @@ Paper.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Paper;
-},{"../styles/transitions":298,"../utils/propTypes":318,"react":"react","simple-assign":291}],91:[function(require,module,exports){
+},{"../styles/transitions":299,"../utils/propTypes":319,"react":"react","simple-assign":291}],91:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -22245,7 +22397,7 @@ Popover.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Popover;
-},{"../Paper":91,"../internal/RenderToLayer":122,"../utils/propTypes":318,"./PopoverAnimationDefault":93,"lodash/throttle":276,"react":"react","react-dom":"react-dom","react-event-listener":322}],93:[function(require,module,exports){
+},{"../Paper":91,"../internal/RenderToLayer":122,"../utils/propTypes":319,"./PopoverAnimationDefault":93,"lodash/throttle":276,"react":"react","react-dom":"react-dom","react-event-listener":323}],93:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -22403,7 +22555,7 @@ PopoverDefaultAnimation.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = PopoverDefaultAnimation;
-},{"../Paper":91,"../styles/transitions":298,"../utils/propTypes":318,"react":"react","simple-assign":291}],94:[function(require,module,exports){
+},{"../Paper":91,"../styles/transitions":299,"../utils/propTypes":319,"react":"react","simple-assign":291}],94:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -22536,7 +22688,7 @@ PopoverAnimationVertical.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = PopoverAnimationVertical;
-},{"../Paper":91,"../styles/transitions":298,"../utils/propTypes":318,"react":"react","simple-assign":291}],95:[function(require,module,exports){
+},{"../Paper":91,"../styles/transitions":299,"../utils/propTypes":319,"react":"react","simple-assign":291}],95:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -22988,7 +23140,7 @@ RaisedButton.contextTypes = {
 exports.default = RaisedButton;
 }).call(this,require('_process'))
 
-},{"../Paper":91,"../internal/EnhancedButton":119,"../styles/transitions":298,"../utils/childUtils":313,"../utils/colorManipulator":314,"_process":19,"react":"react","simple-assign":291}],96:[function(require,module,exports){
+},{"../Paper":91,"../internal/EnhancedButton":119,"../styles/transitions":299,"../utils/childUtils":314,"../utils/colorManipulator":315,"_process":19,"react":"react","simple-assign":291}],96:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23823,7 +23975,7 @@ Slider.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Slider;
-},{"../internal/FocusRipple":120,"../styles/transitions":298,"keycode":157,"react":"react","simple-assign":291}],98:[function(require,module,exports){
+},{"../internal/FocusRipple":120,"../styles/transitions":299,"keycode":157,"react":"react","simple-assign":291}],98:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24083,7 +24235,7 @@ SvgIcon.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = SvgIcon;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],102:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],102:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24183,7 +24335,7 @@ InkBar.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = InkBar;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],104:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],104:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24985,7 +25137,7 @@ EnhancedTextarea.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = EnhancedTextarea;
-},{"react":"react","react-event-listener":322,"simple-assign":291}],109:[function(require,module,exports){
+},{"react":"react","react-event-listener":323,"simple-assign":291}],109:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25557,7 +25709,7 @@ TextField.contextTypes = {
 exports.default = TextField;
 }).call(this,require('_process'))
 
-},{"../styles/transitions":298,"../utils/colorManipulator":314,"../utils/deprecatedPropType":315,"./EnhancedTextarea":108,"./TextFieldHint":110,"./TextFieldLabel":111,"./TextFieldUnderline":112,"_process":19,"keycode":157,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291,"warning":292}],110:[function(require,module,exports){
+},{"../styles/transitions":299,"../utils/colorManipulator":315,"../utils/deprecatedPropType":316,"./EnhancedTextarea":108,"./TextFieldHint":110,"./TextFieldLabel":111,"./TextFieldUnderline":112,"_process":19,"keycode":157,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291,"warning":292}],110:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25634,7 +25786,7 @@ TextFieldHint.defaultProps = {
 };
 
 exports.default = TextFieldHint;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],111:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],111:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25747,7 +25899,7 @@ TextFieldLabel.defaultProps = {
 };
 
 exports.default = TextFieldLabel;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],112:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],112:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25879,7 +26031,7 @@ TextFieldUnderline.propTypes = propTypes;
 TextFieldUnderline.defaultProps = defaultProps;
 
 exports.default = TextFieldUnderline;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],113:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],113:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26295,7 +26447,7 @@ CircleRipple.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = CircleRipple;
-},{"../styles/transitions":298,"../utils/autoPrefix":310,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],117:[function(require,module,exports){
+},{"../styles/transitions":299,"../utils/autoPrefix":311,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],117:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26471,7 +26623,7 @@ ClickAwayListener.propTypes = {
   onClickAway: _react.PropTypes.any
 };
 exports.default = ClickAwayListener;
-},{"../utils/events":317,"react":"react","react-dom":"react-dom"}],119:[function(require,module,exports){
+},{"../utils/events":318,"react":"react","react-dom":"react-dom"}],119:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26873,7 +27025,7 @@ EnhancedButton.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = EnhancedButton;
-},{"../utils/childUtils":313,"../utils/deprecatedPropType":315,"../utils/events":317,"./FocusRipple":120,"./TouchRipple":126,"keycode":157,"react":"react","simple-assign":291}],120:[function(require,module,exports){
+},{"../utils/childUtils":314,"../utils/deprecatedPropType":316,"../utils/events":318,"./FocusRipple":120,"./TouchRipple":126,"keycode":157,"react":"react","simple-assign":291}],120:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27058,7 +27210,7 @@ FocusRipple.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = FocusRipple;
-},{"../styles/transitions":298,"../utils/autoPrefix":310,"./ScaleIn":123,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],121:[function(require,module,exports){
+},{"../styles/transitions":299,"../utils/autoPrefix":311,"./ScaleIn":123,"react":"react","react-dom":"react-dom","recompose/shallowEqual":287,"simple-assign":291}],121:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27187,7 +27339,7 @@ Overlay.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Overlay;
-},{"../styles/transitions":298,"./AutoLockScrolling":114,"react":"react","simple-assign":291}],122:[function(require,module,exports){
+},{"../styles/transitions":299,"./AutoLockScrolling":114,"react":"react","simple-assign":291}],122:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27356,7 +27508,7 @@ RenderToLayer.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = RenderToLayer;
-},{"../utils/dom":316,"react":"react","react-dom":"react-dom"}],123:[function(require,module,exports){
+},{"../utils/dom":317,"react":"react","react-dom":"react-dom"}],123:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27625,7 +27777,7 @@ ScaleInChild.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = ScaleInChild;
-},{"../styles/transitions":298,"../utils/autoPrefix":310,"react":"react","react-dom":"react-dom","simple-assign":291}],125:[function(require,module,exports){
+},{"../styles/transitions":299,"../utils/autoPrefix":311,"react":"react","react-dom":"react-dom","simple-assign":291}],125:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27836,7 +27988,7 @@ Tooltip.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = Tooltip;
-},{"../styles/transitions":298,"react":"react","simple-assign":291}],126:[function(require,module,exports){
+},{"../styles/transitions":299,"react":"react","simple-assign":291}],126:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -28128,7 +28280,7 @@ TouchRipple.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = TouchRipple;
-},{"../utils/dom":316,"./CircleRipple":116,"react":"react","react-addons-transition-group":"react-addons-transition-group","react-dom":"react-dom","simple-assign":291}],127:[function(require,module,exports){
+},{"../utils/dom":317,"./CircleRipple":116,"react":"react","react-addons-transition-group":"react-addons-transition-group","react-dom":"react-dom","simple-assign":291}],127:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34103,7 +34255,44 @@ MuiThemeProvider.childContextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = MuiThemeProvider;
-},{"./getMuiTheme":296,"react":"react"}],294:[function(require,module,exports){
+},{"./getMuiTheme":297,"react":"react"}],294:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _colors = require('../colors');
+
+var _colorManipulator = require('../../utils/colorManipulator');
+
+var _spacing = require('../spacing');
+
+var _spacing2 = _interopRequireDefault(_spacing);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  spacing: _spacing2.default,
+  fontFamily: 'Roboto, sans-serif',
+  palette: {
+    primary1Color: _colors.cyan700,
+    primary2Color: _colors.cyan700,
+    primary3Color: _colors.grey600,
+    accent1Color: _colors.pinkA200,
+    accent2Color: _colors.pinkA400,
+    accent3Color: _colors.pinkA100,
+    textColor: _colors.fullWhite,
+    secondaryTextColor: (0, _colorManipulator.fade)(_colors.fullWhite, 0.7),
+    alternateTextColor: '#303030',
+    canvasColor: '#303030',
+    borderColor: (0, _colorManipulator.fade)(_colors.fullWhite, 0.3),
+    disabledColor: (0, _colorManipulator.fade)(_colors.fullWhite, 0.3),
+    pickerHeaderColor: (0, _colorManipulator.fade)(_colors.fullWhite, 0.12),
+    clockCircleColor: (0, _colorManipulator.fade)(_colors.fullWhite, 0.12)
+  }
+};
+},{"../../utils/colorManipulator":315,"../colors":296,"../spacing":298}],295:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34148,7 +34337,7 @@ exports.default = {
 }; /**
     * NB: If you update this file, please also update `docs/src/app/customization/Themes.js`
     */
-},{"../../utils/colorManipulator":314,"../colors":295,"../spacing":297}],295:[function(require,module,exports){
+},{"../../utils/colorManipulator":315,"../colors":296,"../spacing":298}],296:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34439,7 +34628,7 @@ var faintBlack = exports.faintBlack = 'rgba(0, 0, 0, 0.12)';
 var fullWhite = exports.fullWhite = 'rgba(255, 255, 255, 1)';
 var darkWhite = exports.darkWhite = 'rgba(255, 255, 255, 0.87)';
 var lightWhite = exports.lightWhite = 'rgba(255, 255, 255, 0.54)';
-},{}],296:[function(require,module,exports){
+},{}],297:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34807,7 +34996,7 @@ function getMuiTheme(muiTheme) {
 
   return muiTheme;
 }
-},{"../utils/autoprefixer":311,"../utils/callOnce":312,"../utils/colorManipulator":314,"../utils/rtl":319,"./baseThemes/lightBaseTheme":294,"./colors":295,"./typography":299,"./zIndex":300,"lodash/merge":272,"recompose/compose":279}],297:[function(require,module,exports){
+},{"../utils/autoprefixer":312,"../utils/callOnce":313,"../utils/colorManipulator":315,"../utils/rtl":320,"./baseThemes/lightBaseTheme":295,"./colors":296,"./typography":300,"./zIndex":301,"lodash/merge":272,"recompose/compose":279}],298:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34827,7 +35016,7 @@ exports.default = {
   desktopSubheaderHeight: 48,
   desktopToolbarHeight: 56
 };
-},{}],298:[function(require,module,exports){
+},{}],299:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34862,7 +35051,7 @@ exports.default = {
     return property + ' ' + duration + ' ' + easeFunction + ' ' + delay;
   }
 };
-},{}],299:[function(require,module,exports){
+},{}],300:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34894,7 +35083,7 @@ var Typography = function Typography() {
 };
 
 exports.default = new Typography();
-},{"./colors":295}],300:[function(require,module,exports){
+},{"./colors":296}],301:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34912,7 +35101,7 @@ exports.default = {
   snackbar: 2900,
   tooltip: 3000
 };
-},{}],301:[function(require,module,exports){
+},{}],302:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34945,7 +35134,7 @@ ActionGrade.displayName = 'ActionGrade';
 ActionGrade.muiName = 'SvgIcon';
 
 exports.default = ActionGrade;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],302:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],303:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34978,7 +35167,7 @@ ContentDrafts.displayName = 'ContentDrafts';
 ContentDrafts.muiName = 'SvgIcon';
 
 exports.default = ContentDrafts;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],303:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],304:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35011,7 +35200,7 @@ ContentInbox.displayName = 'ContentInbox';
 ContentInbox.muiName = 'SvgIcon';
 
 exports.default = ContentInbox;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],304:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],305:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35044,7 +35233,7 @@ ContentSend.displayName = 'ContentSend';
 ContentSend.muiName = 'SvgIcon';
 
 exports.default = ContentSend;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],305:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],306:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35077,7 +35266,7 @@ NavigationArrowDropDown.displayName = 'NavigationArrowDropDown';
 NavigationArrowDropDown.muiName = 'SvgIcon';
 
 exports.default = NavigationArrowDropDown;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],306:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],307:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35110,7 +35299,7 @@ NavigationCheck.displayName = 'NavigationCheck';
 NavigationCheck.muiName = 'SvgIcon';
 
 exports.default = NavigationCheck;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],307:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],308:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35143,7 +35332,7 @@ NavigationExpandLess.displayName = 'NavigationExpandLess';
 NavigationExpandLess.muiName = 'SvgIcon';
 
 exports.default = NavigationExpandLess;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],308:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],309:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35176,7 +35365,7 @@ NavigationExpandMore.displayName = 'NavigationExpandMore';
 NavigationExpandMore.muiName = 'SvgIcon';
 
 exports.default = NavigationExpandMore;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],309:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],310:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35209,7 +35398,7 @@ NavigationMenu.displayName = 'NavigationMenu';
 NavigationMenu.muiName = 'SvgIcon';
 
 exports.default = NavigationMenu;
-},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],310:[function(require,module,exports){
+},{"../../SvgIcon":102,"react":"react","recompose/pure":286}],311:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35220,7 +35409,7 @@ exports.default = {
     style[key] = value;
   }
 };
-},{}],311:[function(require,module,exports){
+},{}],312:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -35281,7 +35470,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var hasWarnedAboutUserAgent = false;
 }).call(this,require('_process'))
 
-},{"_process":19,"inline-style-prefixer":127,"warning":292}],312:[function(require,module,exports){
+},{"_process":19,"inline-style-prefixer":127,"warning":292}],313:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -35311,7 +35500,7 @@ function callOnce() {
 }
 }).call(this,require('_process'))
 
-},{"_process":19,"warning":292}],313:[function(require,module,exports){
+},{"_process":19,"warning":292}],314:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35360,7 +35549,7 @@ function extendChildren(children, extendedProps, extendedChildren) {
     return _react2.default.cloneElement(child, newProps, newChildren);
   }) : children;
 }
-},{"react":"react","react-addons-create-fragment":"react-addons-create-fragment"}],314:[function(require,module,exports){
+},{"react":"react","react-addons-create-fragment":"react-addons-create-fragment"}],315:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35593,7 +35782,7 @@ function lighten(color, coefficient) {
 
   return convertColorToString(color);
 }
-},{}],315:[function(require,module,exports){
+},{}],316:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -35635,7 +35824,7 @@ function deprecated(validator, reason) {
 }
 }).call(this,require('_process'))
 
-},{"_process":19,"warning":292}],316:[function(require,module,exports){
+},{"_process":19,"warning":292}],317:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35660,7 +35849,7 @@ exports.default = {
     };
   }
 };
-},{}],317:[function(require,module,exports){
+},{}],318:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35700,7 +35889,7 @@ exports.default = {
     return ['keydown', 'keypress', 'keyup'].indexOf(event.type) !== -1;
   }
 };
-},{}],318:[function(require,module,exports){
+},{}],319:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35732,7 +35921,7 @@ exports.default = {
   zDepth: _react.PropTypes.oneOf([0, 1, 2, 3, 4, 5])
 
 };
-},{"react":"react"}],319:[function(require,module,exports){
+},{"react":"react"}],320:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35818,7 +36007,7 @@ function rtl(muiTheme) {
     };
   }
 }
-},{}],320:[function(require,module,exports){
+},{}],321:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -35989,7 +36178,7 @@ function Radar(props) {
 function Polar(props) {
 	return _react2['default'].createElement(ChartComponent, _extends({}, props, { type: 'polarArea' }));
 }
-},{"./utils/deepEqual":321,"chart.js":26,"react":"react","react-dom":"react-dom"}],321:[function(require,module,exports){
+},{"./utils/deepEqual":322,"chart.js":26,"react":"react","react-dom":"react-dom"}],322:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -36042,7 +36231,7 @@ var deepEqual = function deepEqual(objA, objB) {
 
 exports['default'] = deepEqual;
 module.exports = exports['default'];
-},{}],322:[function(require,module,exports){
+},{}],323:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36205,7 +36394,7 @@ EventListener.defaultProps = {
   capture: false
 };
 exports.default = EventListener;
-},{"fbjs/lib/shallowEqual":323,"react":"react"}],323:[function(require,module,exports){
+},{"fbjs/lib/shallowEqual":324,"react":"react"}],324:[function(require,module,exports){
 arguments[4][285][0].apply(exports,arguments)
 },{"dup":285}]},{},[13])
 
