@@ -20,13 +20,23 @@ class LogUserCommand extends React.Component {
             method: 'GET',
             url: '/api/' + this.props.project + '/' + this.props.logname + '/commands/' + this.props.command,
             cache: false,
-            success: function (data) {} // do nothing 
+            success: function (data) {
+                toastr.info('Command execute sucess!');
+            }, // do nothing 
+            error: function (data) {
+                toastr.error('Command execute failed!\n ' + data.statusText);
+            }
         });
     }
 
     render() {
         return (
-            <button onClick={this.handleClick} type="button" style={{marginTop:"2px", marginRight:"5px"}} className="btn btn-success">{this.props.command}</button>
+            <RaisedButton 
+                style={{marginRight: "10px"}} 
+                onClick={this.handleClick} 
+                type="button"
+                label={this.props.command}
+            />
         );
     }
 }
@@ -56,9 +66,14 @@ class Content extends React.Component {
             return (<div>
                 <h2> {this.state.project + '/' + this.state.logname}</h2>
                 <Divider style={{ marginBottom: "20px" }}/>
-                <div>
+                <div style={{marginBottom: "15px"}}>
                     {this.state.commands.map((command) =>
-                        <LogUserCommand key={command} command={command} project={this.state.project} logname={this.state.logname}/>
+                        <LogUserCommand 
+                            key={command} 
+                            command={command} 
+                            project={this.state.project} 
+                            logname={this.state.logname}
+                        />
                     )}
                 </div>
                 <Tabs>

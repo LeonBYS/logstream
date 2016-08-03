@@ -243,6 +243,35 @@ app.post('/api/*/*/charts/*', function(req, res) {
 
 
 
+// **** bonus time
+var intervalID = null;
+app.get('/api/open-status-chart', (req, res) => {
+    if (!intervalID) {
+        intervalID = setInterval(
+            () => {
+                logstream.addChartData('Server-Status', [
+                    {key:'Websocket-Count', value:connections.count()}
+                ]);
+            },
+            1000
+        );
+    }
+    res.status(200).send();
+});
+
+app.get('/api/close-status-chart', (req, res) => {
+    if (intervalID) {
+        clearInterval(intervalID);
+        intervalID = null;
+    }
+    res.status(200).send();
+});
+
+
+
+
+
+
 
 app.use(function (req, res) {
     Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {

@@ -74,6 +74,27 @@ describe('API commands', function() {
             .expect(200, commands, done);
     });
 
+    // it('response to POST /api/LogStream/Console/commands', (done) => {
+    //     var log = JSON.stringify({timestamp: Date.now(), logtext:'text from command1\n'});
+    //     var commands = [
+    //         {
+    //             name:"Open-Status-Chart", 
+    //             url:"http://localhost:3333/api/open-status-chart",
+    //             method:'GET'
+    //         }, 
+    //         {
+    //             name:"Close-Status-Chart", 
+    //             url:"http://localhost:3333/api/close-status-chart",
+    //             method:'GET'
+    //         }
+    //     ];
+    //     request(app)
+    //         .post('/api/LogStream/Console/commands')
+    //         .send(commands)
+    //         .expect(200, commands, done);
+    // });
+
+
     it('response to POST /api/testProj/testLogname/commands with broken data', (done) => {
         request(app)
             .post('/api/testProj/testLogname/commands')

@@ -46,6 +46,12 @@ class Connections {
             }
         }
     }
+
+
+    // for fun
+    count() {
+        return Object.keys(this.socketBySession).length;
+    }
 }
 
 module.exports = {

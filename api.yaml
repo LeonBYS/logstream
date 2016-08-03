@@ -6,7 +6,7 @@ info:
   description: Stream your logs!
   version: "1.0.0"
 # the domain of the service
-host: logstream-test.azurewebsites.net
+host: logstream-web.azurewebsites.net
 # array of all schemes that your API supports
 schemes:
   - http
@@ -162,11 +162,11 @@ paths:
         - Commands
       responses:
         200:
-          description: An array of commands
+          description: An array of commands name
           schema:
             type: array
             items:
-              $ref: '#/definitions/Commands'
+              type: string
         default:
           description: Unexpected error
           schema:
@@ -230,6 +230,47 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+
+  /{project}/{logname}/charts/{chartname}:
+    post:
+      summary: Add chart name
+      description: Add data to a specific chart in the branch (project, logname)
+      parameters:
+        - name: project
+          in: path
+          description: project name
+          required: true
+          type: string
+        - name: logname
+          in: path
+          description: log name
+          required: true
+          type: string
+        - name: chartname
+          in: path
+          description: chart name
+          required: true
+          type: string
+        - name: chartdata
+          in: body
+          description: the data user want to add
+          required: true
+          schema:
+            $ref: '#/definitions/ChartData'
+      tags:
+        - Charts
+      responses:
+        200:
+          description: User added commands
+          schema:
+            $ref: '#/definitions/ChartData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+
+
 definitions:
   Project:
     type: object
@@ -269,6 +310,31 @@ definitions:
       body:
         type: string
         description: the http request body
+  ChartData:
+    type: object
+    properties:
+      timestamp:
+        type: integer
+        format: int64
+        description: A int64 number represent the timestamp when this log send.
+      chartType:
+        type: string
+        description: the chart type, one of ('line')
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/ChartDatum'
+  ChartDatum:
+    type: object
+    properties:
+      key:
+        type: string
+        description: the key name of a datum
+      value:
+        type: number
+        format: float
+        description: the value of this datum
+      
   Error:
     type: object
     properties:
