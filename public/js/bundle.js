@@ -175,7 +175,7 @@ var LogWindowActions = function () {
                     } else {
                         _this.getLogsSuccess({ logs: data, project: project, logname: logname });
                     }
-                } else if (!_this.lastTimestamp) {
+                } else if (!timestamp) {
                     // data is [] or null, this branch doesn't have log data
                     _this.getLogsSuccess({ logs: [], project: project, logname: logname });
                 }
@@ -793,17 +793,23 @@ var LogUserCommand = function (_React$Component) {
                 method: 'GET',
                 url: '/api/' + this.props.project + '/' + this.props.logname + '/commands/' + this.props.command,
                 cache: false,
-                success: function success(data) {} // do nothing 
+                success: function success(data) {
+                    toastr.info('Command execute sucess!');
+                }, // do nothing 
+                error: function error(data) {
+                    toastr.error('Command execute failed!\n ' + data.statusText);
+                }
             });
         }
     }, {
         key: 'render',
         value: function render() {
-            return _react2.default.createElement(
-                'button',
-                { onClick: this.handleClick, type: 'button', style: { marginTop: "2px", marginRight: "5px" }, className: 'btn btn-success' },
-                this.props.command
-            );
+            return _react2.default.createElement(_RaisedButton2.default, {
+                style: { marginRight: "10px" },
+                onClick: this.handleClick,
+                type: 'button',
+                label: this.props.command
+            });
         }
     }]);
 
@@ -856,9 +862,14 @@ var Content = function (_React$Component2) {
                     _react2.default.createElement(_Divider2.default, { style: { marginBottom: "20px" } }),
                     _react2.default.createElement(
                         'div',
-                        null,
+                        { style: { marginBottom: "15px" } },
                         this.state.commands.map(function (command) {
-                            return _react2.default.createElement(LogUserCommand, { key: command, command: command, project: _this3.state.project, logname: _this3.state.logname });
+                            return _react2.default.createElement(LogUserCommand, {
+                                key: command,
+                                command: command,
+                                project: _this3.state.project,
+                                logname: _this3.state.logname
+                            });
                         })
                     ),
                     _react2.default.createElement(
@@ -873,15 +884,6 @@ var Content = function (_React$Component2) {
                             _Tabs.Tab,
                             { label: 'Charts' },
                             _react2.default.createElement(_chartsWindow2.default, { project: this.state.project, logname: this.state.logname })
-                        ),
-                        _react2.default.createElement(
-                            _Tabs.Tab,
-                            { label: 'Setting' },
-                            _react2.default.createElement(
-                                'h2',
-                                null,
-                                'Settings!!!! \\^O^/'
-                            )
                         )
                     )
                 );

@@ -35,7 +35,7 @@ class LogWindowActions {
                 }else {
                     this.getLogsSuccess({logs: data, project: project, logname: logname});
                 }
-            }else if (!this.lastTimestamp) { 
+            }else if (!timestamp) { 
                 // data is [] or null, this branch doesn't have log data
                 this.getLogsSuccess({logs: [], project: project, logname: logname});
             }

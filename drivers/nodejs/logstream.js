@@ -38,7 +38,7 @@ class LogStream {
     addChartData(chartname, data, chartType) {
         var timestamp = Date.now();
         var chartData = {timestamp: timestamp, chartType: chartType, data:data};
-        chartData = JSON.stringify(chartData);
+        var message = JSON.stringify(chartData);
         
         var options = {
             hostname: this.host,

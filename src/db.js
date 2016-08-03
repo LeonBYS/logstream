@@ -140,7 +140,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     getCommands: function (project, logname, callback) {
-        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        var lkey = this.prefix + "commands:" + project + ':' + logname;
         this.returnListData(lkey, 0, -1, (err, result) => {
             if (result) { 
                 result = result.map((a) => a.name).sort();
@@ -156,7 +156,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     delCommands: function (project, logname, callback) {
-        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        var lkey = this.prefix + "commands:" + project + ':' + logname;
         this.client.del(lkey, callback);
     },
 
@@ -168,7 +168,7 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     addCommands: function (project, logname, commands, callback) {
-        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        var lkey = this.prefix + "commands:" + project + ':' + logname;
         var lvals = commands.map(command => JSON.stringify(command));
         var params = [lkey].concat(lvals);
         params.push(callback);
@@ -183,11 +183,11 @@ var dbRedis = {
      * @param {function(err, result)} callback 
      */
     exeCommand: function (project, logname, command, callback) {
-        var lkey = this.prefix + "commands:" + project + '/' + logname;
+        var lkey = this.prefix + "commands:" + project + ':' + logname;
         this.client.lrange(lkey, 0, -1, (err, result) => {
             if (result) {
                 result = result.map((x) => JSON.parse(x));
-                for (var i=1; i<result.length; i++) {
+                for (var i=0; i<result.length; i++) {
                     if (result[i].name === command) {
                         this.sendRequest(result[i].method, result[i].url, result[i].headers, result[i].body, callback);
                         break; 
