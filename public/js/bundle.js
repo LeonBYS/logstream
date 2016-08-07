@@ -17237,7 +17237,7 @@ var TransitionItem = function (_Component) {
       this.setState({
         style: {
           opacity: 1,
-          transform: 'translate(0, ' + spacing.desktopKeylineIncrement + 'px)'
+          transform: 'translate3d(0, ' + spacing.desktopKeylineIncrement + 'px, 0)'
         }
       });
 
@@ -17249,7 +17249,7 @@ var TransitionItem = function (_Component) {
       this.setState({
         style: {
           opacity: 0,
-          transform: 'translate(0, 0)'
+          transform: 'translate3d(0, 0, 0)'
         }
       });
 
@@ -18047,7 +18047,7 @@ var Drawer = function (_Component) {
           zIndex: muiTheme.zIndex.drawer,
           left: 0,
           top: 0,
-          transform: 'translate(' + x + 'px, 0)',
+          transform: 'translate3d(' + x + 'px, 0, 0)',
           transition: !this.state.swiping && _transitions2.default.easeOut(null, 'transform', null),
           backgroundColor: theme.color,
           overflow: 'auto',
@@ -18117,7 +18117,7 @@ var Drawer = function (_Component) {
     key: 'setPosition',
     value: function setPosition(translateX) {
       var drawer = _reactDom2.default.findDOMNode(this.refs.clickAwayableElement);
-      var transformCSS = 'translate(' + this.getTranslateMultiplier() * translateX + 'px, 0)';
+      var transformCSS = 'translate3d(' + this.getTranslateMultiplier() * translateX + 'px, 0, 0)';
       this.refs.overlay.setOpacity(1 - translateX / this.getMaxTranslateX());
       _autoPrefix2.default.set(drawer.style, 'transform', transformCSS);
     }
@@ -18510,7 +18510,6 @@ var DropDownMenu = function (_Component) {
     value: function render() {
       var _props = this.props;
       var animated = _props.animated;
-      var animation = _props.animation;
       var autoWidth = _props.autoWidth;
       var children = _props.children;
       var className = _props.className;
@@ -18524,7 +18523,7 @@ var DropDownMenu = function (_Component) {
       var underlineStyle = _props.underlineStyle;
       var value = _props.value;
 
-      var other = _objectWithoutProperties(_props, ['animated', 'animation', 'autoWidth', 'children', 'className', 'iconStyle', 'labelStyle', 'listStyle', 'maxHeight', 'menuStyle', 'openImmediately', 'style', 'underlineStyle', 'value']);
+      var other = _objectWithoutProperties(_props, ['animated', 'autoWidth', 'children', 'className', 'iconStyle', 'labelStyle', 'listStyle', 'maxHeight', 'menuStyle', 'openImmediately', 'style', 'underlineStyle', 'value']);
 
       var _state = this.state;
       var anchorEl = _state.anchorEl;
@@ -18533,9 +18532,9 @@ var DropDownMenu = function (_Component) {
 
       var styles = getStyles(this.props, this.context);
 
-      var displayValue = void 0;
+      var displayValue = '';
       _react2.default.Children.forEach(children, function (child) {
-        if (!displayValue || value === child.props.value) {
+        if (value === child.props.value) {
           // This will need to be improved (in case primaryText is a node)
           displayValue = child.props.label || child.props.primaryText;
         }
@@ -18575,7 +18574,7 @@ var DropDownMenu = function (_Component) {
           {
             anchorOrigin: anchorOrigin,
             anchorEl: anchorEl,
-            animation: animation || _PopoverAnimationVertical2.default,
+            animation: _PopoverAnimationVertical2.default,
             open: open,
             animated: animated,
             onRequestClose: this.handleRequestCloseMenu
@@ -18607,10 +18606,6 @@ DropDownMenu.propTypes = {
    * it gets added to the DOM.
    */
   animated: _react.PropTypes.bool,
-  /**
-   * Override the default animation component used.
-   */
-  animation: _react.PropTypes.func,
   /**
    * The width will automatically be set according to the items inside the menu.
    * To control this width in css instead, set this prop to `false`.
@@ -18869,14 +18864,13 @@ var FlatButton = function (_Component) {
       var labelStyleIcon = {};
 
       if (icon) {
-        var iconStyles = (0, _simpleAssign2.default)({
-          verticalAlign: 'middle',
-          marginLeft: label && labelPosition !== 'before' ? 12 : 0,
-          marginRight: label && labelPosition === 'before' ? 12 : 0
-        }, icon.props.style);
         iconCloned = _react2.default.cloneElement(icon, {
           color: icon.props.color || mergedRootStyles.color,
-          style: iconStyles
+          style: {
+            verticalAlign: 'middle',
+            marginLeft: label && labelPosition !== 'before' ? 12 : 0,
+            marginRight: label && labelPosition === 'before' ? 12 : 0
+          }
         });
 
         if (labelPosition === 'before') {
@@ -19430,11 +19424,10 @@ var IconButton = function (_Component) {
       var onKeyboardFocus = _props.onKeyboardFocus;
       var tooltip = _props.tooltip;
       var tooltipPositionProp = _props.tooltipPosition;
-      var tooltipStyles = _props.tooltipStyles;
       var touch = _props.touch;
       var iconStyle = _props.iconStyle;
 
-      var other = _objectWithoutProperties(_props, ['disabled', 'disableTouchRipple', 'children', 'iconClassName', 'onKeyboardFocus', 'tooltip', 'tooltipPosition', 'tooltipStyles', 'touch', 'iconStyle']);
+      var other = _objectWithoutProperties(_props, ['disabled', 'disableTouchRipple', 'children', 'iconClassName', 'onKeyboardFocus', 'tooltip', 'tooltipPosition', 'touch', 'iconStyle']);
 
       var fonticon = void 0;
 
@@ -19446,7 +19439,7 @@ var IconButton = function (_Component) {
         label: tooltip,
         show: this.state.tooltipShown,
         touch: touch,
-        style: (0, _simpleAssign2.default)(styles.tooltip, tooltipStyles),
+        style: (0, _simpleAssign2.default)(styles.tooltip, this.props.tooltipStyles),
         verticalPosition: tooltipPosition[0],
         horizontalPosition: tooltipPosition[1]
       }) : null;
@@ -19663,9 +19656,6 @@ var List = function (_Component) {
 
       var other = _objectWithoutProperties(_props, ['children', 'insetSubheader', 'style', 'subheader', 'subheaderStyle', 'zDepth']);
 
-      var prepareStyles = this.context.muiTheme.prepareStyles;
-
-
       process.env.NODE_ENV !== "production" ? (0, _warning2.default)(typeof zDepth === 'undefined', 'List no longer supports `zDepth`. Instead, wrap it in `Paper` ' + 'or another component that provides zDepth. It will be removed with v0.16.0.') : void 0;
 
       var hasSubheader = false;
@@ -19673,8 +19663,8 @@ var List = function (_Component) {
       if (subheader) {
         hasSubheader = true;
       } else {
-        var firstChild = _react.Children.toArray(children)[0];
-        if ((0, _react.isValidElement)(firstChild) && firstChild.type === _Subheader2.default) {
+        var firstChild = _react2.default.Children.toArray(children)[0];
+        if (_react2.default.isValidElement(firstChild) && firstChild.type === _Subheader2.default) {
           hasSubheader = true;
         }
       }
@@ -19689,7 +19679,9 @@ var List = function (_Component) {
 
       return _react2.default.createElement(
         'div',
-        _extends({}, other, { style: prepareStyles((0, _simpleAssign2.default)(styles.root, style)) }),
+        _extends({}, other, {
+          style: (0, _simpleAssign2.default)(styles.root, style)
+        }),
         subheader && _react2.default.createElement(
           _Subheader2.default,
           { inset: insetSubheader, style: subheaderStyle },
@@ -19957,9 +19949,8 @@ var ListItem = function (_Component) {
       _this.props.onMouseLeave(event);
     }, _this.handleNestedListToggle = function (event) {
       event.stopPropagation();
-      _this.setState({ open: !_this.state.open }, function () {
-        _this.props.onNestedListToggle(_this);
-      });
+      _this.setState({ open: !_this.state.open });
+      _this.props.onNestedListToggle(_this);
     }, _this.handleRightIconButtonKeyboardFocus = function (event, isKeyboardFocused) {
       if (isKeyboardFocused) {
         _this.setState({
@@ -20217,7 +20208,7 @@ var ListItem = function (_Component) {
 
       var nestedList = nestedItems.length ? _react2.default.createElement(
         _NestedList2.default,
-        { nestedLevel: nestedLevel, open: this.state.open, style: nestedListStyle },
+        { nestedLevel: nestedLevel + 1, open: this.state.open, style: nestedListStyle },
         nestedItems
       ) : undefined;
 
@@ -20431,8 +20422,6 @@ var _deprecatedPropType2 = _interopRequireDefault(_deprecatedPropType);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -20535,7 +20524,6 @@ var MakeSelectable = exports.MakeSelectable = function MakeSelectable(Component)
         var children = _props.children;
         var selectedItemStyle = _props.selectedItemStyle;
 
-        var other = _objectWithoutProperties(_props, ['children', 'selectedItemStyle']);
 
         this.keyIndex = 0;
         var styles = {};
@@ -20547,7 +20535,7 @@ var MakeSelectable = exports.MakeSelectable = function MakeSelectable(Component)
 
         return _react2.default.createElement(
           Component,
-          _extends({}, other, this.state),
+          _extends({}, this.props, this.state),
           _react2.default.Children.map(children, function (child) {
             return _this3.extendChild(child, styles, selectedItemStyle);
           })
@@ -20642,7 +20630,7 @@ var NestedList = function (_Component) {
 
 NestedList.propTypes = {
   children: _react.PropTypes.node,
-  nestedLevel: _react.PropTypes.number.isRequired,
+  nestedLevel: _react.PropTypes.number,
   open: _react.PropTypes.bool,
   /**
    * Override the inline-styles of the root element.
@@ -20650,6 +20638,7 @@ NestedList.propTypes = {
   style: _react.PropTypes.object
 };
 NestedList.defaultProps = {
+  nestedLevel: 1,
   open: false
 };
 exports.default = NestedList;
@@ -20745,7 +20734,7 @@ function getStyles(props, context) {
   var styles = {
     root: {
       color: props.disabled ? disabledColor : textColor,
-      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      cursor: props.disabled ? 'not-allowed' : 'inherit',
       lineHeight: props.desktop ? '32px' : '48px',
       fontSize: props.desktop ? 15 : 16,
       whiteSpace: 'nowrap'
@@ -20805,7 +20794,8 @@ var MenuItem = function (_Component) {
           if (item.props.onTouchTap) {
             item.props.onTouchTap(event);
           }
-        }
+        },
+        onRequestClose: _this.handleRequestClose
       });
     }, _this.handleTouchTap = function (event) {
       event.preventDefault();
@@ -20878,10 +20868,9 @@ var MenuItem = function (_Component) {
       var rightIcon = _props.rightIcon;
       var secondaryText = _props.secondaryText;
       var style = _props.style;
-      var animation = _props.animation;
       var value = _props.value;
 
-      var other = _objectWithoutProperties(_props, ['checked', 'children', 'desktop', 'disabled', 'focusState', 'innerDivStyle', 'insetChildren', 'leftIcon', 'menuItems', 'rightIcon', 'secondaryText', 'style', 'animation', 'value']);
+      var other = _objectWithoutProperties(_props, ['checked', 'children', 'desktop', 'disabled', 'focusState', 'innerDivStyle', 'insetChildren', 'leftIcon', 'menuItems', 'rightIcon', 'secondaryText', 'style', 'value']);
 
       var prepareStyles = this.context.muiTheme.prepareStyles;
 
@@ -20920,7 +20909,6 @@ var MenuItem = function (_Component) {
         childMenuPopover = _react2.default.createElement(
           _Popover2.default,
           {
-            animation: animation,
             anchorOrigin: { horizontal: 'right', vertical: 'top' },
             anchorEl: this.state.anchorEl,
             open: this.state.open,
@@ -20959,10 +20947,6 @@ var MenuItem = function (_Component) {
 
 MenuItem.muiName = 'MenuItem';
 MenuItem.propTypes = {
-  /**
-   * Override the default animation component used.
-   */
-  animation: _react.PropTypes.func,
   /**
    * If true, a left check mark will be rendered.
    */
@@ -21765,7 +21749,7 @@ var _initialiseProps = function _initialiseProps() {
         _this5.decrementKeyboardFocusIndex();
         break;
       default:
-        if (key && key.length === 1) {
+        if (key.length === 1) {
           var hotKeys = _this5.hotKeyHolder.append(key);
           if (_this5.setFocusIndexStartsWith(hotKeys)) {
             event.preventDefault();
@@ -22955,14 +22939,13 @@ var RaisedButton = function (_Component) {
       var fullWidth = _props.fullWidth;
       var icon = _props.icon;
       var label = _props.label;
-      var labelColor = _props.labelColor;
       var labelPosition = _props.labelPosition;
       var labelStyle = _props.labelStyle;
       var primary = _props.primary;
       var rippleStyle = _props.rippleStyle;
       var secondary = _props.secondary;
 
-      var other = _objectWithoutProperties(_props, ['backgroundColor', 'children', 'className', 'disabled', 'fullWidth', 'icon', 'label', 'labelColor', 'labelPosition', 'labelStyle', 'primary', 'rippleStyle', 'secondary']);
+      var other = _objectWithoutProperties(_props, ['backgroundColor', 'children', 'className', 'disabled', 'fullWidth', 'icon', 'label', 'labelPosition', 'labelStyle', 'primary', 'rippleStyle', 'secondary']);
 
       var prepareStyles = this.context.muiTheme.prepareStyles;
 
@@ -22985,9 +22968,9 @@ var RaisedButton = function (_Component) {
         label
       );
 
-      var iconCloned = icon && (0, _react.cloneElement)(icon, {
+      var iconCloned = icon && _react2.default.cloneElement(icon, {
         color: icon.props.color || styles.label.color,
-        style: (0, _simpleAssign2.default)(styles.icon, icon.props.style)
+        style: styles.icon
       });
 
       // Place label before or after children.
@@ -23937,7 +23920,7 @@ Slider.propTypes = {
    */
   onDragStart: _react.PropTypes.func,
   /**
-   * Callback function that is fired when the slide has stopped moving.
+   * Callback function that is fried when the slide has stopped moving.
    */
   onDragStop: _react.PropTypes.func,
   /** @ignore */
@@ -25311,7 +25294,7 @@ var getStyles = function getStyles(props, context, state) {
  * @returns True if the string provided is valid, false otherwise.
  */
 function isValid(value) {
-  return value !== '' && value !== undefined && value !== null;
+  return Boolean(value || value === 0);
 }
 
 var TextField = function (_Component) {
@@ -25817,14 +25800,14 @@ function getStyles(props) {
     transition: _transitions2.default.easeOut(),
     zIndex: 1, // Needed to display label above Chrome's autocomplete field background
     cursor: props.disabled ? 'not-allowed' : 'text',
-    transform: 'scale(1) translate(0, 0)',
+    transform: 'scale(1) translate3d(0, 0, 0)',
     transformOrigin: 'left top',
     pointerEvents: 'auto',
     userSelect: 'none'
   };
 
   var shrinkStyles = props.shrink ? (0, _simpleAssign2.default)({
-    transform: 'scale(0.75) translate(0, -28px)',
+    transform: 'perspective(1px) scale(0.75) translate3d(0, -28px, 0)',
     pointerEvents: 'none'
   }, props.shrinkStyle) : null;
 
@@ -26927,7 +26910,7 @@ var EnhancedButton = function (_Component) {
          * See: http://stackoverflow.com/questions/17298739/
          * css-overflow-hidden-not-working-in-chrome-when-parent-has-border-radius-and-chil
          */
-        transform: disableTouchRipple && disableFocusRipple ? null : 'translate(0, 0)',
+        transform: disableTouchRipple && disableFocusRipple ? null : 'translate3d(0, 0, 0)',
         verticalAlign: href ? 'middle' : null
       }, style);
 
@@ -27352,11 +27335,17 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _react = require('react');
 
+var _react2 = _interopRequireDefault(_react);
+
 var _reactDom = require('react-dom');
 
 var _dom = require('../utils/dom');
 
 var _dom2 = _interopRequireDefault(_dom);
+
+var _MuiThemeProvider = require('../styles/MuiThemeProvider');
+
+var _MuiThemeProvider2 = _interopRequireDefault(_MuiThemeProvider);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27367,6 +27356,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 // heavily inspired by https://github.com/Khan/react-components/blob/master/js/layered-component-mixin.jsx
+
 var RenderToLayer = function (_Component) {
   _inherits(RenderToLayer, _Component);
 
@@ -27481,7 +27471,15 @@ var RenderToLayer = function (_Component) {
           }
         }
 
-        var layerElement = render();
+        /**
+         * We use the <MuiThemeProvider /> component as a work around for
+         * https://github.com/facebook/react/issues/6599.
+         */
+        var layerElement = _react2.default.createElement(
+          _MuiThemeProvider2.default,
+          { muiTheme: this.context.muiTheme },
+          render()
+        );
         this.layerElement = (0, _reactDom.unstable_renderSubtreeIntoContainer)(this, layerElement, this.layer);
       } else {
         this.unrenderLayer();
@@ -27510,7 +27508,7 @@ RenderToLayer.contextTypes = {
   muiTheme: _react.PropTypes.object.isRequired
 };
 exports.default = RenderToLayer;
-},{"../utils/dom":317,"react":"react","react-dom":"react-dom"}],123:[function(require,module,exports){
+},{"../styles/MuiThemeProvider":293,"../utils/dom":317,"react":"react","react-dom":"react-dom"}],123:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27859,7 +27857,7 @@ function getStyles(props, context, state) {
     rootWhenShown: {
       top: verticalPosition === 'top' ? touchOffsetTop : 36,
       opacity: 0.9,
-      transform: 'translate(0px, ' + offset + 'px)',
+      transform: 'translate3d(0px, ' + offset + 'px, 0px)',
       transition: _transitions2.default.easeOut('0ms', 'top', '0ms') + ', ' + _transitions2.default.easeOut('450ms', 'transform', '0ms') + ', ' + _transitions2.default.easeOut('450ms', 'opacity', '0ms')
     },
     rootWhenTouched: {
@@ -28054,6 +28052,7 @@ var TouchRipple = function (_Component) {
     // showing ripples twice we skip showing a ripple for the first mouse down
     // after a touch start. Note we don't store ignoreNextMouseDown in this.state
     // to avoid re-rendering when we change it.
+
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(TouchRipple).call(this, props, context));
 
     _this.handleMouseDown = function (event) {
@@ -34717,9 +34716,9 @@ function getMuiTheme(muiTheme) {
     badge: {
       color: palette.alternateTextColor,
       textColor: palette.textColor,
-      primaryColor: palette.primary1Color,
+      primaryColor: palette.accent1Color,
       primaryTextColor: palette.alternateTextColor,
-      secondaryColor: palette.accent1Color,
+      secondaryColor: palette.primary1Color,
       secondaryTextColor: palette.alternateTextColor,
       fontWeight: _typography2.default.fontWeightMedium
     },
@@ -35799,29 +35798,13 @@ var _warning2 = _interopRequireDefault(_warning);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var warned = {}; /**
-                  * This module is taken from https://github.com/react-bootstrap/react-prop-types.
-                  * It's not a dependency to reduce build size / install time.
-                  * It should be pretty stable.
-                  */
-function deprecated(validator, reason) {
-  return function validate(props, propName, componentName, location, propFullName) {
-    var componentNameSafe = componentName || '<<anonymous>>';
-    var propFullNameSafe = propFullName || propName;
-
+function deprecated(propType, explanation) {
+  return function validate(props, propName, componentName) {
     if (props[propName] != null) {
-      var messageKey = componentName + '.' + propName;
-
-      process.env.NODE_ENV !== "production" ? (0, _warning2.default)(warned[messageKey], 'The ' + location + ' `' + propFullNameSafe + '` of ' + ('`' + componentNameSafe + '` is deprecated. ' + reason + '.')) : void 0;
-
-      warned[messageKey] = true;
+      process.env.NODE_ENV !== "production" ? (0, _warning2.default)(false, '"' + propName + '" property of "' + componentName + '" has been deprecated.\n' + explanation) : void 0;
     }
 
-    for (var _len = arguments.length, args = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
-      args[_key - 5] = arguments[_key];
-    }
-
-    return validator.apply(undefined, [props, propName, componentName, location, propFullName].concat(args));
+    return propType(props, propName, componentName);
   };
 }
 }).call(this,require('_process'))

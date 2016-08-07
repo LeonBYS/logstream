@@ -106,6 +106,7 @@ app.post('/api/*/*/logs', function(req, res) {
     var logname = req.params[1];
     var logtext = req.body.logtext;
     var timestamp = req.body.timestamp; 
+    var level = req.body.level || 0; // support level for log
     if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
         timestamp = Number(req.body.timestamp); // use user provided timestamp
     }else {

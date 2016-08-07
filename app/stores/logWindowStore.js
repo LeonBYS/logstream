@@ -28,7 +28,7 @@ class LogWindowStore {
         var results = [];
         for (var i=0; i<lines.length; i++) {
             size += lines[i].length + 1; // +1 for '\n'
-            results.push({timestamp: logs[pos].timestamp, logtext: lines[i]});
+            results.push({timestamp: logs[pos].timestamp, logtext: lines[i], level:logs[pos].level || 0});
             if (size >= logs[pos].logtext.length) {
                 size -= logs[pos].logtext.length;
                 pos++;
