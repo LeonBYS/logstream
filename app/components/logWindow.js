@@ -2,64 +2,55 @@ import React from 'react';
 import LogWindowStore from '../stores/logWindowStore';
 import LogWindowActions from '../actions/logWindowActions';
 
-class LogSearchBar extends React.Component {
-    constructor(props) {
-        super(props);
-        this.handleChange = this.handleChange.bind(this);
-    }
+import Divider from 'material-ui/Divider';
+import TextField from 'material-ui/TextField';
+import DropDownMenu from 'material-ui/DropDownMenu';
+import MenuItem from 'material-ui/MenuItem';
+import DatePicker from 'material-ui/DatePicker';
 
-    handleChange(event) {
-        LogWindowActions.changeFilter(event.target.value);
-    }
-
-    render() {
-        return (
-            <div className="input-group custom-search-form pull-right">
-                <input type="text" onChange={this.handleChange} className="input-sm" placeholder="Filter..." />
-            </div>
-        );
-    }
-}
-
-class MsgItem extends React.Component {
-    render() {
-        return (
-            <tr style={{color: "#f1f1f1", margin:"0"}}>
-                <td>
-                    <a style={{color: "#666", marginRight:"10px"}}>{this.props.index}</a>
-                </td>
-                <td>
-                    <span>{this.props.text}</span>
-                </td>
-            </tr>
-        );
-    }
-}
 
 class MsgHeader extends React.Component {
     constructor(props) {
         super(props);
-        this.logHeaderStyle = { backgroundColor: "#666", margin:"0" };
-        this.iStyle = {cursor:"pointer", marginRight:"3px", marginLeft:"3px", color:"#000"};
-        this.handlePause = this.handlePause.bind(this);
-        this.handlePlay = this.handlePlay.bind(this);
+        this.handleFilterChange = this.handleFilterChange.bind(this);
+        this.handleLevelChange = this.handleLevelChange.bind(this);
+        this.handleStartDateChange = this.handleStartDateChange.bind(this);
+        this.handleEndDateChange = this.handleEndDateChange.bind(this);
     }
-    handlePause(event) {
-        LogWindowActions.scroll(0);
+
+    handleFilterChange(event) {
+        LogWindowActions.changeFilter(event.target.value);
     }
-    handlePlay(event) {
-        LogWindowActions.scroll(100000000);
+
+    handleLevelChange(event, index, value) {
+        LogWindowActions.changeLevel(value);
     }
+
+    handleStartDateChange(event, date) {
+        LogWindowActions.changeStartDate(date);
+    }
+
+    handleEndDateChange(event, date) {
+        LogWindowActions.changeEndDate(date);
+    }
+
+
     render() {
-        var iplay = (<i onClick={this.handlePlay} className="fa fa-play" aria-hidden="true" style={{cursor:"pointer", marginRight:"13px", marginLeft:"3px", color:"#000"}}></i>);
-        var ipause = (<i onClick={this.handlePause} className="fa fa-pause" aria-hidden="true" style={{cursor:"pointer", marginRight:"13px", marginLeft:"3px", color:"#000"}}></i>);
         return (
-            <div className="row" style={this.logHeaderStyle}>
-                <div className="col-md-8" style={{paddingTop:"6px"}}>
-                    {this.props.pause ? iplay : ipause}
-                </div>
-                <div className="col-md-4">
-                    <LogSearchBar />
+            <div className="row">
+                <div className="col-md-12">
+                    <table><tbody><tr>
+                        <td style={{marginRight:"10px"}}> <TextField hintText="Filter" onChange={this.handleFilterChange} style={{marginRight:"10px"}}/> </td>
+                        <td style={{width:"100px"}}> <DatePicker hintText="Start date" value={this.props.dateStart} onChange={this.handleStartDateChange} style={{marginRight:"10px"}} textFieldStyle={{width:"100%"}}/> </td>
+                        <td style={{width:"100px"}}> <DatePicker hintText="End date" value={this.props.dateEnd} onChange={this.handleEndDateChange} style={{marginRight:"10px"}} textFieldStyle={{width:"100%"}}/> </td>
+                        <td>
+                            <DropDownMenu value={this.props.level} onChange={this.handleLevelChange} labelStyle={{marginTop:"4px"}} style={{marginBottom:"16px"}}>
+                                <MenuItem value={0} primaryText="Log" />
+                                <MenuItem value={1} primaryText="Warn" />
+                                <MenuItem value={2} primaryText="Error" />
+                            </DropDownMenu>
+                        </td>
+                    </tr></tbody></table>
                 </div>
             </div>
         );
@@ -67,41 +58,49 @@ class MsgHeader extends React.Component {
 }
 
 class MsgWindow extends React.Component {
-    constructor(props) {
-        super(props);
-        this.styleOut = {
-            fontSize:"1em",
-            fontFamily:"Monaco, Inconsolata, monospace", 
-            backgroundColor: "#222",
-            padding: "10px"
-        };  
-        this.handleWheel = this.handleWheel.bind(this);
-    }
-    handleWheel(event) {
-        LogWindowActions.scroll(event.deltaY);
-    }
     render() {
-        var index = this.props.start;
-        var logContent = this.props.logs.map((item) => {
-            index = index + 1;
-            try {
-                var timestring = new Date(Number(item.timestamp)).toLocaleString();
-                return (
-                    <MsgItem key={index} index={index} time={timestring} text={item.logtext} />
-                );
-            } catch (e) {
-                return (<MsgItem key={index} index={index} time="NA" text={item.toString()} />);
+        if (window) {
+            var AceEditor = require('react-ace').default;
+            var brace = require('brace').default;
+            require('brace/mode/java');
+            require('brace/theme/github');
+            
+            var logstr = this.props.logs.map(a => a.logtext).join('\n');
+            var _this = this;
+   
+            if (!this.editor) { 
+                this.ace = <AceEditor
+                    mode="java"
+                    theme="github"
+                    readOnly={true}
+                    name="UNIQUE_ID_OF_DIV"
+                    editorProps={{ $blockScrolling: true }}
+                    value={logstr}
+                    cursorStart={-1}
+                    onLoad={ (editor) => { _this.editor = editor; } }
+                    width="100%"
+                    height="100%"
+                    fontSize={14}
+                    />; 
+            }else {
+                var row0 = this.editor.session.getLength() - 1;
+                var col0 = this.editor.session.getLine(row0).length;
+                var pos0 = this.editor.selection.getCursor();
+
+                this.editor.setValue(logstr, 1);
+
+                if (pos0.row === row0 && pos0.column === col0) {
+                    var row1 = this.editor.session.getLength() - 1;
+                    var col1 = this.editor.session.getLine(row1).length // or simply Infinity;
+                    this.editor.gotoLine(row1 + 1, col1);
+                }else {
+                    this.editor.gotoLine(pos0.row + 1, pos0.column);
+                }
             }
-        });
-        return (
-            <div onWheel={this.handleWheel} style={this.styleOut}>    
-                <table>   
-                    <tbody>             
-                    {logContent}
-                    </tbody>
-                </table>
-            </div>
-        );
+            return this.ace;
+        }else {
+            return <div/>
+        }
     }
 }
 
@@ -137,15 +136,21 @@ class LogWindow extends React.Component {
     }
 
     render () {
-        var start = this.state.start < 0 ? this.state.linesFilted.length - this.state.height : this.state.start;
-        start = Math.max(start, 0); // start >= 0
-        var end = start + this.state.height;
-        end = Math.min(end, this.state.linesFilted.length); // log <= logs.length
-        var logs = this.state.linesFilted.slice(start, end);
+        var style = {
+            borderWidth: 1, 
+            borderColor:"#CCC", 
+            borderStyle:"solid",
+            borderRadius: 2, 
+            width:"100%", 
+            height:"500px", 
+            marginBottom:"10px"
+        };
         return (
             <div>
-                <MsgHeader pause={this.state.start >= 0} />
-                <MsgWindow logs={logs} start={start} />
+                <MsgHeader level={this.state.level} dateStart={this.state.dateStart} dateEnd={this.state.dateEnd} />
+                <div style={style}> 
+                    <MsgWindow logs={this.state.linesFilted}/> 
+                </div>
             </div>
         );
     }

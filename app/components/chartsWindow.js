@@ -154,8 +154,8 @@ class Chart extends React.Component {
                 data: this.props.data[key]
                         .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
                         .sort((a, b) => a.x - b.x),
-                        borderCapStyle: 'butt',
                 // style options
+                borderCapStyle: 'butt',
                 fill:false,
                 borderDash: [],
                 borderDashOffset: 0.0,
@@ -199,7 +199,7 @@ class Chart extends React.Component {
 
         if(!window || !data) { return <div/>; } 
 
-        console.log('render chart', this.props.name, data);
+        //console.log('render chart', this.props.name, data);
 
         if (this.props.type === 'line') {
             if (this.timeoutID) {
@@ -256,12 +256,12 @@ class ChartsWindow extends React.Component {
     }
 
     onChange(state) {
-        console.log('on change', state);
+        //console.log('on change', state);
         this.setState(state);
     }
 
     render () {
-        console.log('charts window render!', this.state.charts);
+        //console.log('charts window render!', this.state.charts);
         return (
             <div> 
                 {this.state.charts.map((chartname) => {

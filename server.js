@@ -10,7 +10,7 @@ var db = require('./src/db').Database('redis');
 var Connections = require('./src/connections').Connections;
 
 
-global.navigator = { userAgent: 'all' };
+global.navigator = { userAgent: 'all'};
 /* react */
 var swig = require('swig');
 var React = require('react');
@@ -117,7 +117,7 @@ app.post('/api/*/*/logs', function(req, res) {
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
     if (logtext) {
-        db.addLog(project, logname, logtext, timestamp, (err, result) => {
+        db.addLog(project, logname, logtext, timestamp, level, (err, result) => {
             var logs = [{timestamp: timestamp, logtext: logtext}];
             connections.publish('log', project, logname, logs);
             returnResult(res, req.body)(err, result);

@@ -9,8 +9,9 @@ class LogWindowActions {
             'ajaxFail',
             'scroll',
             'changeFilter',
-            'changePage',
-            'changePageSize'
+            'changeLevel',
+            'changeStartDate',
+            'changeEndDate'
         )
         this.internalID = null;
         this.lastTimestamp = null;
