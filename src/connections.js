@@ -47,6 +47,13 @@ class Connections {
         }
     }
 
+    hasSession(sessionID) {
+        if (sessionID && this.socketBySession[sessionID]) {
+            return true;
+        }else {
+            return false;
+        }
+    }
 
     // for fun
     count() {

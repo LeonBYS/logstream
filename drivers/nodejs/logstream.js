@@ -1,6 +1,7 @@
 'use strict'
 
 var http = require('http');
+var request = require('request');
 
 
 class LogStream {
@@ -10,6 +11,7 @@ class LogStream {
         this.project = project;
         this.logname = logname;
         this.log = this.log.bind(this);
+        this.api_secret = process.env.API_SECRET;
     }
 
     log(msg) {
@@ -19,40 +21,38 @@ class LogStream {
             logtext += ' ' + arguments[i];
         }
         logtext += '\n';
-        var message = JSON.stringify({logtext: logtext, timestamp:timestamp});
-        var options = {
-            hostname: this.host,
-            port: this.port,
-            path: '/api/' + this.project + '/' + this.logname + '/logs',
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(message)}
-        };
-        var req = http.request(options);
-        req.on('error', function (e) {
-            console.log('LogStream.Log(', message, ') FAILED!');
-        });
-        req.write(message);
-        req.end();
+        var message = {logtext: logtext, timestamp:timestamp};
+
+        request.post(
+            {
+                uri: 'http://' + this.host + ':' + this.port + '/api/' + this.project + '/' + this.logname + '/logs',
+                json: message,
+                headers: {'API_SECRET': this.api_secret}
+            }, 
+            function (error, response, body) {
+                if (error) {
+                    console.log('LogStream.Log(', message, ') FAILED!')
+                }
+            }
+        );
     }
 
     addChartData(chartname, data, chartType) {
         var timestamp = Date.now();
         var chartData = {timestamp: timestamp, chartType: chartType, data:data};
-        var message = JSON.stringify(chartData);
-        
-        var options = {
-            hostname: this.host,
-            port: this.port,
-            path: '/api/' + this.project + '/' + this.logname + '/charts/' + chartname,
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(message)}
-        };
-        var req = http.request(options);
-        req.on('error', function (e) {
-            console.log('LogStream.Log(', message, ') FAILED!');
-        });
-        req.write(message);
-        req.end();
+        var url = 'http://' + this.host + this.port + '/api/' + this.project + ':' +'/' + this.logname + '/charts/' + chartname;
+        request.post(
+            {
+                uri: url,
+                json: chartData,
+                headers: {'API_SECRET': this.api_secret}
+            }, 
+            function (error, response, body) {
+                if (error) {
+                    console.log('LogStream.Log(', message, ') FAILED!')
+                }
+            }
+        );
     }
 }
 
