@@ -132,8 +132,19 @@ var logstream = new LogStream(
 );
 
 
-
 /* RESTful API*/
+function checkAPICall(req, res, next) {
+    if (process.env.API_SECRET) {
+        if (process.env.API_SECRET !== req.headers['api_secret']) {
+            if (!connections.hasSession(req.query.sessionID)) {
+                res.status(401).send();
+                return;
+            }
+        }
+    }
+    return next();
+}
+
 function returnResult(res, successRet) {
     function ret(err, result) {
         res.setHeader('Content-Type', 'application/json');
@@ -151,7 +162,7 @@ function returnResult(res, successRet) {
 }
 
 // meta data
-app.get('/api/projects', function (req, res) {
+app.get('/api/projects', checkAPICall, function (req, res) {
     console.log('projects session', req.query.sessionID);
 
     console.log('[' + new Date().toLocaleString() + ']', 'get projects');
@@ -161,7 +172,7 @@ app.get('/api/projects', function (req, res) {
 });
 
 // Logs
-app.get('/api/*/*/logs', function (req, res) {
+app.get('/api/*/*/logs', checkAPICall, function (req, res) {
     var project = req.params[0];
     var logname = req.params[1];
     var timestamp = req.query.timestamp;
@@ -184,7 +195,7 @@ app.get('/api/*/*/logs', function (req, res) {
     });
 });
 
-app.post('/api/*/*/logs', function(req, res) {
+app.post('/api/*/*/logs', checkAPICall, function(req, res) {
     var project = req.params[0];
     var logname = req.params[1];
     var logtext = req.body.logtext;
@@ -212,7 +223,7 @@ app.post('/api/*/*/logs', function(req, res) {
 
 
 // Commands
-app.get('/api/*/*/commands', function (req, res) {
+app.get('/api/*/*/commands', checkAPICall, function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'GET commands');
     logstream.log('GET commands');
 
@@ -221,7 +232,7 @@ app.get('/api/*/*/commands', function (req, res) {
     db.getCommands(project, logname, returnResult(res));
 });
 
-app.get('/api/*/*/commands/*', function (req, res) {
+app.get('/api/*/*/commands/*', checkAPICall, function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'GET commands/' + req.params[2]);
     logstream.log('GET commands/' + req.params[2]);
  
@@ -232,7 +243,7 @@ app.get('/api/*/*/commands/*', function (req, res) {
     db.exeCommand(project, logname, command, returnResult(res));
 });
 
-app.post('/api/*/*/commands', function (req, res) {
+app.post('/api/*/*/commands', checkAPICall, function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'POST commands');
     logstream.log('POST commands');
 
@@ -254,7 +265,7 @@ app.post('/api/*/*/commands', function (req, res) {
     }
 });
 
-app.delete('/api/*/*/commands', function (req, res) {
+app.delete('/api/*/*/commands', checkAPICall, function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'DELETE commands');
     logstream.log('DELETE commands');
 
@@ -264,7 +275,7 @@ app.delete('/api/*/*/commands', function (req, res) {
 });
 
 // Charts
-app.get('/api/*/*/charts', function (req, res) {
+app.get('/api/*/*/charts', checkAPICall, function (req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'GET charts');
     logstream.log('GET charts', req.params[0], req.params[1]);
 
@@ -276,7 +287,7 @@ app.get('/api/*/*/charts', function (req, res) {
     });
 });
 
-app.get('/api/*/*/charts/*', function(req, res) {
+app.get('/api/*/*/charts/*', checkAPICall, function(req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'GET chart data');
     logstream.log('GET chart data', req.params[0], req.params[1]);
 
@@ -286,7 +297,7 @@ app.get('/api/*/*/charts/*', function(req, res) {
     db.getChartData(project, logname, chartname, returnResult(res));
 });
 
-app.delete('/api/*/*/charts/*', function(req, res) {
+app.delete('/api/*/*/charts/*', checkAPICall, function(req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'DELETE chart');
     logstream.log('DELETE chart', req.params[0], req.params[1]);
 
@@ -296,7 +307,7 @@ app.delete('/api/*/*/charts/*', function(req, res) {
     db.delChart(project, logname, chartname, returnResult(res, ''));
 });
 
-app.post('/api/*/*/charts/*', function(req, res) {
+app.post('/api/*/*/charts/*', checkAPICall, function(req, res) {
     console.log('[' + new Date().toLocaleString() + ']', 'POST chart data'); 
     logstream.log('POST chart data', req.params[0], req.params[1]);
 
