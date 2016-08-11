@@ -27,11 +27,24 @@ class LogStream {
             {
                 uri: 'http://' + this.host + ':' + this.port + '/api/' + this.project + '/' + this.logname + '/logs',
                 json: message,
+                //followAllRedirects: true,
                 headers: {'API_SECRET': this.api_secret}
             }, 
             function (error, response, body) {
-                if (error) {
-                    console.log('LogStream.Log(', message, ') FAILED!')
+                if (response.statusCode === 302) {
+                    request.post({
+                        uri: response.headers['location'], 
+                        json: message, 
+                        headers: {'API_SECRET': this.api_secret}
+                    }, function (error, response, body) {
+                        if (error) {
+                            console.log('LogStream.Log(', message, ') FAILED!')
+                        }
+                    })
+                }else {
+                    if (error) {
+                        console.log('LogStream.Log(', message, ') FAILED!')
+                    }
                 }
             }
         );
@@ -48,8 +61,20 @@ class LogStream {
                 headers: {'API_SECRET': this.api_secret}
             }, 
             function (error, response, body) {
-                if (error) {
-                    console.log('LogStream.Log(', message, ') FAILED!')
+                if (response.statusCode === 302) {
+                    request.post({
+                        uri: response.headers['location'], 
+                        json: chartData, 
+                        headers: {'API_SECRET': this.api_secret}
+                    }, function (error, response, body) {
+                        if (error) {
+                            console.log('LogStream.Log(', message, ') FAILED!')
+                        }
+                    })
+                }else {
+                    if (error) {
+                        console.log('LogStream.Log(', message, ') FAILED!')
+                    }
                 }
             }
         );
