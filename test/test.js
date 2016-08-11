@@ -10,7 +10,7 @@ describe('API base', function() {
     });
     
     it('response to GET /', (done) => {
-        request(app).get('/').expect(200, done);
+        request(app).get('/').expect(302, done);
     });
 
     it('404 everything else', (done) => {
