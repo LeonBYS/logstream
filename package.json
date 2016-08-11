@@ -34,6 +34,8 @@
     "ioredis": "^2.1.0",
     "material-ui": "^0.15.2",
     "mocha": "^2.5.3",
+    "passport": "^0.3.2",
+    "passport-azure-ad": "^2.0.0",
     "react": "^15.3.0",
     "react-ace": "^3.5.0",
     "react-addons-create-fragment": "^15.3.0",
