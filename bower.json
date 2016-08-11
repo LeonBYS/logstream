@@ -1,7 +1,8 @@
 {
   "name": "logstream",
   "dependencies": {
-    "startbootstrap-sb-admin-2": "^1.0.8",
-    "toastr": "^2.1.2"
+    "toastr": "^2.1.2",
+    "bootstrap": "^3.3.6",
+    "font-awesome": "^4.2.0"
   }
 }

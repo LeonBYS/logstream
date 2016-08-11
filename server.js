@@ -1,16 +1,18 @@
 'use strict'
 
 require('babel-register');
+
+global.navigator = { userAgent: 'all'};
+
 var express = require('express');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var expressSession = require('express-session');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var db = require('./src/db').Database('redis');
 var Connections = require('./src/connections').Connections;
-
-
-global.navigator = { userAgent: 'all' };
 /* react */
 var swig = require('swig');
 var React = require('react');
@@ -18,9 +20,89 @@ var ReactDOM = require('react-dom');
 var ReactDOMServer = require('react-dom/server')
 var Router = require('react-router');
 var routes = require('./app/routes');
+// AAD
+var passport = require('passport');
+var OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+var config = require('./config');
 
+
+// Passport session setup. 
+
+//   To support persistent login sessions, Passport needs to be able to
+//   serialize users into and deserialize users out of the session.  Typically,
+//   this will be as simple as storing the user ID when serializing, and finding
+//   the user by ID when deserializing.
+
+// array to hold logged in users
+var users = [];
+
+var findByEmail = function (email, fn) {
+    for (var i = 0, len = users.length; i < len; i++) {
+        var user = users[i];
+        if (user.email === email) {
+            return fn(null, user);
+        }
+    }
+    return fn(null, null);
+};
+
+passport.serializeUser(function (user, done) {
+    done(null, user.email);
+});
+
+passport.deserializeUser(function (id, done) {
+    findByEmail(id, function (err, user) {
+        done(err, user);
+    });
+});
+
+// Use the OIDCStrategy within Passport. (Section 2) 
+// 
+//   Strategies in passport require a `validate` function, which accept
+//   credentials (in this case, an OpenID identifier), and invoke a callback
+//   with a user object.
+passport.use(new OIDCStrategy({
+    callbackURL: config.creds.returnURL,
+    realm: config.creds.realm,
+    clientID: config.creds.clientID,
+    clientSecret: config.creds.clientSecret,
+    oidcIssuer: config.creds.issuer,
+    identityMetadata: config.creds.identityMetadata,
+    skipUserProfile: config.creds.skipUserProfile,
+    responseType: config.creds.responseType,
+    responseMode: config.creds.responseMode
+    },
+    function (iss, sub, profile, accessToken, refreshToken, done) {
+        if (!profile.email) {
+            return done(new Error("No email found"), null);
+        }
+        // asynchronous verification, for effect...
+        process.nextTick(function () {
+            findByEmail(profile.email, function (err, user) {
+                if (err) {
+                    return done(err);
+                }
+                if (!user) {
+                    // "Auto-registration"
+                    users.push(profile);
+                    return done(null, profile);
+                }
+                return done(null, user);
+            });
+        });
+    }
+));
+
+
+
+/* Middleware */
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.text({ limit: '5mb' }));
+app.use(cookieParser());
+app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: false }));
+app.use(bodyParser.urlencoded({ extended : true }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static('public'));
 app.use(function(req, res, next) {
     global.navigator = {
@@ -28,6 +110,7 @@ app.use(function(req, res, next) {
     }
     next();
 });
+
 
 
 db.connect(
@@ -106,6 +189,7 @@ app.post('/api/*/*/logs', function(req, res) {
     var logname = req.params[1];
     var logtext = req.body.logtext;
     var timestamp = req.body.timestamp; 
+    var level = req.body.level || 0; // support level for log
     if (isFinite(timestamp) && new Date(Number(timestamp)).getTime() > 0) { // check valid timestamp, (integer and convert to valid date)
         timestamp = Number(req.body.timestamp); // use user provided timestamp
     }else {
@@ -116,7 +200,7 @@ app.post('/api/*/*/logs', function(req, res) {
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
     if (logtext) {
-        db.addLog(project, logname, logtext, timestamp, (err, result) => {
+        db.addLog(project, logname, logtext, timestamp, level, (err, result) => {
             var logs = [{timestamp: timestamp, logtext: logtext}];
             connections.publish('log', project, logname, logs);
             returnResult(res, req.body)(err, result);
@@ -270,7 +354,32 @@ app.get('/api/close-status-chart', (req, res) => {
 
 
 
+/* for login */
+app.get('/login',
+    passport.authenticate('azuread-openidconnect', { failureRedirect: '/login_failed' }),
+    function (req, res) {
+        console.log('login ok, redirect!');
+        res.redirect('/');
+    }
+);
 
+app.get('/login_failed', (req, res) => {
+    res.send("<h1>You do not have permission!</h1>");
+});
+
+app.get('/auth/openid/return',
+    passport.authenticate('azuread-openidconnect', { failureRedirect: '/login_failed' }),
+    function (req, res) {
+        console.log('We received a return from AzureAD. GET');
+        res.redirect('/');
+    });
+
+app.post('/auth/openid/return',
+    passport.authenticate('azuread-openidconnect', { failureRedirect: '/login_failed' }),
+    function (req, res) {
+        console.log('We received a return from AzureAD. POST');
+        res.redirect('/');
+    });
 
 
 app.use(function (req, res) {
@@ -280,9 +389,13 @@ app.use(function (req, res) {
         } else if (redirectLocation) {
             res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
         } else if (renderProps) {
-            var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
-            var page = swig.renderFile('views/index.html', { html: html });
-            res.status(200).send(page);
+            if (req.isAuthenticated()) {
+                var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
+                var page = swig.renderFile('views/index.html', { html: html });
+                res.status(200).send(page);
+            }else {
+                res.redirect('/login');
+            }
         } else {
             res.status(404).send('Page Not Found')
         }

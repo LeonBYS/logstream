@@ -57,7 +57,7 @@ const paperStyle = {
     paddingLeft: "6%",
     paddingRight: "6%",
     paddingTop: "2px",
-    paddingBottom: "25px"
+    paddingBottom: "25px",
 };
 
 class Home extends React.Component {

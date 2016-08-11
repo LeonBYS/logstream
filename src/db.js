@@ -95,9 +95,9 @@ var dbRedis = {
      * @param {number} timestamp
      * @param {function(err, result)} callback 
      */
-    addLog: function (project, logname, logtext, timestamp, callback) {
+    addLog: function (project, logname, logtext, timestamp, level,  callback) {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
-        var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext });
+        var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext, level:level });
         this.client.lpush(lkey, lval, callback);
     },
 
@@ -199,7 +199,7 @@ var dbRedis = {
         });
     },
 
-    // TODO, TO Test
+    // send request 
     sendRequest: function (method, url, headers, body, callback) {
         if (body) {
             headers['Content-Length'] = Buffer.byteLength(body);
