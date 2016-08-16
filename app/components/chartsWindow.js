@@ -16,20 +16,20 @@ function rgb2hex(rgb){
 }
 
 const defaultColors = [
-    { // blue
-        backgroundColor: "rgba(151,187,205,0.2)",
-        borderColor: "rgba(151,187,205,1)",
-        pointBorderColor: "rgba(151,187,205,1)",
-        pointBackgroundColor: "#fff",
-        pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
-        pointHoverBorderColor: "rgba(220,220,220,1)"
-    },
     { // red
         backgroundColor: "rgba(247,70,74,0.2)",
         borderColor: "rgba(247,70,74,1)",
         pointBorderColor: "rgba(247,70,74,1)",
         pointBackgroundColor: "#fff",
         pointHoverBackgroundColor: "rgba(247,70,74,0.8)",
+        pointHoverBorderColor: "rgba(220,220,220,1)"
+    },
+    { // blue
+        backgroundColor: "rgba(151,187,205,0.2)",
+        borderColor: "rgba(151,187,205,1)",
+        pointBorderColor: "rgba(151,187,205,1)",
+        pointBackgroundColor: "#fff",
+        pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
         pointHoverBorderColor: "rgba(220,220,220,1)"
     },
     { // green
@@ -92,14 +92,14 @@ class Chart extends React.Component {
     }
 
     componentDidMount() {
-        console.log('mount chart', this.props.name);
+        //console.log('mount chart', this.props.name);
     }
 
     componentWillUnmount() {
         if (this.timeoutID) {
             clearTimeout(this.timeoutID);
         }
-        console.log('unmount chart', this.props.name);
+        //console.log('unmount chart', this.props.name);
     }
 
 
@@ -236,7 +236,7 @@ class ChartsWindow extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('will recieve props');
+        //console.log('will recieve props');
         this.props = nextProps;
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);
@@ -244,7 +244,7 @@ class ChartsWindow extends React.Component {
     }
 
     componentDidMount() {
-        console.log('did mount');
+        //console.log('did mount');
         ChartsWindowStore.listen(this.onChange);
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);

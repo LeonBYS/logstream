@@ -67,6 +67,8 @@ class Home extends React.Component {
         this.state = {
             theme: 0
         }
+        this.lastLogTimestamp = null;
+        this.savedLogs = [];
     }
 
     componentDidMount() {
@@ -77,11 +79,19 @@ class Home extends React.Component {
             api.setSessionID(sid);
         });
         this.socket.on('log', (data) => {
-            console.log('log coming', data);
-            LogWindowActions.getLogsSuccessAppend(data);
+            //console.log('log coming', data);
+            var now = Date.now();
+            if (this.lastLogTimestamp === null || now - this.lastLogTimestamp > 500) {
+                this.lastLogTimestamp = now;
+                console.log('fire', this.savedLogs.length);
+                LogWindowActions.getLogsSuccessAppend(this.savedLogs);
+                this.savedLogs = [];
+            }else {
+                this.savedLogs = this.savedLogs.concat(data);
+            }
         });
         this.socket.on('chart', (data) => {
-            console.log('chart coming', data);
+            //console.log('chart coming', data);
             ChartsWindowActions.updateChartData(data);
         });
     }

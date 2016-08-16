@@ -207,7 +207,7 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
         timestamp = Date.now(); // use server timestamp if user not provide it
     }
 
-    console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '"' + logtext + '"');
+    console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
     if (logtext) {
