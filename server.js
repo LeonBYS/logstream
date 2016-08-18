@@ -209,10 +209,10 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
         timestamp = Date.now(); // use server timestamp if user not provide it
     }
 
-    console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
-    //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
+    if (logtext) {        
+        console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
+        //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
-    if (logtext) {
         var logbranch = project + '/' + logname;
         logCounter.inc(logbranch);
         var count = logCounter.count(logbranch);
@@ -229,7 +229,7 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
                 returnResult(res, req.body)(err, result);
             });
         }else {
-            // do nothing...
+            res.status(500).send({error:'too many logs!'});
         }
     }else {
         res.status(500).send({error:'invalid log'});
@@ -418,6 +418,7 @@ app.use(function (req, res) {
             if (req.isAuthenticated()) {
                 var html = ReactDOMServer.renderToString(React.createElement(Router.RouterContext, renderProps));
                 var page = swig.renderFile('views/index.html', { html: html });
+                res.cookie('displayName', req.user.displayName);
                 res.status(200).send(page);
             }else {
                 res.redirect('/login');

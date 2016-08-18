@@ -917,6 +917,7 @@ var Content = function (_React$Component2) {
 exports.default = Content;
 
 },{"../actions/contentActions":2,"../stores/contentStore":16,"./chartsWindow":8,"./logWindow":11,"material-ui/Divider":86,"material-ui/RaisedButton":113,"material-ui/Tabs":124,"react":"react"}],10:[function(require,module,exports){
+(function (global){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1108,10 +1109,28 @@ var Home = function (_React$Component) {
             });
         }
     }, {
+        key: 'getCookie',
+        value: function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                var c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    var c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
+        }
+    }, {
         key: 'render',
         value: function render() {
             var _this3 = this;
 
+            var userName = 'Guest';
+            if (global.document) {
+                userName = this.getCookie('displayName');
+            }
             return _react2.default.createElement(
                 _MuiThemeProvider2.default,
                 { muiTheme: this.themes[this.state.theme] },
@@ -1122,8 +1141,8 @@ var Home = function (_React$Component) {
                         title: 'LogStream',
                         iconElementRight: _react2.default.createElement(
                             _FlatButton2.default,
-                            { label: 'GITHUB', href: 'https://github.com/usstwxy/logstream' },
-                            _react2.default.createElement('i', { className: 'fa fa-github', style: { marginRight: "-10px", marginLeft: "15px" } })
+                            { label: userName },
+                            _react2.default.createElement('i', { className: 'fa fa-user', style: { marginRight: "-10px", marginLeft: "15px" } })
                         )
                     }),
                     _react2.default.createElement(
@@ -1152,6 +1171,8 @@ var Home = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Home;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"../actions/chartsWindowActions":1,"../actions/logWindowActions":3,"../api":6,"./content":9,"./sideBar":12,"material-ui/AppBar":70,"material-ui/Dialog":84,"material-ui/Divider":86,"material-ui/Drawer":88,"material-ui/FlatButton":93,"material-ui/IconButton":97,"material-ui/Paper":108,"material-ui/RaisedButton":113,"material-ui/Slider":115,"material-ui/Subheader":117,"material-ui/Tabs":124,"material-ui/TextField":130,"material-ui/styles/MuiThemeProvider":312,"material-ui/styles/baseThemes/darkBaseTheme":313,"material-ui/styles/baseThemes/lightBaseTheme":314,"material-ui/styles/colors":315,"material-ui/styles/getMuiTheme":316,"material-ui/svg-icons/action/grade":321,"material-ui/svg-icons/content/drafts":322,"material-ui/svg-icons/content/inbox":323,"material-ui/svg-icons/content/send":324,"react":"react"}],11:[function(require,module,exports){
 (function (process){
