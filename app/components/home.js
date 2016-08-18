@@ -67,6 +67,8 @@ class Home extends React.Component {
         this.state = {
             theme: 0
         }
+        this.lastLogTimestamp = null;
+        this.savedLogs = [];
     }
 
     componentDidMount() {
@@ -77,24 +79,48 @@ class Home extends React.Component {
             api.setSessionID(sid);
         });
         this.socket.on('log', (data) => {
-            console.log('log coming', data);
-            LogWindowActions.getLogsSuccessAppend(data);
+            //console.log('log coming', data);
+            this.savedLogs = this.savedLogs.concat(data);
+            var now = Date.now();
+            if (this.lastLogTimestamp === null || now - this.lastLogTimestamp > 500) {
+                this.lastLogTimestamp = now;
+                console.log('fire', this.savedLogs.length);
+                LogWindowActions.getLogsSuccessAppend(this.savedLogs);
+                this.savedLogs = [];
+            }
         });
         this.socket.on('chart', (data) => {
-            console.log('chart coming', data);
+            //console.log('chart coming', data);
             ChartsWindowActions.updateChartData(data);
         });
     }
 
+    getCookie(c_name) {
+        if (document.cookie.length > 0) {
+            var c_start = document.cookie.indexOf(c_name + "=")
+            if (c_start!=-1) { 
+                c_start = c_start + c_name.length+1 
+                var c_end = document.cookie.indexOf(";", c_start)
+                if (c_end==-1) c_end=document.cookie.length
+                return unescape(document.cookie.substring(c_start,c_end))
+            } 
+        }
+        return ""
+    }
+
     render() {                    
+        var userName = 'Guest';
+        if (global.document) {
+            userName = this.getCookie('displayName');
+        }
         return (
             <MuiThemeProvider muiTheme={this.themes[this.state.theme]}>
                 <div>
                     <AppBar
                         title="LogStream" 
                         iconElementRight={
-                            <FlatButton label="GITHUB" href="https://github.com/usstwxy/logstream"> 
-                                <i className="fa fa-github" style={{marginRight:"-10px", marginLeft:"15px"}}></i> 
+                            <FlatButton label={userName}> 
+                                <i className="fa fa-user" style={{marginRight:"-10px", marginLeft:"15px"}}></i> 
                             </FlatButton>
                         }
                     />

@@ -424,19 +424,19 @@ function rgb2hex(rgb) {
     return rgb && rgb.length === 4 ? "#" + ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2) : '';
 }
 
-var defaultColors = [{ // blue
-    backgroundColor: "rgba(151,187,205,0.2)",
-    borderColor: "rgba(151,187,205,1)",
-    pointBorderColor: "rgba(151,187,205,1)",
-    pointBackgroundColor: "#fff",
-    pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
-    pointHoverBorderColor: "rgba(220,220,220,1)"
-}, { // red
+var defaultColors = [{ // red
     backgroundColor: "rgba(247,70,74,0.2)",
     borderColor: "rgba(247,70,74,1)",
     pointBorderColor: "rgba(247,70,74,1)",
     pointBackgroundColor: "#fff",
     pointHoverBackgroundColor: "rgba(247,70,74,0.8)",
+    pointHoverBorderColor: "rgba(220,220,220,1)"
+}, { // blue
+    backgroundColor: "rgba(151,187,205,0.2)",
+    borderColor: "rgba(151,187,205,1)",
+    pointBorderColor: "rgba(151,187,205,1)",
+    pointBackgroundColor: "#fff",
+    pointHoverBackgroundColor: "rgba(151,187,205,0.8)",
     pointHoverBorderColor: "rgba(220,220,220,1)"
 }, { // green
     backgroundColor: "rgba(70,191,189,0.2)",
@@ -484,7 +484,7 @@ var Chart = function (_React$Component) {
     _createClass(Chart, [{
         key: 'componentDidMount',
         value: function componentDidMount() {
-            console.log('mount chart', this.props.name);
+            //console.log('mount chart', this.props.name);
         }
     }, {
         key: 'componentWillUnmount',
@@ -492,7 +492,7 @@ var Chart = function (_React$Component) {
             if (this.timeoutID) {
                 clearTimeout(this.timeoutID);
             }
-            console.log('unmount chart', this.props.name);
+            //console.log('unmount chart', this.props.name);
         }
     }, {
         key: 'changeTimeSpan',
@@ -668,7 +668,7 @@ var ChartsWindow = function (_React$Component2) {
         value: function componentWillReceiveProps(nextProps) {
             var _this5 = this;
 
-            console.log('will recieve props');
+            //console.log('will recieve props');
             this.props = nextProps;
             process.nextTick(function () {
                 _chartsWindowActions2.default.getCharts(_this5.props.project, _this5.props.logname);
@@ -679,7 +679,7 @@ var ChartsWindow = function (_React$Component2) {
         value: function componentDidMount() {
             var _this6 = this;
 
-            console.log('did mount');
+            //console.log('did mount');
             _chartsWindowStore2.default.listen(this.onChange);
             process.nextTick(function () {
                 _chartsWindowActions2.default.getCharts(_this6.props.project, _this6.props.logname);
@@ -917,6 +917,7 @@ var Content = function (_React$Component2) {
 exports.default = Content;
 
 },{"../actions/contentActions":2,"../stores/contentStore":16,"./chartsWindow":8,"./logWindow":11,"material-ui/Divider":86,"material-ui/RaisedButton":113,"material-ui/Tabs":124,"react":"react"}],10:[function(require,module,exports){
+(function (global){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1075,6 +1076,8 @@ var Home = function (_React$Component) {
         _this.state = {
             theme: 0
         };
+        _this.lastLogTimestamp = null;
+        _this.savedLogs = [];
         return _this;
     }
 
@@ -1090,19 +1093,44 @@ var Home = function (_React$Component) {
                 _api2.default.setSessionID(sid);
             });
             this.socket.on('log', function (data) {
-                console.log('log coming', data);
-                _logWindowActions2.default.getLogsSuccessAppend(data);
+                //console.log('log coming', data);
+                _this2.savedLogs = _this2.savedLogs.concat(data);
+                var now = Date.now();
+                if (_this2.lastLogTimestamp === null || now - _this2.lastLogTimestamp > 500) {
+                    _this2.lastLogTimestamp = now;
+                    console.log('fire', _this2.savedLogs.length);
+                    _logWindowActions2.default.getLogsSuccessAppend(_this2.savedLogs);
+                    _this2.savedLogs = [];
+                }
             });
             this.socket.on('chart', function (data) {
-                console.log('chart coming', data);
+                //console.log('chart coming', data);
                 _chartsWindowActions2.default.updateChartData(data);
             });
+        }
+    }, {
+        key: 'getCookie',
+        value: function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                var c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    var c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
         }
     }, {
         key: 'render',
         value: function render() {
             var _this3 = this;
 
+            var userName = 'Guest';
+            if (global.document) {
+                userName = this.getCookie('displayName');
+            }
             return _react2.default.createElement(
                 _MuiThemeProvider2.default,
                 { muiTheme: this.themes[this.state.theme] },
@@ -1113,8 +1141,8 @@ var Home = function (_React$Component) {
                         title: 'LogStream',
                         iconElementRight: _react2.default.createElement(
                             _FlatButton2.default,
-                            { label: 'GITHUB', href: 'https://github.com/usstwxy/logstream' },
-                            _react2.default.createElement('i', { className: 'fa fa-github', style: { marginRight: "-10px", marginLeft: "15px" } })
+                            { label: userName },
+                            _react2.default.createElement('i', { className: 'fa fa-user', style: { marginRight: "-10px", marginLeft: "15px" } })
                         )
                     }),
                     _react2.default.createElement(
@@ -1143,6 +1171,8 @@ var Home = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Home;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"../actions/chartsWindowActions":1,"../actions/logWindowActions":3,"../api":6,"./content":9,"./sideBar":12,"material-ui/AppBar":70,"material-ui/Dialog":84,"material-ui/Divider":86,"material-ui/Drawer":88,"material-ui/FlatButton":93,"material-ui/IconButton":97,"material-ui/Paper":108,"material-ui/RaisedButton":113,"material-ui/Slider":115,"material-ui/Subheader":117,"material-ui/Tabs":124,"material-ui/TextField":130,"material-ui/styles/MuiThemeProvider":312,"material-ui/styles/baseThemes/darkBaseTheme":313,"material-ui/styles/baseThemes/lightBaseTheme":314,"material-ui/styles/colors":315,"material-ui/styles/getMuiTheme":316,"material-ui/svg-icons/action/grade":321,"material-ui/svg-icons/content/drafts":322,"material-ui/svg-icons/content/inbox":323,"material-ui/svg-icons/content/send":324,"react":"react"}],11:[function(require,module,exports){
 (function (process){
@@ -1274,9 +1304,10 @@ var MsgHeader = function (_React$Component) {
                                     _react2.default.createElement(
                                         _DropDownMenu2.default,
                                         { value: this.props.level, onChange: this.handleLevelChange, labelStyle: { marginTop: "4px" }, style: { marginBottom: "16px" } },
-                                        _react2.default.createElement(_MenuItem2.default, { value: 0, primaryText: 'Log' }),
-                                        _react2.default.createElement(_MenuItem2.default, { value: 1, primaryText: 'Warn' }),
-                                        _react2.default.createElement(_MenuItem2.default, { value: 2, primaryText: 'Error' })
+                                        _react2.default.createElement(_MenuItem2.default, { value: 0, primaryText: 'Verbose' }),
+                                        _react2.default.createElement(_MenuItem2.default, { value: 1, primaryText: 'Info' }),
+                                        _react2.default.createElement(_MenuItem2.default, { value: 2, primaryText: 'Warning' }),
+                                        _react2.default.createElement(_MenuItem2.default, { value: 3, primaryText: 'Error' })
                                     )
                                 )
                             )
@@ -1300,26 +1331,53 @@ var MsgWindow = function (_React$Component2) {
     }
 
     _createClass(MsgWindow, [{
+        key: 'isSame',
+        value: function isSame(logs1, log2, tryCount) {
+            var n = Math.min(logs1.length, log2.length);
+            while (tryCount > 0) {
+                var i = Math.floor(Math.random() * n); // random 0..n-1
+                if (logs1[i] !== log2[i]) {
+                    return false;
+                }
+                tryCount--;
+            }
+            return true;
+        }
+    }, {
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(nextProps) {
+            var logsOld = this.props.logs;
+            var logsNew = nextProps.logs;
+            if (logsOld.length <= logsNew.length && this.isSame(logsOld, logsNew, 10)) {
+                if (typeof this.appendData === 'array') {
+                    this.appendData = this.appendData.concat(logsNew.slice(logsOld.length));
+                } else {
+                    this.appendData = logsNew.slice(logsOld.length);
+                }
+            } else {
+                this.appendData = null;
+            }
+        }
+    }, {
         key: 'render',
         value: function render() {
             if (window) {
-                var AceEditor = require('react-ace').default;
-                var brace = require('brace').default;
-                require('brace/mode/java');
-                require('brace/theme/github');
-
-                var logstr = this.props.logs.map(function (a) {
-                    return a.logtext;
-                }).join('\n');
-                var _this = this;
-
                 if (!this.editor) {
+                    var AceEditor = require('react-ace').default;
+                    var brace = require('brace').default;
+                    require('brace/mode/java');
+                    require('brace/theme/github');
+
+                    var logstr = this.props.logs.map(function (a) {
+                        return a.logtext;
+                    }).join('\n');
+                    var _this = this;
                     this.ace = _react2.default.createElement(AceEditor, {
-                        mode: 'java',
+                        mode: 'text',
                         theme: 'github',
                         readOnly: true,
                         name: 'UNIQUE_ID_OF_DIV',
-                        editorProps: { $blockScrolling: true },
+                        editorProps: { $blockScrolling: Infinity },
                         value: logstr,
                         cursorStart: -1,
                         onLoad: function onLoad(editor) {
@@ -1330,18 +1388,52 @@ var MsgWindow = function (_React$Component2) {
                         fontSize: 14
                     });
                 } else {
-                    var row0 = this.editor.session.getLength() - 1;
-                    var col0 = this.editor.session.getLine(row0).length;
-                    var pos0 = this.editor.selection.getCursor();
+                    var now = Date.now();
 
-                    this.editor.setValue(logstr, 1);
+                    if (!this.appendData) {
+                        // refresh all data
+                        console.log('updating...');
 
-                    if (pos0.row === row0 && pos0.column === col0) {
-                        var row1 = this.editor.session.getLength() - 1;
-                        var col1 = this.editor.session.getLine(row1).length; // or simply Infinity;
-                        this.editor.gotoLine(row1 + 1, col1);
-                    } else {
-                        this.editor.gotoLine(pos0.row + 1, pos0.column);
+                        var row0 = this.editor.session.getLength() - 1;
+                        var col0 = this.editor.session.getLine(row0).length;
+                        var pos0 = this.editor.selection.getCursor();
+
+                        var logstr = this.props.logs.map(function (a) {
+                            return a.logtext;
+                        }).join('\n');
+                        this.editor.session.setValue(logstr, 1);
+
+                        if (pos0.row === row0 && pos0.column === col0) {
+                            var row1 = this.editor.session.getLength() - 1;
+                            var col1 = this.editor.session.getLine(row1).length; // or simply Infinity;
+                            this.editor.gotoLine(row1 + 1, col1);
+                        } else {
+                            this.editor.gotoLine(pos0.row + 1, pos0.column);
+                        }
+
+                        console.log('cost', Date.now() - now);
+                    } else if (this.appendData.length > 0) {
+                        // just append the data to tail
+                        console.log('appending...');
+
+                        var row0 = this.editor.session.getLength() - 1;
+                        var col0 = this.editor.session.getLine(row0).length;
+                        var pos0 = this.editor.selection.getCursor();
+
+                        var logstr = this.appendData.map(function (a) {
+                            return a.logtext;
+                        }).join('\n');
+                        this.editor.session.insert({ row: this.editor.session.getLength(), column: 0 }, "\n" + logstr);
+
+                        if (pos0.row === row0 && pos0.column === col0) {
+                            var row1 = this.editor.session.getLength() - 1;
+                            var col1 = this.editor.session.getLine(row1).length; // or simply Infinity;
+                            this.editor.gotoLine(row1 + 1, col1);
+                        } else {
+                            this.editor.gotoLine(pos0.row + 1, pos0.column);
+                        }
+
+                        console.log('cost', '' + (Date.now() - now) + 'ms, ', 'line number:', this.editor.session.getLength());
                     }
                 }
                 return this.ace;

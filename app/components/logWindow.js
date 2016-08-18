@@ -45,9 +45,10 @@ class MsgHeader extends React.Component {
                         <td style={{width:"100px"}}> <DatePicker hintText="End date" value={this.props.dateEnd} onChange={this.handleEndDateChange} style={{marginRight:"10px"}} textFieldStyle={{width:"100%"}}/> </td>
                         <td>
                             <DropDownMenu value={this.props.level} onChange={this.handleLevelChange} labelStyle={{marginTop:"4px"}} style={{marginBottom:"16px"}}>
-                                <MenuItem value={0} primaryText="Log" />
-                                <MenuItem value={1} primaryText="Warn" />
-                                <MenuItem value={2} primaryText="Error" />
+                                <MenuItem value={0} primaryText="Verbose" />
+                                <MenuItem value={1} primaryText="Info" />
+                                <MenuItem value={2} primaryText="Warning" />
+                                <MenuItem value={3} primaryText="Error" />
                             </DropDownMenu>
                         </td>
                     </tr></tbody></table>
@@ -58,23 +59,48 @@ class MsgHeader extends React.Component {
 }
 
 class MsgWindow extends React.Component {
+    isSame(logs1, log2, tryCount) {
+        var n = Math.min(logs1.length, log2.length);
+        while (tryCount > 0) {
+            var i = Math.floor(Math.random() * n); // random 0..n-1
+            if (logs1[i] !== log2[i]) {
+                return false;
+            }
+            tryCount--;
+        }
+        return true;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        var logsOld = this.props.logs;
+        var logsNew = nextProps.logs;
+        if (logsOld.length <= logsNew.length && this.isSame(logsOld, logsNew, 10)) {
+            if (typeof(this.appendData) === 'array') {
+                this.appendData = this.appendData.concat(logsNew.slice(logsOld.length));
+            }else {
+                this.appendData = logsNew.slice(logsOld.length);
+            }
+        }else {
+            this.appendData = null;
+        }
+    }
+
     render() {
         if (window) {
-            var AceEditor = require('react-ace').default;
-            var brace = require('brace').default;
-            require('brace/mode/java');
-            require('brace/theme/github');
-            
-            var logstr = this.props.logs.map(a => a.logtext).join('\n');
-            var _this = this;
-   
             if (!this.editor) { 
+                var AceEditor = require('react-ace').default;
+                var brace = require('brace').default;
+                require('brace/mode/java');
+                require('brace/theme/github');
+
+                var logstr = this.props.logs.map(a => a.logtext).join('\n');
+                var _this = this;
                 this.ace = <AceEditor
-                    mode="java"
+                    mode="text"
                     theme="github"
                     readOnly={true}
                     name="UNIQUE_ID_OF_DIV"
-                    editorProps={{ $blockScrolling: true }}
+                    editorProps={{ $blockScrolling: Infinity }}
                     value={logstr}
                     cursorStart={-1}
                     onLoad={ (editor) => { _this.editor = editor; } }
@@ -83,18 +109,46 @@ class MsgWindow extends React.Component {
                     fontSize={14}
                     />; 
             }else {
-                var row0 = this.editor.session.getLength() - 1;
-                var col0 = this.editor.session.getLine(row0).length;
-                var pos0 = this.editor.selection.getCursor();
+                var now = Date.now();
 
-                this.editor.setValue(logstr, 1);
+                if (!this.appendData) { // refresh all data
+                    console.log('updating...');
 
-                if (pos0.row === row0 && pos0.column === col0) {
-                    var row1 = this.editor.session.getLength() - 1;
-                    var col1 = this.editor.session.getLine(row1).length // or simply Infinity;
-                    this.editor.gotoLine(row1 + 1, col1);
-                }else {
-                    this.editor.gotoLine(pos0.row + 1, pos0.column);
+                    var row0 = this.editor.session.getLength() - 1;
+                    var col0 = this.editor.session.getLine(row0).length;
+                    var pos0 = this.editor.selection.getCursor();
+
+                    var logstr = this.props.logs.map(a => a.logtext).join('\n');
+                    this.editor.session.setValue(logstr, 1);
+                    
+                    if (pos0.row === row0 && pos0.column === col0) {
+                        var row1 = this.editor.session.getLength() - 1;
+                        var col1 = this.editor.session.getLine(row1).length // or simply Infinity;
+                        this.editor.gotoLine(row1 + 1, col1);
+                    }else {
+                        this.editor.gotoLine(pos0.row + 1, pos0.column);
+                    }
+
+                    console.log('cost', Date.now() - now);
+                }else if (this.appendData.length > 0) { // just append the data to tail
+                    console.log('appending...');
+
+                    var row0 = this.editor.session.getLength() - 1;
+                    var col0 = this.editor.session.getLine(row0).length;
+                    var pos0 = this.editor.selection.getCursor();
+
+                    var logstr = this.appendData.map(a => a.logtext).join('\n');
+                    this.editor.session.insert({row: this.editor.session.getLength(), column: 0}, "\n" + logstr);
+                    
+                    if (pos0.row === row0 && pos0.column === col0) {
+                        var row1 = this.editor.session.getLength() - 1;
+                        var col1 = this.editor.session.getLine(row1).length // or simply Infinity;
+                        this.editor.gotoLine(row1 + 1, col1);
+                    }else {
+                        this.editor.gotoLine(pos0.row + 1, pos0.column);
+                    }
+
+                    console.log('cost', '' + (Date.now() - now) + 'ms, ', 'line number:', this.editor.session.getLength());
                 }
             }
             return this.ace;
