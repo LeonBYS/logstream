@@ -1093,14 +1093,13 @@ var Home = function (_React$Component) {
             });
             this.socket.on('log', function (data) {
                 //console.log('log coming', data);
+                _this2.savedLogs = _this2.savedLogs.concat(data);
                 var now = Date.now();
                 if (_this2.lastLogTimestamp === null || now - _this2.lastLogTimestamp > 500) {
                     _this2.lastLogTimestamp = now;
                     console.log('fire', _this2.savedLogs.length);
                     _logWindowActions2.default.getLogsSuccessAppend(_this2.savedLogs);
                     _this2.savedLogs = [];
-                } else {
-                    _this2.savedLogs = _this2.savedLogs.concat(data);
                 }
             });
             this.socket.on('chart', function (data) {
@@ -1392,7 +1391,7 @@ var MsgWindow = function (_React$Component2) {
                         }
 
                         console.log('cost', Date.now() - now);
-                    } else {
+                    } else if (this.appendData.length > 0) {
                         // just append the data to tail
                         console.log('appending...');
 

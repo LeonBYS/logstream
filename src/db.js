@@ -4,6 +4,11 @@ var Redis = new require('ioredis');
 var request = require("request");
 
 
+var config = {
+    MAX_LOGS_COUNT: 100000,
+    PROB_CHECK_LOGS: 0.001
+};
+
 
 var dbRedis = {
     connect: function(host, port, password, tls) {
@@ -93,12 +98,16 @@ var dbRedis = {
      * @param {string} logname
      * @param {string} logtext
      * @param {number} timestamp
+     * @param {number} level
      * @param {function(err, result)} callback 
      */
-    addLog: function (project, logname, logtext, timestamp, level,  callback) {
+    addLog: function (project, logname, logtext, timestamp, level, callback) {
         var lkey = this.prefix + 'logs:' + project + ':' + logname;
         var lval = JSON.stringify({ timestamp: timestamp, logtext: logtext, level:level });
-        this.client.lpush(lkey, lval, callback);
+        var pipe = this.client.pipeline();
+        pipe.lpush(lkey, lval);
+        pipe.ltrim(lkey, 0, config.MAX_LOGS_COUNT);
+        pipe.exec(callback);
     },
 
     /**

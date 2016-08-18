@@ -80,14 +80,13 @@ class Home extends React.Component {
         });
         this.socket.on('log', (data) => {
             //console.log('log coming', data);
+            this.savedLogs = this.savedLogs.concat(data);
             var now = Date.now();
             if (this.lastLogTimestamp === null || now - this.lastLogTimestamp > 500) {
                 this.lastLogTimestamp = now;
                 console.log('fire', this.savedLogs.length);
                 LogWindowActions.getLogsSuccessAppend(this.savedLogs);
                 this.savedLogs = [];
-            }else {
-                this.savedLogs = this.savedLogs.concat(data);
             }
         });
         this.socket.on('chart', (data) => {

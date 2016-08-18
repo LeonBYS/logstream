@@ -13,6 +13,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var db = require('./src/db').Database('redis');
 var Connections = require('./src/connections').Connections;
+var LogCounter = require('./src/utils').LogCounter;
 /* react */
 var swig = require('swig');
 var React = require('react');
@@ -122,6 +123,7 @@ db.connect(
 
 
 var connections = new Connections(http);
+var logCounter = new LogCounter(500);
 
 var LogStream = require('./drivers/nodejs/logstream').LogStream;
 var logstream = new LogStream(
@@ -211,11 +213,24 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
     //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
     if (logtext) {
-        db.addLog(project, logname, logtext, timestamp, level, (err, result) => {
-            var logs = [{timestamp: timestamp, logtext: logtext}];
-            connections.publish('log', project, logname, logs);
-            returnResult(res, req.body)(err, result);
-        });
+        var logbranch = project + '/' + logname;
+        logCounter.inc(logbranch);
+        var count = logCounter.count(logbranch);
+        var probality = 100.0 / count;
+        var publish = Math.random() < probality;
+
+        if (publish) {
+            db.addLog(project, logname, logtext, timestamp, level, (err, result) => {
+                var logs = [{timestamp: timestamp, logtext: logtext, level:level}];
+                if (probality < 1.0) {
+                    logs[0].logtext = '[probality: ' + Math.round(probality * 100.0) / 100.0 + '] ' + logs[0].logtext;
+                }
+                connections.publish('log', project, logname, logs);
+                returnResult(res, req.body)(err, result);
+            });
+        }else {
+            // do nothing...
+        }
     }else {
         res.status(500).send({error:'invalid log'});
     }

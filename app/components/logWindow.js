@@ -130,7 +130,7 @@ class MsgWindow extends React.Component {
                     }
 
                     console.log('cost', Date.now() - now);
-                }else { // just append the data to tail
+                }else if (this.appendData.length > 0) { // just append the data to tail
                     console.log('appending...');
 
                     var row0 = this.editor.session.getLength() - 1;
