@@ -160,3 +160,24 @@ describe('API charts', function() {
     });
 });
 
+describe('Others', function() {
+    it('response to GET /api/open-status-chart', (done) => {
+        request(app).get('/api/open-status-chart').expect(200, done);
+    });
+    
+    it('response to GET /api/close-status-chart', (done) => {
+        request(app).get('/api/close-status-chart').expect(200, done);
+    });
+
+    it('response to GET /login_failed', (done) => {
+        request(app).get('/login_failed').expect(200, done);
+    });
+
+    it('response to GET /login', (done) => {
+        request(app).get('/login').expect(500, done);
+    });
+
+    it('response to GET /auth/openid/return', (done) => {
+        request(app).get('/auth/openid/return').expect(500, done);
+    });
+});

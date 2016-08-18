@@ -38,10 +38,9 @@ var config = require('./config');
 var users = [];
 
 var findByEmail = function (email, fn) {
-    for (var i = 0, len = users.length; i < len; i++) {
-        var user = users[i];
-        if (user.email === email) {
-            return fn(null, user);
+    for (var i = 0; i < users.length; i++) {
+        if (user[i].email === email) {
+            return fn(null, user[i]);
         }
     }
     return fn(null, null);
@@ -52,9 +51,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-    findByEmail(id, function (err, user) {
-        done(err, user);
-    });
+    findByEmail(id, done);
 });
 
 // Use the OIDCStrategy within Passport. (Section 2) 
@@ -62,37 +59,39 @@ passport.deserializeUser(function (id, done) {
 //   Strategies in passport require a `validate` function, which accept
 //   credentials (in this case, an OpenID identifier), and invoke a callback
 //   with a user object.
-passport.use(new OIDCStrategy({
-    callbackURL: config.creds.returnURL,
-    realm: config.creds.realm,
-    clientID: config.creds.clientID,
-    clientSecret: config.creds.clientSecret,
-    oidcIssuer: config.creds.issuer,
-    identityMetadata: config.creds.identityMetadata,
-    skipUserProfile: config.creds.skipUserProfile,
-    responseType: config.creds.responseType,
-    responseMode: config.creds.responseMode
-    },
-    function (iss, sub, profile, accessToken, refreshToken, done) {
-        if (!profile.email) {
-            return done(new Error("No email found"), null);
-        }
-        // asynchronous verification, for effect...
-        process.nextTick(function () {
-            findByEmail(profile.email, function (err, user) {
-                if (err) {
-                    return done(err);
-                }
-                if (!user) {
-                    // "Auto-registration"
-                    users.push(profile);
-                    return done(null, profile);
-                }
-                return done(null, user);
+if (config.creds.clientID) {
+    passport.use(new OIDCStrategy({
+        callbackURL: config.creds.returnURL,
+        realm: config.creds.realm,
+        clientID: config.creds.clientID,
+        clientSecret: config.creds.clientSecret,
+        oidcIssuer: config.creds.issuer,
+        identityMetadata: config.creds.identityMetadata,
+        skipUserProfile: config.creds.skipUserProfile,
+        responseType: config.creds.responseType,
+        responseMode: config.creds.responseMode
+        },
+        function (iss, sub, profile, accessToken, refreshToken, done) {
+            if (!profile.email) {
+                return done(new Error("No email found"), null);
+            }
+            // asynchronous verification, for effect...
+            process.nextTick(function () {
+                findByEmail(profile.email, function (err, user) {
+                    if (err) {
+                        return done(err);
+                    }
+                    if (!user) {
+                        // "Auto-registration"
+                        users.push(profile);
+                        return done(null, profile);
+                    }
+                    return done(null, user);
+                });
             });
-        });
-    }
-));
+        }
+    ));
+}
 
 
 
@@ -399,14 +398,6 @@ app.get('/auth/openid/return',
         console.log('We received a return from AzureAD. GET');
         res.redirect('/');
     });
-
-app.post('/auth/openid/return',
-    passport.authenticate('azuread-openidconnect', { failureRedirect: '/login_failed' }),
-    function (req, res) {
-        console.log('We received a return from AzureAD. POST');
-        res.redirect('/');
-    });
-
 
 app.use(function (req, res) {
     Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
