@@ -1434,7 +1434,7 @@ var MsgWindow = function (_React$Component2) {
 
                         var logstr = this.props.logs.map(function (a) {
                             return a.logtext;
-                        }).join('\n');
+                        }).join('');
                         this.editor.session.setValue(logstr, 1);
 
                         if (pos0.row === row0 && pos0.column === col0) {
@@ -1456,8 +1456,8 @@ var MsgWindow = function (_React$Component2) {
 
                         var logstr = this.appendData.map(function (a) {
                             return a.logtext;
-                        }).join('\n');
-                        this.editor.session.insert({ row: this.editor.session.getLength(), column: 0 }, "\n" + logstr);
+                        }).join('');
+                        this.editor.session.insert({ row: this.editor.session.getLength(), column: 0 }, "" + logstr);
 
                         if (pos0.row === row0 && pos0.column === col0) {
                             var row1 = this.editor.session.getLength() - 1;
@@ -2015,6 +2015,7 @@ var LogWindowStore = function () {
     }, {
         key: 'convertLogsToLines',
         value: function convertLogsToLines(logs) {
+            return logs;
             var lines = logs.reduce(function (a, b) {
                 return a + b.logtext;
             }, '').split('\n');
@@ -2039,6 +2040,8 @@ var LogWindowStore = function () {
         key: 'mergeLines',
         value: function mergeLines(lines0, lines1) {
             // merge two ordered line list
+            if (lines0.length === 0) return lines1;
+            if (lines1.length === 0) return lines0;
             // a good solution is merge sort... but we naviely sort the added array now
             var newLines = lines0.concat(lines1);
             if (lines0.length > 0 && lines1.length > 0 && lines1[0].timestamp >= lines0[lines0.length - 1].timestamp) {

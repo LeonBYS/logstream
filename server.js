@@ -209,7 +209,7 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
     }
 
     if (logtext) {        
-        console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
+        //console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
         //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
         var logbranch = project + '/' + logname;
