@@ -118,7 +118,7 @@ class MsgWindow extends React.Component {
                     var col0 = this.editor.session.getLine(row0).length;
                     var pos0 = this.editor.selection.getCursor();
 
-                    var logstr = this.props.logs.map(a => a.logtext).join('\n');
+                    var logstr = this.props.logs.map(a => a.logtext).join('');
                     this.editor.session.setValue(logstr, 1);
                     
                     if (pos0.row === row0 && pos0.column === col0) {
@@ -137,8 +137,8 @@ class MsgWindow extends React.Component {
                     var col0 = this.editor.session.getLine(row0).length;
                     var pos0 = this.editor.selection.getCursor();
 
-                    var logstr = this.appendData.map(a => a.logtext).join('\n');
-                    this.editor.session.insert({row: this.editor.session.getLength(), column: 0}, "\n" + logstr);
+                    var logstr = this.appendData.map(a => a.logtext).join('');
+                    this.editor.session.insert({row: this.editor.session.getLength(), column: 0}, "" + logstr);
                     
                     if (pos0.row === row0 && pos0.column === col0) {
                         var row1 = this.editor.session.getLength() - 1;
