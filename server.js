@@ -39,8 +39,8 @@ var users = [];
 
 var findByEmail = function (email, fn) {
     for (var i = 0; i < users.length; i++) {
-        if (user[i].email === email) {
-            return fn(null, user[i]);
+        if (users[i].email === email) {
+            return fn(null, users[i]);
         }
     }
     return fn(null, null);
@@ -331,7 +331,7 @@ app.post('/api/*/*/charts/*', checkAPICall, function(req, res) {
     var timestamp = req.body.timestamp || Date.now();
     var chartType = req.body.chartType;
     var data = req.body.data;
-    if (!chartType || ['line'].indexOf(chartType) >= 0) {
+    if (!chartType || ['line', 'bar'].indexOf(chartType) >= 0) {
         db.addChartData(project, logname, chartname, timestamp, chartType, data, (err, result) => {
             var appendData = Object.assign({
                 chartname: chartname,
