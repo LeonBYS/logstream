@@ -6,14 +6,7 @@ import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 
 var Line = null;
-
-function rgb2hex(rgb){
- rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
- return (rgb && rgb.length === 4) ? "#" +
-  ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
-  ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
-  ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
-}
+var Bar = null;
 
 const defaultColors = [
     { // red
@@ -92,14 +85,12 @@ class Chart extends React.Component {
     }
 
     componentDidMount() {
-        //console.log('mount chart', this.props.name);
     }
 
     componentWillUnmount() {
         if (this.timeoutID) {
             clearTimeout(this.timeoutID);
         }
-        //console.log('unmount chart', this.props.name);
     }
 
 
@@ -112,7 +103,7 @@ class Chart extends React.Component {
         this.setState(state);
     }
 
-    makeDataInSpan(data, x_start, x_end) {
+    makeDataInSpanLine(data, x_start, x_end) {
         var dataNew = [];
         
         for (var i=0; i<data.length; i++) {
@@ -131,7 +122,7 @@ class Chart extends React.Component {
                     dataNew[dataNew.length-1] = {x: sum_x/count, y:sum_y/count};
                 }
                 if (i<data.length) dataNew.push(data[i]);
-            } 
+            }
         }
         dataNew.unshift({x:x_start, y:null});
         dataNew.push({x:x_end, y:null});
@@ -142,7 +133,7 @@ class Chart extends React.Component {
         return dataNew;
     }
 
-    convertData () {
+    convertDataLine () {
         if (!this.props.data) return null;
         var tnow = Date.now();
         tnow += -(tnow % this.state.timeSpanBase);
@@ -168,9 +159,31 @@ class Chart extends React.Component {
             }, defaultColors[i++]));
         }
         for (var i=0; i<data.datasets.length; i++) {
-            data.datasets[i].data = this.makeDataInSpan(data.datasets[i].data, -this.state.timeSpan, 1);
+            data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
         }
         return data;
+    }
+
+    convertDataBar() {
+        if (!this.props.data) return null;
+        var now = Date.now();
+        var dt = this.state.timeSpan * this.state.timeSpanBase;
+        var labels = Object.keys(this.props.data).sort();
+        var datasets = [{
+            backgroundColor: defaultColors.slice(0, labels.length).map(x => x.backgroundColor),
+            borderColor: defaultColors.slice(0, labels.length).map(x => x.backgroundColor),
+            borderWidth: 1,
+            data: labels.map(x => this.props.data[x]).map(L => L.filter(o => now-o[1] <= dt).map(o => o[0]).reduce((x, y) => x+y, 0)).map(x => x===0 ? 0.1 : x)
+        }];
+        return {labels: labels, datasets: datasets}
+    }
+
+    convertData() {
+        if (this.props.type === 'line') {
+            return this.convertDataLine();
+        }else if (this.props.type === 'bar') {
+            return this.convertDataBar();
+        }
     }
 
     handleChange(event, index, value) {
@@ -185,44 +198,40 @@ class Chart extends React.Component {
 
     render () {
         var data = this.convertData();
-        //if (!data) data = [];
+        var options = { animation : false };
+        if(!window || !data) { return <div/>; }
 
-        var options = {
-            scales: {
-                xAxes: [{
-                    type: 'linear',
-                    position: 'bottom'
-                }]
-            },
-            animation : false
-        };
-
-        if(!window || !data) { return <div/>; } 
-
-        //console.log('render chart', this.props.name, data);
-
-        if (this.props.type === 'line') {
-            if (this.timeoutID) {
-                clearTimeout(this.timeoutID);
-            }
-            this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
-            if (!Line) {
-                Line = require('react-chartjs-2').Line;
-            }
-            return (
-                <div>
-                    <h2> {this.props.name} </h2>
-                    <DropDownMenu value={this.state.timeSpanIndex} onChange={this.handleChange}>
-                        <MenuItem value={1} primaryText="Last 60 seconds" />
-                        <MenuItem value={2} primaryText="Last 60 minutes" />
-                        <MenuItem value={3} primaryText="Last 24 hour" />
-                    </DropDownMenu>
-                    <Line data={data} options={options} redraw={false} height={50}/>
-                </div>
-            );
-        }else {
-            return <h1> Invalid chart types! </h1>;
+        if (this.timeoutID) {
+            clearTimeout(this.timeoutID);
         }
+        this.timeoutID = setTimeout(() => {this.forceUpdate();}, this.state.timeSpanBase);
+        
+        if (!Line || !Bar) {
+            Line = require('react-chartjs-2').Line;
+            Bar = require('react-chartjs-2').Bar;
+        }
+
+        var chart = <h1> Invalid chart types! </h1>;
+        if (this.props.type === 'line') {
+            options.scales = {xAxes: [{type: 'linear', position: 'bottom'}]};
+            chart = <Line data={data} options={options} redraw={false} height={50}/>;
+        }else if (this.props.type === 'bar') {
+            options.legend = {display: false};
+            options.scales = {yAxes: [{type: 'logarithmic', position: 'left'}]};
+            chart = <div style={{paddingTop:"10px"}}> <Bar data={data} options={options} redraw={false} height={100}/> </div>;
+        }
+
+        return (
+            <div>
+                <h2> {this.props.name} </h2>
+                <DropDownMenu value={this.state.timeSpanIndex} onChange={this.handleChange}>
+                    <MenuItem value={1} primaryText="Last 60 seconds" />
+                    <MenuItem value={2} primaryText="Last 60 minutes" />
+                    <MenuItem value={3} primaryText="Last 24 hour" />
+                </DropDownMenu>
+                {chart}
+            </div>
+        );
     } // end render
 }
 
@@ -236,7 +245,6 @@ class ChartsWindow extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        //console.log('will recieve props');
         this.props = nextProps;
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);
@@ -244,7 +252,6 @@ class ChartsWindow extends React.Component {
     }
 
     componentDidMount() {
-        //console.log('did mount');
         ChartsWindowStore.listen(this.onChange);
         process.nextTick(() => {
             ChartsWindowActions.getCharts(this.props.project, this.props.logname);
@@ -256,7 +263,6 @@ class ChartsWindow extends React.Component {
     }
 
     onChange(state) {
-        //console.log('on change', state);
         this.setState(state);
     }
 

@@ -418,11 +418,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Line = null;
-
-function rgb2hex(rgb) {
-    rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
-    return rgb && rgb.length === 4 ? "#" + ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2) + ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2) : '';
-}
+var Bar = null;
 
 var defaultColors = [{ // red
     backgroundColor: "rgba(247,70,74,0.2)",
@@ -483,16 +479,13 @@ var Chart = function (_React$Component) {
 
     _createClass(Chart, [{
         key: 'componentDidMount',
-        value: function componentDidMount() {
-            //console.log('mount chart', this.props.name);
-        }
+        value: function componentDidMount() {}
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
             if (this.timeoutID) {
                 clearTimeout(this.timeoutID);
             }
-            //console.log('unmount chart', this.props.name);
         }
     }, {
         key: 'changeTimeSpan',
@@ -505,8 +498,8 @@ var Chart = function (_React$Component) {
             this.setState(state);
         }
     }, {
-        key: 'makeDataInSpan',
-        value: function makeDataInSpan(data, x_start, x_end) {
+        key: 'makeDataInSpanLine',
+        value: function makeDataInSpanLine(data, x_start, x_end) {
             var dataNew = [];
 
             for (var i = 0; i < data.length; i++) {
@@ -536,8 +529,8 @@ var Chart = function (_React$Component) {
             return dataNew;
         }
     }, {
-        key: 'convertData',
-        value: function convertData() {
+        key: 'convertDataLine',
+        value: function convertDataLine() {
             var _this2 = this;
 
             if (!this.props.data) return null;
@@ -567,9 +560,51 @@ var Chart = function (_React$Component) {
                 }, defaultColors[i++]));
             }
             for (var i = 0; i < data.datasets.length; i++) {
-                data.datasets[i].data = this.makeDataInSpan(data.datasets[i].data, -this.state.timeSpan, 1);
+                data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
             }
             return data;
+        }
+    }, {
+        key: 'convertDataBar',
+        value: function convertDataBar() {
+            var _this3 = this;
+
+            if (!this.props.data) return null;
+            var now = Date.now();
+            var dt = this.state.timeSpan * this.state.timeSpanBase;
+            var labels = Object.keys(this.props.data).sort();
+            var datasets = [{
+                backgroundColor: defaultColors.slice(0, labels.length).map(function (x) {
+                    return x.backgroundColor;
+                }),
+                borderColor: defaultColors.slice(0, labels.length).map(function (x) {
+                    return x.backgroundColor;
+                }),
+                borderWidth: 1,
+                data: labels.map(function (x) {
+                    return _this3.props.data[x];
+                }).map(function (L) {
+                    return L.filter(function (o) {
+                        return now - o[1] <= dt;
+                    }).map(function (o) {
+                        return o[0];
+                    }).reduce(function (x, y) {
+                        return x + y;
+                    }, 0);
+                }).map(function (x) {
+                    return x === 0 ? 0.1 : x;
+                })
+            }];
+            return { labels: labels, datasets: datasets };
+        }
+    }, {
+        key: 'convertData',
+        value: function convertData() {
+            if (this.props.type === 'line') {
+                return this.convertDataLine();
+            } else if (this.props.type === 'bar') {
+                return this.convertDataBar();
+            }
         }
     }, {
         key: 'handleChange',
@@ -585,63 +620,65 @@ var Chart = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _this3 = this;
+            var _this4 = this;
 
             var data = this.convertData();
-            //if (!data) data = [];
-
-            var options = {
-                scales: {
-                    xAxes: [{
-                        type: 'linear',
-                        position: 'bottom'
-                    }]
-                },
-                animation: false
-            };
-
+            var options = { animation: false };
             if (!window || !data) {
                 return _react2.default.createElement('div', null);
             }
 
-            //console.log('render chart', this.props.name, data);
+            if (this.timeoutID) {
+                clearTimeout(this.timeoutID);
+            }
+            this.timeoutID = setTimeout(function () {
+                _this4.forceUpdate();
+            }, this.state.timeSpanBase);
 
+            if (!Line || !Bar) {
+                Line = require('react-chartjs-2').Line;
+                Bar = require('react-chartjs-2').Bar;
+            }
+
+            var chart = _react2.default.createElement(
+                'h1',
+                null,
+                ' Invalid chart types! '
+            );
             if (this.props.type === 'line') {
-                if (this.timeoutID) {
-                    clearTimeout(this.timeoutID);
-                }
-                this.timeoutID = setTimeout(function () {
-                    _this3.forceUpdate();
-                }, this.state.timeSpanBase);
-                if (!Line) {
-                    Line = require('react-chartjs-2').Line;
-                }
-                return _react2.default.createElement(
+                options.scales = { xAxes: [{ type: 'linear', position: 'bottom' }] };
+                chart = _react2.default.createElement(Line, { data: data, options: options, redraw: false, height: 50 });
+            } else if (this.props.type === 'bar') {
+                options.legend = { display: false };
+                options.scales = { yAxes: [{ type: 'logarithmic', position: 'left' }] };
+                chart = _react2.default.createElement(
                     'div',
-                    null,
-                    _react2.default.createElement(
-                        'h2',
-                        null,
-                        ' ',
-                        this.props.name,
-                        ' '
-                    ),
-                    _react2.default.createElement(
-                        _DropDownMenu2.default,
-                        { value: this.state.timeSpanIndex, onChange: this.handleChange },
-                        _react2.default.createElement(_MenuItem2.default, { value: 1, primaryText: 'Last 60 seconds' }),
-                        _react2.default.createElement(_MenuItem2.default, { value: 2, primaryText: 'Last 60 minutes' }),
-                        _react2.default.createElement(_MenuItem2.default, { value: 3, primaryText: 'Last 24 hour' })
-                    ),
-                    _react2.default.createElement(Line, { data: data, options: options, redraw: false, height: 50 })
-                );
-            } else {
-                return _react2.default.createElement(
-                    'h1',
-                    null,
-                    ' Invalid chart types! '
+                    { style: { paddingTop: "10px" } },
+                    ' ',
+                    _react2.default.createElement(Bar, { data: data, options: options, redraw: false, height: 100 }),
+                    ' '
                 );
             }
+
+            return _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    ' ',
+                    this.props.name,
+                    ' '
+                ),
+                _react2.default.createElement(
+                    _DropDownMenu2.default,
+                    { value: this.state.timeSpanIndex, onChange: this.handleChange },
+                    _react2.default.createElement(_MenuItem2.default, { value: 1, primaryText: 'Last 60 seconds' }),
+                    _react2.default.createElement(_MenuItem2.default, { value: 2, primaryText: 'Last 60 minutes' }),
+                    _react2.default.createElement(_MenuItem2.default, { value: 3, primaryText: 'Last 24 hour' })
+                ),
+                chart
+            );
         } // end render
 
     }]);
@@ -655,34 +692,32 @@ var ChartsWindow = function (_React$Component2) {
     function ChartsWindow(props) {
         _classCallCheck(this, ChartsWindow);
 
-        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
+        var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChartsWindow).call(this, props));
 
-        _this4.state = _chartsWindowStore2.default.getState();
-        _this4.onChange = _this4.onChange.bind(_this4);
-        _this4.componentWillReceiveProps = _this4.componentWillReceiveProps.bind(_this4);
-        return _this4;
+        _this5.state = _chartsWindowStore2.default.getState();
+        _this5.onChange = _this5.onChange.bind(_this5);
+        _this5.componentWillReceiveProps = _this5.componentWillReceiveProps.bind(_this5);
+        return _this5;
     }
 
     _createClass(ChartsWindow, [{
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            var _this5 = this;
+            var _this6 = this;
 
-            //console.log('will recieve props');
             this.props = nextProps;
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this5.props.project, _this5.props.logname);
+                _chartsWindowActions2.default.getCharts(_this6.props.project, _this6.props.logname);
             });
         }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
-            var _this6 = this;
+            var _this7 = this;
 
-            //console.log('did mount');
             _chartsWindowStore2.default.listen(this.onChange);
             process.nextTick(function () {
-                _chartsWindowActions2.default.getCharts(_this6.props.project, _this6.props.logname);
+                _chartsWindowActions2.default.getCharts(_this7.props.project, _this7.props.logname);
             });
         }
     }, {
@@ -693,24 +728,23 @@ var ChartsWindow = function (_React$Component2) {
     }, {
         key: 'onChange',
         value: function onChange(state) {
-            //console.log('on change', state);
             this.setState(state);
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this7 = this;
+            var _this8 = this;
 
             //console.log('charts window render!', this.state.charts);
             return _react2.default.createElement(
                 'div',
                 null,
                 this.state.charts.map(function (chartname) {
-                    var chart = _this7.state.chartsData[chartname];
+                    var chart = _this8.state.chartsData[chartname];
                     var data = chart ? chart.data : null;
                     var type = chart ? chart.type : null;
                     return _react2.default.createElement(Chart, {
-                        key: _this7.state.project + '/' + _this7.state.logname + '/chart/' + chartname,
+                        key: _this8.state.project + '/' + _this8.state.logname + '/chart/' + chartname,
                         name: chartname,
                         data: data,
                         type: type });
