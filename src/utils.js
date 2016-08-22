@@ -33,6 +33,9 @@ class LogCounter {
     }
 
     count(key) {
+        if (!this.table[key]) {
+            this.table[key] = new Counter(this.milliseconds);
+        }
         return this.table[key].count();
     }
 }

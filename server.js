@@ -150,7 +150,7 @@ function returnResult(res, successRet) {
     function ret(err, result) {
         res.setHeader('Content-Type', 'application/json');
         if (err) {
-            res.status(500).send({error:err});
+            res.status(400).send({error:err});
         }else {
             if (successRet) {
                 res.status(200).send(typeof(successRet) === 'string' ? successRet : JSON.stringify(successRet));
@@ -228,10 +228,10 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
                 returnResult(res, req.body)(err, result);
             });
         }else {
-            res.status(500).send({error:'too many logs!'});
+            res.status(400).send({error:'too many logs!'});
         }
     }else {
-        res.status(500).send({error:'invalid log'});
+        res.status(400).send({error:'invalid log'});
     }
 });
 
@@ -266,11 +266,11 @@ app.post('/api/*/*/commands', checkAPICall, function (req, res) {
     var commands = req.body;
 
     if (!commands || !Array.isArray(commands)) {
-        res.status(500).send({error: 'command list is needed!'});
+        res.status(400).send({error: 'command list is needed!'});
     }else {
         for (var i=0; i<commands.length; i++) {
             if (!commands[i].name || commands[i].name.length === 0) {
-                res.status(500).send({error: 'command list is needed!'});
+                res.status(400).send({error: 'command list is needed!'});
                 return;
             }
             commands[i].url = commands[i].url || '#';
@@ -342,7 +342,7 @@ app.post('/api/*/*/charts/*', checkAPICall, function(req, res) {
             returnResult(res, req.body)(err, result);
         });   
     }else {
-        res.status(500).send({error:'invalid chart type'});
+        res.status(400).send({error:'invalid chart type'});
     }
 });
 
@@ -358,9 +358,17 @@ app.get('/api/open-status-chart', (req, res) => {
     if (!intervalID) {
         intervalID = setInterval(
             () => {
+                var branchs = connections.getFocusedBranchs();
                 logstream.addChartData('Server-Status', [
-                    {key:'Websocket-Count', value:connections.count()}
+                    {key: 'Websocket-Count', value: connections.countSession()},
+                    {key: 'Subscriptions-Count', value: connections.countSubscription()},
+                    {key: 'Focused-Branch-Count', value: branchs.length}
                 ]);
+                var branchEmitCount = [];
+                for (var i=0; i<branchs.length; i++) {
+                    branchEmitCount.push({key: branchs[i], value: connections.getBranchEmitCount(branchs[i])});
+                }
+                logstream.addChartData('Channel-Emit-Count', branchEmitCount);
             },
             1000
         );
@@ -373,6 +381,10 @@ app.get('/api/close-status-chart', (req, res) => {
         clearInterval(intervalID);
         intervalID = null;
     }
+    res.status(200).send();
+});
+
+app.get('/api/test', (req, res) => {
     res.status(200).send();
 });
 
@@ -402,7 +414,7 @@ app.get('/auth/openid/return',
 app.use(function (req, res) {
     Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
         if (err) {
-            res.status(500).send(err.message)
+            res.status(400).send(err.message)
         } else if (redirectLocation) {
             res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
         } else if (renderProps) {

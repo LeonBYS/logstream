@@ -537,31 +537,60 @@ var Chart = function (_React$Component) {
             var tnow = Date.now();
             tnow += -(tnow % this.state.timeSpanBase);
             var data = { datasets: [] };
+
             var i = 0;
             for (var key in this.props.data) {
-                data.datasets.push(Object.assign({
-                    label: key,
-                    data: this.props.data[key].map(function (o) {
-                        return { x: (o[1] - tnow) / _this2.state.timeSpanBase, y: o[0] };
-                    }).sort(function (a, b) {
-                        return a.x - b.x;
-                    }),
-                    // style options
-                    borderCapStyle: 'butt',
-                    fill: false,
-                    borderDash: [],
-                    borderDashOffset: 0.0,
-                    borderJoinStyle: 'miter',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 5,
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 1,
-                    pointHitRadius: 10
-                }, defaultColors[i++]));
+                var chartData = this.makeDataInSpanLine(this.props.data[key].map(function (o) {
+                    return { x: (o[1] - tnow) / _this2.state.timeSpanBase, y: o[0] };
+                }).sort(function (a, b) {
+                    return a.x - b.x;
+                }), -this.state.timeSpan, 1);
+
+                if (chartData.length > 2) {
+                    data.datasets.push(Object.assign({
+                        label: key,
+                        data: chartData,
+                        // style options
+                        borderCapStyle: 'butt',
+                        fill: false,
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        pointHoverBorderWidth: 2,
+                        pointRadius: 1,
+                        pointHitRadius: 10
+                    }, defaultColors[i++]));
+                }
             }
-            for (var i = 0; i < data.datasets.length; i++) {
-                data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
-            }
+
+            // for (var i=0; i<data.datasets.length; i++) {
+            //     data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
+            // }
+
+            // var i = 0;
+            // for (var key in this.props.data) {
+            //     data.datasets.push(Object.assign({
+            //         label: key,
+            //         data: this.props.data[key]
+            //                 .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
+            //                 .sort((a, b) => a.x - b.x),
+            //         // style options
+            //         borderCapStyle: 'butt',
+            //         fill:false,
+            //         borderDash: [],
+            //         borderDashOffset: 0.0,
+            //         borderJoinStyle: 'miter',
+            //         pointBorderWidth: 1,
+            //         pointHoverRadius: 5,
+            //         pointHoverBorderWidth: 2,
+            //         pointRadius: 1,
+            //         pointHitRadius: 10,
+            //     }, defaultColors[i++]));
+            // }
+
+
             return data;
         }
     }, {
@@ -933,7 +962,7 @@ var Content = function (_React$Component2) {
                     _react2.default.createElement(
                         'h4',
                         { style: { marginTop: "20px", marginBottom: "50px" } },
-                        'View, manage, analyze your app logs centrally in real time :)'
+                        'A Simple & Flexible UI Service :)'
                     ),
                     _react2.default.createElement(_RaisedButton2.default, {
                         label: 'Github',
@@ -1861,7 +1890,9 @@ var ChartsWindowStore = function () {
         value: function onGetChartsSuccess(data) {
             this.project = data.project;
             this.logname = data.logname;
-            this.charts = data.charts;
+            this.charts = data.charts.sort(function (a, b) {
+                return a < b ? -1 : 1;
+            });
             this.chartData = {};
         }
     }, {
@@ -2183,7 +2214,11 @@ var SideBarStore = function () {
     }, {
         key: 'onGetProjectsSuccess',
         value: function onGetProjectsSuccess(data) {
-            this.originProjects = data;
+            this.originProjects = data.map(function (p) {
+                return { name: p.name, lognames: p.lognames.sort(function (a, b) {
+                        return a < b ? -1 : 1;
+                    }) };
+            });
             this.updateProjects();
         }
     }, {
