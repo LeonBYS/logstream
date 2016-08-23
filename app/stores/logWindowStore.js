@@ -27,6 +27,7 @@ class LogWindowStore {
     }
 
     convertLogsToLines(logs) {
+        return logs;
         var lines = logs.reduce((a, b) => a + b.logtext, '').split('\n');
         if (lines[lines.length - 1].length === 0) { lines.pop(); }
 
@@ -44,6 +45,8 @@ class LogWindowStore {
     }
 
     mergeLines(lines0, lines1) { // merge two ordered line list
+        if (lines0.length === 0) return lines1;
+        if (lines1.length === 0) return lines0;
         // a good solution is merge sort... but we naviely sort the added array now
         var newLines = lines0.concat(lines1);
         if (lines0.length > 0 && lines1.length > 0 && lines1[0].timestamp >= lines0[lines0.length - 1].timestamp) {

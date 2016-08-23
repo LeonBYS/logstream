@@ -37,7 +37,7 @@ class SideBarStore {
     }
 
     onGetProjectsSuccess(data) {
-        this.originProjects = data;
+        this.originProjects = data.map(p => ({name:p.name, lognames:p.lognames.sort((a,b) => a<b? -1:1)}));
         this.updateProjects();
     }
 

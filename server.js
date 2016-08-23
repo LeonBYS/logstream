@@ -38,10 +38,9 @@ var config = require('./config');
 var users = [];
 
 var findByEmail = function (email, fn) {
-    for (var i = 0, len = users.length; i < len; i++) {
-        var user = users[i];
-        if (user.email === email) {
-            return fn(null, user);
+    for (var i = 0; i < users.length; i++) {
+        if (users[i].email === email) {
+            return fn(null, users[i]);
         }
     }
     return fn(null, null);
@@ -52,9 +51,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-    findByEmail(id, function (err, user) {
-        done(err, user);
-    });
+    findByEmail(id, done);
 });
 
 // Use the OIDCStrategy within Passport. (Section 2) 
@@ -62,37 +59,39 @@ passport.deserializeUser(function (id, done) {
 //   Strategies in passport require a `validate` function, which accept
 //   credentials (in this case, an OpenID identifier), and invoke a callback
 //   with a user object.
-passport.use(new OIDCStrategy({
-    callbackURL: config.creds.returnURL,
-    realm: config.creds.realm,
-    clientID: config.creds.clientID,
-    clientSecret: config.creds.clientSecret,
-    oidcIssuer: config.creds.issuer,
-    identityMetadata: config.creds.identityMetadata,
-    skipUserProfile: config.creds.skipUserProfile,
-    responseType: config.creds.responseType,
-    responseMode: config.creds.responseMode
-    },
-    function (iss, sub, profile, accessToken, refreshToken, done) {
-        if (!profile.email) {
-            return done(new Error("No email found"), null);
-        }
-        // asynchronous verification, for effect...
-        process.nextTick(function () {
-            findByEmail(profile.email, function (err, user) {
-                if (err) {
-                    return done(err);
-                }
-                if (!user) {
-                    // "Auto-registration"
-                    users.push(profile);
-                    return done(null, profile);
-                }
-                return done(null, user);
+if (config.creds.clientID) {
+    passport.use(new OIDCStrategy({
+        callbackURL: config.creds.returnURL,
+        realm: config.creds.realm,
+        clientID: config.creds.clientID,
+        clientSecret: config.creds.clientSecret,
+        oidcIssuer: config.creds.issuer,
+        identityMetadata: config.creds.identityMetadata,
+        skipUserProfile: config.creds.skipUserProfile,
+        responseType: config.creds.responseType,
+        responseMode: config.creds.responseMode
+        },
+        function (iss, sub, profile, accessToken, refreshToken, done) {
+            if (!profile.email) {
+                return done(new Error("No email found"), null);
+            }
+            // asynchronous verification, for effect...
+            process.nextTick(function () {
+                findByEmail(profile.email, function (err, user) {
+                    if (err) {
+                        return done(err);
+                    }
+                    if (!user) {
+                        // "Auto-registration"
+                        users.push(profile);
+                        return done(null, profile);
+                    }
+                    return done(null, user);
+                });
             });
-        });
-    }
-));
+        }
+    ));
+}
 
 
 
@@ -151,7 +150,7 @@ function returnResult(res, successRet) {
     function ret(err, result) {
         res.setHeader('Content-Type', 'application/json');
         if (err) {
-            res.status(500).send({error:err});
+            res.status(400).send({error:err});
         }else {
             if (successRet) {
                 res.status(200).send(typeof(successRet) === 'string' ? successRet : JSON.stringify(successRet));
@@ -210,7 +209,7 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
     }
 
     if (logtext) {        
-        console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
+        //console.log('[' + new Date().toLocaleString() + ']', 'POST', project + '/' + logname, '(' + logtext.length + 'bytes' + ')');
         //logstream.log('post', project, logname, logtext); DON'T DO IT!!!!!!!!!!!!!!!
 
         var logbranch = project + '/' + logname;
@@ -229,10 +228,10 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
                 returnResult(res, req.body)(err, result);
             });
         }else {
-            res.status(500).send({error:'too many logs!'});
+            res.status(400).send({error:'too many logs!'});
         }
     }else {
-        res.status(500).send({error:'invalid log'});
+        res.status(400).send({error:'invalid log'});
     }
 });
 
@@ -267,11 +266,11 @@ app.post('/api/*/*/commands', checkAPICall, function (req, res) {
     var commands = req.body;
 
     if (!commands || !Array.isArray(commands)) {
-        res.status(500).send({error: 'command list is needed!'});
+        res.status(400).send({error: 'command list is needed!'});
     }else {
         for (var i=0; i<commands.length; i++) {
             if (!commands[i].name || commands[i].name.length === 0) {
-                res.status(500).send({error: 'command list is needed!'});
+                res.status(400).send({error: 'command list is needed!'});
                 return;
             }
             commands[i].url = commands[i].url || '#';
@@ -332,7 +331,7 @@ app.post('/api/*/*/charts/*', checkAPICall, function(req, res) {
     var timestamp = req.body.timestamp || Date.now();
     var chartType = req.body.chartType;
     var data = req.body.data;
-    if (!chartType || ['line'].indexOf(chartType) >= 0) {
+    if (!chartType || ['line', 'bar'].indexOf(chartType) >= 0) {
         db.addChartData(project, logname, chartname, timestamp, chartType, data, (err, result) => {
             var appendData = Object.assign({
                 chartname: chartname,
@@ -343,7 +342,7 @@ app.post('/api/*/*/charts/*', checkAPICall, function(req, res) {
             returnResult(res, req.body)(err, result);
         });   
     }else {
-        res.status(500).send({error:'invalid chart type'});
+        res.status(400).send({error:'invalid chart type'});
     }
 });
 
@@ -359,9 +358,17 @@ app.get('/api/open-status-chart', (req, res) => {
     if (!intervalID) {
         intervalID = setInterval(
             () => {
+                var branchs = connections.getFocusedBranchs();
                 logstream.addChartData('Server-Status', [
-                    {key:'Websocket-Count', value:connections.count()}
+                    {key: 'Websocket-Count', value: connections.countSession()},
+                    {key: 'Subscriptions-Count', value: connections.countSubscription()},
+                    {key: 'Focused-Branch-Count', value: branchs.length}
                 ]);
+                var branchEmitCount = [];
+                for (var i=0; i<branchs.length; i++) {
+                    branchEmitCount.push({key: branchs[i], value: connections.getBranchEmitCount(branchs[i])});
+                }
+                logstream.addChartData('Channel-Emit-Count', branchEmitCount);
             },
             1000
         );
@@ -374,6 +381,10 @@ app.get('/api/close-status-chart', (req, res) => {
         clearInterval(intervalID);
         intervalID = null;
     }
+    res.status(200).send();
+});
+
+app.get('/api/test', (req, res) => {
     res.status(200).send();
 });
 
@@ -400,18 +411,10 @@ app.get('/auth/openid/return',
         res.redirect('/');
     });
 
-app.post('/auth/openid/return',
-    passport.authenticate('azuread-openidconnect', { failureRedirect: '/login_failed' }),
-    function (req, res) {
-        console.log('We received a return from AzureAD. POST');
-        res.redirect('/');
-    });
-
-
 app.use(function (req, res) {
     Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
         if (err) {
-            res.status(500).send(err.message)
+            res.status(400).send(err.message)
         } else if (redirectLocation) {
             res.status(302).redirect(redirectLocation.pathname + redirectLocation.search)
         } else if (renderProps) {
