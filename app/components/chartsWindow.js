@@ -138,29 +138,61 @@ class Chart extends React.Component {
         var tnow = Date.now();
         tnow += -(tnow % this.state.timeSpanBase);
         var data = { datasets: [] };
+
         var i = 0;
         for (var key in this.props.data) {
-            data.datasets.push(Object.assign({
-                label: key,
-                data: this.props.data[key]
-                        .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
-                        .sort((a, b) => a.x - b.x),
-                // style options
-                borderCapStyle: 'butt',
-                fill:false,
-                borderDash: [],
-                borderDashOffset: 0.0,
-                borderJoinStyle: 'miter',
-                pointBorderWidth: 1,
-                pointHoverRadius: 5,
-                pointHoverBorderWidth: 2,
-                pointRadius: 1,
-                pointHitRadius: 10,
-            }, defaultColors[i++]));
+            var chartData = this.makeDataInSpanLine(
+                this.props.data[key]
+                    .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
+                    .sort((a, b) => a.x - b.x), 
+                -this.state.timeSpan, 1
+            );
+
+            if (chartData.length > 2) {
+                data.datasets.push(Object.assign({
+                    label: key,
+                    data: chartData,
+                    // style options
+                    borderCapStyle: 'butt',
+                    fill:false,
+                    borderDash: [],
+                    borderDashOffset: 0.0,
+                    borderJoinStyle: 'miter',
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 5,
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 1,
+                    pointHitRadius: 10,
+                }, defaultColors[i++]));
+            }
         }
-        for (var i=0; i<data.datasets.length; i++) {
-            data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
-        }
+
+        // for (var i=0; i<data.datasets.length; i++) {
+        //     data.datasets[i].data = this.makeDataInSpanLine(data.datasets[i].data, -this.state.timeSpan, 1);
+        // }
+
+        // var i = 0;
+        // for (var key in this.props.data) {
+        //     data.datasets.push(Object.assign({
+        //         label: key,
+        //         data: this.props.data[key]
+        //                 .map((o) => ({x:(o[1]-tnow)/this.state.timeSpanBase, y:o[0]}))
+        //                 .sort((a, b) => a.x - b.x),
+        //         // style options
+        //         borderCapStyle: 'butt',
+        //         fill:false,
+        //         borderDash: [],
+        //         borderDashOffset: 0.0,
+        //         borderJoinStyle: 'miter',
+        //         pointBorderWidth: 1,
+        //         pointHoverRadius: 5,
+        //         pointHoverBorderWidth: 2,
+        //         pointRadius: 1,
+        //         pointHitRadius: 10,
+        //     }, defaultColors[i++]));
+        // }
+
+        
         return data;
     }
 

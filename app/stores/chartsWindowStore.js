@@ -13,7 +13,7 @@ class ChartsWindowStore {
     onGetChartsSuccess(data) {
         this.project = data.project;
         this.logname = data.logname;
-        this.charts = data.charts;
+        this.charts = data.charts.sort((a, b) => a<b ? -1:1);
         this.chartData = {};
     }
 

@@ -41,14 +41,14 @@ describe('API logs', function() {
         request(app)
             .post('/api/testProj/testLogname/logs')
             .send(log)
-            .expect(500, {error:'invalid log'}, done);
+            .expect(400, {error:'invalid log'}, done);
     });
     
     it('reponse to POST /api/testProj/testLogname/logs with broken log', (done) => {
         request(app)
             .post('/api/testProj/testLogname/logs')
             .send("this is a broken log")
-            .expect(500, done);
+            .expect(400, done);
     });
 
     it('reponse to GET /api/testProj/testLogname/logs without timestamp', (done) => {
@@ -99,14 +99,14 @@ describe('API commands', function() {
         request(app)
             .post('/api/testProj/testLogname/commands')
             .send("broken data")
-            .expect(500, done);
+            .expect(400, done);
     });
 
     it('response to POST /api/testProj/testLogname/commands with broken data2', (done) => {
         request(app)
             .post('/api/testProj/testLogname/commands')
             .send([{name:"", url:"url1"}, {url:"url2"}])
-            .expect(500, done);
+            .expect(400, done);
     });
 
     it('response to GET{EXECUTE} /api/testProj/testLogname/commands/command1', (done) => {
@@ -138,7 +138,7 @@ describe('API charts', function() {
         request(app)
             .post('/api/testProj/testLogname/charts/testChart')
             .send({chartType:'invalid type', timestamp:2333, data:[{key:'key1', value:1}]})
-            .expect(500, done);
+            .expect(400, done);
     });
 
     it('response to GET /api/testProj/testLogname/charts', (done) => {

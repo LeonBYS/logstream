@@ -89,7 +89,7 @@ class Content extends React.Component {
             return (<div style={{textAlign: 'center', paddingTop:"100px", paddingBottom:"100px"}}> 
                 <h1> LogStream </h1>
                 <h4 style={{marginTop:"20px", marginBottom:"50px"}}> 
-                    View, manage, analyze your app logs centrally in real time :) 
+                    A Simple & Flexible UI Service :) 
                 </h4> 
                 <RaisedButton
                     label="Github"
