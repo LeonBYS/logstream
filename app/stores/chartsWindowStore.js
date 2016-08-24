@@ -30,7 +30,9 @@ class ChartsWindowStore {
         if (!this.chartsData[chartname]) {
             this.chartsData[chartname] = {};
             this.chartsData[chartname].data = {};
-            this.charts.push(chartname);
+            if (this.charts.indexOf(chartname) < 0) {
+                this.charts.push(chartname);
+            }
         }
 
         for (var i=0; i<appendData.length; i++) {
