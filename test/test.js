@@ -51,6 +51,36 @@ describe('API logs', function() {
             .expect(400, done);
     });
 
+    it('reponse to POST /api/testProj/testLogname/mlogs without timestamp', (done) => {
+        var logs = [{logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString() + '\n'}];
+        request(app)
+            .post('/api/testProj/testLogname/mlogs')
+            .send(logs)
+            .expect(200, '1', done);
+    });
+
+    it('reponse to POST /api/testProj/testLogname/mlogs with multi logs', (done) => {
+        var logs = [
+            {logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString() + '\n'},
+            {logtext:"This is another test msg at " + new Date(Date.now()).toLocaleDateString() + '\n'}
+        ];
+        request(app)
+            .post('/api/testProj/testLogname/mlogs')
+            .send(logs)
+            .expect(200, '2', done);
+    });
+
+    it('reponse to POST /api/testProj/testLogname/mlogs with multi logs contains invalid log', (done) => {
+        var logs = [
+            {logtext:"This is a test msg at " + new Date(Date.now()).toLocaleDateString() + '\n'},
+            {logtext:"This is another test msg at " + new Date(Date.now()).toLocaleDateString() + '\n', level:'lallala'}
+        ];
+        request(app)
+            .post('/api/testProj/testLogname/mlogs')
+            .send(logs)
+            .expect(400, done);
+    });
+
     it('reponse to GET /api/testProj/testLogname/logs without timestamp', (done) => {
         request(app)
             .get('/api/testProj/testLogname/logs')

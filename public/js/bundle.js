@@ -546,7 +546,7 @@ var Chart = function (_React$Component) {
                     return a.x - b.x;
                 }), -this.state.timeSpan, 1);
 
-                if (datasets.length === 0 || chartData.length > 2) {
+                if (data.datasets.length === 0 || chartData.length > 2) {
                     data.datasets.push(Object.assign({
                         label: key,
                         data: chartData,
