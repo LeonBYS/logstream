@@ -546,7 +546,7 @@ var Chart = function (_React$Component) {
                     return a.x - b.x;
                 }), -this.state.timeSpan, 1);
 
-                if (datasets.length === 0 || chartData.length > 2) {
+                if (data.datasets.length === 0 || chartData.length > 2) {
                     data.datasets.push(Object.assign({
                         label: key,
                         data: chartData,
@@ -1911,7 +1911,9 @@ var ChartsWindowStore = function () {
             if (!this.chartsData[chartname]) {
                 this.chartsData[chartname] = {};
                 this.chartsData[chartname].data = {};
-                this.charts.push(chartname);
+                if (this.charts.indexOf(chartname) < 0) {
+                    this.charts.push(chartname);
+                }
             }
 
             for (var i = 0; i < appendData.length; i++) {

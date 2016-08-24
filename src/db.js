@@ -111,6 +111,24 @@ var dbRedis = {
     },
 
     /**
+     * add logs to a specific log branch (project, logname)
+     * @param {string} project
+     * @param {string} logname
+     * @param {array} logs
+     * @param {function(err, result)} callback 
+     */
+    addLogs: function (project, logname, logs, callback) {
+        var lkey = this.prefix + 'logs:' + project + ':' + logname;
+        logs = logs.map(log => JSON.stringify(log));
+        var params = [lkey].concat(logs);
+
+        var pipe = this.client.pipeline();
+        pipe.lpush.apply(this.client, params);
+        pipe.ltrim(lkey, 0, config.MAX_LOGS_COUNT);
+        pipe.exec(callback);
+    },
+
+    /**
      * get projects with it's log branchs
      * @param {function(err, result)} callback 
      */
