@@ -235,6 +235,36 @@ app.post('/api/*/*/logs', checkAPICall, function(req, res) {
     }
 });
 
+app.post('/api/*/*/mlogs', checkAPICall, function(req, res) {
+    var project = req.params[0];
+    var logname = req.params[1];
+    var logs = req.body;
+
+    // default value
+    var now = Date.now();
+    for (var i=0; i<logs.length; i++) {
+        logs[i].timestamp = logs[i].timestamp || now;
+        logs[i].level = logs[i].level || 0; 
+    }
+
+    // check parameter 
+    for (var i=0; i<logs.length; i++) {
+        if (typeof(logs[i].timestamp) !== 'number' || 
+            typeof(logs[i].level) !== 'number' ||
+            !logs[i].logtext ||
+            logs[i].logtext.length === 0) {
+
+            res.status(400).send('invalid logs!');
+            return;
+        }
+    }
+
+    db.addLogs(project, logname, logs, (err, result) => {
+        connections.publish('log', project, logname, logs);
+        returnResult(res, logs.length)(err, result);
+    });
+});
+
 
 // Commands
 app.get('/api/*/*/commands', checkAPICall, function (req, res) {
