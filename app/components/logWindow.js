@@ -83,6 +83,11 @@ class MsgWindow extends React.Component {
         }else {
             this.appendData = null;
         }
+        if (this.props.height != nextProps.height) {
+            if (this.editor) {
+                this.editor.resize();
+            }
+        }
     }
 
     render() {
@@ -165,6 +170,9 @@ class LogWindow extends React.Component {
         this.state = LogWindowStore.getState();
         this.onChange = this.onChange.bind(this);
         this.componentWillReceiveProps = this.componentWillReceiveProps.bind(this);
+        this.componentDidMount = this.componentDidMount.bind(this);
+        this.componentWillUnmount = this.componentWillUnmount.bind(this);
+        this.updateDimensions = this.updateDimensions.bind(this);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -174,15 +182,21 @@ class LogWindow extends React.Component {
         });
     }
 
+    updateDimensions() {
+        this.forceUpdate();
+    }
+
     componentDidMount() {
         LogWindowStore.listen(this.onChange);
         process.nextTick(() => {
             LogWindowActions.getLogs(this.props.project, this.props.logname);
         });
+        if (window) window.addEventListener("resize", this.updateDimensions);
     }
 
     componentWillUnmount() {
         LogWindowStore.unlisten(this.onChange);
+        if (window) window.addEventListener("resize", this.updateDimensions);
     }
 
     onChange(state) {
@@ -199,11 +213,15 @@ class LogWindow extends React.Component {
             height:"500px", 
             marginBottom:"10px"
         };
+        if (window) {
+            var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            style.height = (height - 300) + 'px';
+        }
         return (
-            <div>
+            <div style={{height:"100%"}}>
                 <MsgHeader level={this.state.level} dateStart={this.state.dateStart} dateEnd={this.state.dateEnd} />
                 <div style={style}> 
-                    <MsgWindow logs={this.state.linesFilted}/> 
+                    <MsgWindow logs={this.state.linesFilted} height={style.height}/> 
                 </div>
             </div>
         );
