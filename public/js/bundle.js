@@ -1420,6 +1420,11 @@ var MsgWindow = function (_React$Component2) {
             } else {
                 this.appendData = null;
             }
+            if (this.props.height != nextProps.height) {
+                if (this.editor) {
+                    this.editor.resize();
+                }
+            }
         }
     }, {
         key: 'render',
@@ -1520,6 +1525,9 @@ var LogWindow = function (_React$Component3) {
         _this4.state = _logWindowStore2.default.getState();
         _this4.onChange = _this4.onChange.bind(_this4);
         _this4.componentWillReceiveProps = _this4.componentWillReceiveProps.bind(_this4);
+        _this4.componentDidMount = _this4.componentDidMount.bind(_this4);
+        _this4.componentWillUnmount = _this4.componentWillUnmount.bind(_this4);
+        _this4.updateDimensions = _this4.updateDimensions.bind(_this4);
         return _this4;
     }
 
@@ -1534,6 +1542,11 @@ var LogWindow = function (_React$Component3) {
             });
         }
     }, {
+        key: 'updateDimensions',
+        value: function updateDimensions() {
+            this.forceUpdate();
+        }
+    }, {
         key: 'componentDidMount',
         value: function componentDidMount() {
             var _this6 = this;
@@ -1542,11 +1555,13 @@ var LogWindow = function (_React$Component3) {
             process.nextTick(function () {
                 _logWindowActions2.default.getLogs(_this6.props.project, _this6.props.logname);
             });
+            if (window) window.addEventListener("resize", this.updateDimensions);
         }
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
             _logWindowStore2.default.unlisten(this.onChange);
+            if (window) window.addEventListener("resize", this.updateDimensions);
         }
     }, {
         key: 'onChange',
@@ -1565,14 +1580,18 @@ var LogWindow = function (_React$Component3) {
                 height: "500px",
                 marginBottom: "10px"
             };
+            if (window) {
+                var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                style.height = height - 300 + 'px';
+            }
             return _react2.default.createElement(
                 'div',
-                null,
+                { style: { height: "100%" } },
                 _react2.default.createElement(MsgHeader, { level: this.state.level, dateStart: this.state.dateStart, dateEnd: this.state.dateEnd }),
                 _react2.default.createElement(
                     'div',
                     { style: style },
-                    _react2.default.createElement(MsgWindow, { logs: this.state.linesFilted })
+                    _react2.default.createElement(MsgWindow, { logs: this.state.linesFilted, height: style.height })
                 )
             );
         }
