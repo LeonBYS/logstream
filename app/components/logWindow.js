@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import LogWindowStore from '../stores/logWindowStore';
 import LogWindowActions from '../actions/logWindowActions';
 
@@ -123,7 +124,7 @@ class MsgWindow extends React.Component {
                     var col0 = this.editor.session.getLine(row0).length;
                     var pos0 = this.editor.selection.getCursor();
 
-                    var logstr = this.props.logs.map(a => a.logtext).join('');
+                    var logstr = this.props.logs.map(a => '[' + moment(a.timestamp).format() + '] ' + a.logtext).join('');
                     this.editor.session.setValue(logstr, 1);
                     
                     if (pos0.row === row0 && pos0.column === col0) {
@@ -142,7 +143,7 @@ class MsgWindow extends React.Component {
                     var col0 = this.editor.session.getLine(row0).length;
                     var pos0 = this.editor.selection.getCursor();
 
-                    var logstr = this.appendData.map(a => a.logtext).join('');
+                    var logstr = this.appendData.map(a => '[' + moment(a.timestamp).format() + '] ' + a.logtext).join('');
                     this.editor.session.insert({row: this.editor.session.getLength(), column: 0}, "" + logstr);
                     
                     if (pos0.row === row0 && pos0.column === col0) {
