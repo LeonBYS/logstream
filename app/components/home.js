@@ -4,6 +4,7 @@ import Content from './content';
 import LogWindowActions from '../actions/logWindowActions';
 import ChartsWindowActions from '../actions/chartsWindowActions';
 import api from '../api';
+import io from 'socket.io-client'
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';

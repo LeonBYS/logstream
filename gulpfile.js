@@ -24,7 +24,8 @@ var dependencies = [
   'react-addons-transition-group',
   'react-addons-create-fragment',
   'react-tap-event-plugin',
-  'underscore'
+  'underscore',
+  'socket.io-client'
 ];
 
 /*
@@ -39,7 +40,6 @@ gulp.task('vendor', function() {
     //'bower_components/startbootstrap-sb-admin-2/dist/js/sb-admin-2.js',
     //'bower_components/metisMenu/dist/metisMenu.js',
     'bower_components/toastr/toastr.js',
-    'node_modules/socket.io/node_modules/socket.io-client/socket.io.js'
   ]).pipe(concat('vendor.js'))
     .pipe(gulpif(production, uglify({ mangle: false })))
     .pipe(gulp.dest('public/js'));

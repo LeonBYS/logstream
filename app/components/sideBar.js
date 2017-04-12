@@ -4,10 +4,10 @@ import SideBarActions from '../actions/sideBarActions'
 import ContentActions from '../actions/contentActions';
 
 import TextField from 'material-ui/TextField';
-import {List, ListItem, MakeSelectable} from 'material-ui/List';
+import {List, ListItem, makeSelectable} from 'material-ui/List';
 
 
-let SelectableListNaive = MakeSelectable(List);
+let SelectableListNaive = makeSelectable(List);
 
 class SelectableList extends React.Component {
     constructor(props) {
