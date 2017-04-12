@@ -37,7 +37,7 @@
     "mocha": "^2.5.3",
     "moment": "^2.18.1",
     "passport": "^0.3.2",
-    "passport-azure-ad": "^2.0.0",
+    "passport-azure-ad": "^2.0.1",
     "react": "^15.3.0",
     "react-ace": "^3.5.0",
     "react-addons-create-fragment": "^15.3.0",
