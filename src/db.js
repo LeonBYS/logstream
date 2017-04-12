@@ -5,7 +5,7 @@ var request = require("request");
 
 
 var config = {
-    MAX_LOGS_COUNT: 100000,
+    MAX_LOGS_COUNT: process.env.MAX_LOGS_COUNT || 10000,
     PROB_CHECK_LOGS: 0.001
 };
 
