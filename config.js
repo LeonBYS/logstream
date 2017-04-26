@@ -1,6 +1,6 @@
 exports.creds = {
     returnURL: process.env.OAUTH_RETURN_URL,
-    identityMetadata: 'https://login.microsoftonline.com/common/.well-known/openid-configuration', // For using Microsoft you should never need to change this.
+    identityMetadata: process.env.OAUTH_IDENTITY_METADATA,
     clientID: process.env.OAUTH_CLIENT_ID,
     clientSecret: process.env.OAUTH_SECRET, // if you are doing code or id_token code
     skipUserProfile: true, // for AzureAD should be set to true.
